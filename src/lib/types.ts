@@ -158,6 +158,33 @@ export interface Profile {
   defaultAccountId?: string | null;
 }
 
+export interface SavingsPlan {
+  id: string;
+  name: string;
+  kind: 'goal' | 'emergency';
+  target_paise: number;
+  emergency_months: number | null;
+  /** Saved before tracking started. */
+  opening_paise: number;
+  monthly_contribution_paise: number | null;
+  target_date: string | null;
+  account_id: string;
+  category_id: string;
+  priority: number;
+  active: boolean;
+  created_at: string;
+  /** Derived: opening_paise + live contributions linked to this plan. */
+  saved_paise: number;
+}
+
+export interface SavingsData {
+  items: SavingsPlan[];
+  /** Average monthly Needs + Wants spend over the last complete months with spend. */
+  averageMonthlySpendPaise: number;
+  /** Emergency fund target suggestion: that average × the emergency fund's months (6 when there is none). */
+  emergencySuggestionPaise: number;
+}
+
 export interface InsurancePolicy {
   id: string;
   name: string;

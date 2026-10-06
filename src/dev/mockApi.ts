@@ -95,6 +95,15 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
   }),
   lent: () => ({ items: [] }),
   asks: () => ({ items: [] }),
+  savings: () => ({
+    averageMonthlySpendPaise: 4500000,
+    emergencySuggestionPaise: 27000000,
+    items: [
+      { id: 's1', name: 'Emergency fund', kind: 'emergency', target_paise: 27000000, emergency_months: 6, opening_paise: 5000000, monthly_contribution_paise: 1500000, target_date: '2027-12-31', account_id: 'acc1', category_id: 'c13', priority: 0, active: true, created_at: '2026-06-01T00:00:00Z', saved_paise: 9500000 },
+      { id: 's2', name: 'New laptop', kind: 'goal', target_paise: 12000000, emergency_months: null, opening_paise: 0, monthly_contribution_paise: 1000000, target_date: '2027-02-01', account_id: 'acc1', category_id: 'c13', priority: 1, active: true, created_at: '2026-07-01T00:00:00Z', saved_paise: 3000000 },
+      { id: 's3', name: 'Goa trip', kind: 'goal', target_paise: 4000000, emergency_months: null, opening_paise: 1000000, monthly_contribution_paise: null, target_date: null, account_id: 'acc4', category_id: 'c13', priority: 2, active: true, created_at: '2026-08-01T00:00:00Z', saved_paise: 4200000 },
+    ],
+  }),
 };
 
 export function installMockApi() {

@@ -81,6 +81,17 @@ const GROUPS: RuleGroup[] = [
     ],
   },
   {
+    title: 'Savings plans',
+    icon: 'piggy-bank',
+    rules: [
+      'A contribution is a spend in a Savings category. It leaves your balance and counts toward your Savings budget.',
+      'Saved = already saved (before you started tracking) + contributions. It is always worked out from your entries.',
+      'Emergency fund target = months × your average monthly Needs + Wants spend, over the last 3 complete months that had spending. You can change it.',
+      'You can have one emergency fund and any number of goals.',
+      'Removing a plan keeps its past contributions in the Log as savings.',
+    ],
+  },
+  {
     title: 'Entries and accounts',
     icon: 'wallet',
     rules: [

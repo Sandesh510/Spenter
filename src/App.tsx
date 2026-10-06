@@ -12,6 +12,7 @@ import { Home } from './screens/Home';
 import { Lent } from './screens/Lent';
 import { Commitments } from './screens/Commitments';
 import { Rules } from './screens/Rules';
+import { Savings } from './screens/Savings';
 import { Import } from './screens/Import';
 import { Lock } from './screens/Lock';
 import { Log } from './screens/Log';
@@ -26,9 +27,9 @@ interface LogFilter {
   month: string;
 }
 
-export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules' | 'import';
+export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules' | 'import' | 'savings';
 
-const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules', 'import'];
+const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules', 'import', 'savings'];
 function isRoute(v: unknown): v is Route {
   return typeof v === 'string' && ROUTE_NAMES.includes(v);
 }
@@ -242,6 +243,7 @@ export function App() {
       {route === 'commitments' && <Commitments token={token} go={go} onToast={showToast} />}
       {route === 'rules' && <Rules go={go} />}
       {route === 'import' && <Import token={token} go={go} onToast={showToast} />}
+      {route === 'savings' && <Savings token={token} go={go} onToast={showToast} />}
 
       {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}
       {toast && <div className="toast" role="status">{toast}</div>}
