@@ -3,6 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Field';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
+import { MAX_ACCOUNTS } from '../lib/limits';
 import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
@@ -83,7 +84,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
   return (
     <div className={step === 'amount' ? 'scroll scroll--stack' : 'scroll'} style={{ paddingBottom: 24 }}>
-      <div className="topbar" style={{ padding: '8px 0 4px' }}>
+      <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={back} aria-label={step === 'amount' ? 'Close' : 'Back'}>
           <Icon name={step === 'amount' ? 'x' : 'chevron-left'} size={18} />
         </button>
@@ -197,7 +198,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
                 <div className="fs-11 c-mut mt-2">{a.bank ?? a.kind ?? ''}</div>
               </Card>
             ))}
-            {(accounts.data?.items.length ?? 0) < 6 && (
+            {(accounts.data?.items.length ?? 0) < MAX_ACCOUNTS && (
               <button
                 onClick={() => go('settings')}
                 style={{ padding: 14, borderRadius: 18, border: '1px dashed var(--color-border)', background: 'transparent', color: 'var(--color-accent-text)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}

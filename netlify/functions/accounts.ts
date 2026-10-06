@@ -2,10 +2,10 @@ import { authed } from './_lib/handler';
 import { reqId, reqStr, optStr, readJson } from './_lib/input';
 import { HttpError, json } from './_lib/response';
 
-const MAX_ACCOUNTS = 6;
+import { MAX_ACCOUNTS } from '../../src/lib/limits';
 
 /**
- * GET   /accounts                       → the user's accounts (max 6)
+ * GET   /accounts                       → the user's accounts (max 10)
  * POST  /accounts  { nickname, bank?, kind? }
  * PATCH  /accounts  { id, nickname }     → rename
  * DELETE /accounts?id=…                 → remove (refused while transactions still use it)

@@ -219,11 +219,7 @@ function CommitmentsCard({ token, onOpen }: { token: string; onOpen: () => void 
   const { data } = useApi<CommitmentsData>('commitments', token);
   const t = data?.totals;
   return (
-    <Card
-      as="button"
-      onClick={onOpen}
-      style={{ display: 'block', width: '100%', marginTop: 12, padding: 14, cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit', textAlign: 'left' }}
-    >
+    <Card as="button" onClick={onOpen} className="card--link">
       <div className="flex ai-c jc-sb">
         <span className="fs-13 c-sec">Commitments · every month</span>
         <Icon name="chevron-right" size={16} />

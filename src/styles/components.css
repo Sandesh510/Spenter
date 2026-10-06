@@ -144,3 +144,102 @@
 .input::placeholder {
   color: var(--color-text-muted);
 }
+
+/* Status badge: uses the semantic status families only. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.badge--success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge--info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.badge--neutral {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+
+/* Chip with an icon */
+.chip--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Section label used as a heading */
+.kicker--spaced {
+  margin-bottom: 8px;
+}
+
+/* Text link in the danger family */
+.link--danger {
+  color: var(--color-danger);
+}
+
+/* A whole card that is a button (Home's Lent and Commitments cards) */
+.card--link {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  text-align: left;
+}
+
+/* Topbar: the back button, title, and a spacer that balances the back button's width */
+.topbar.topbar--inset {
+  padding: 8px 0 4px;
+}
+
+.topbar__spacer {
+  width: 36px;
+}
+
+/* Visually hidden, for labels that screen readers need but the layout does not show */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Resets for semantic lists and groups, so the markup can be real lists and fieldsets without browser styling */
+.m-0 {
+  margin: 0;
+}
+
+.fw-400 {
+  font-weight: 400;
+}
+
+.list-reset {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fieldset-reset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.topbar__title {
+  margin: 0;
+}

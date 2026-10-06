@@ -114,10 +114,10 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
 
   return (
     <div className="scroll scroll--stack" style={{ paddingBottom: 24 }}>
-      <div className="topbar" style={{ padding: '8px 0 4px' }}>
+      <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={() => go(editing ? 'log' : 'quickadd')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
         <span className="topbar__title">{editing ? 'Edit transaction' : 'Add transaction'}</span>
-        <span style={{ width: 36 }} />
+        <span className="topbar__spacer" aria-hidden="true" />
       </div>
 
       <div className="chiprow mt-8">

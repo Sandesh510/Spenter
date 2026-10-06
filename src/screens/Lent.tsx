@@ -103,10 +103,10 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
 
   return (
     <div className="scroll">
-      <div className="topbar" style={{ padding: '8px 0 4px' }}>
+      <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={() => go('home')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
         <span className="topbar__title">Money lent</span>
-        <span style={{ width: 36 }} />
+        <span className="topbar__spacer" aria-hidden="true" />
       </div>
 
       {error && <p className="c-danger fs-13" role="alert">{error}</p>}
@@ -179,7 +179,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
       {adding && (
         <div className="abs inset-0 flex" role="dialog" aria-modal="true" aria-label="Record money lent" style={{ zIndex: 30, flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setAdding(false)} style={{ position: 'absolute', inset: 0, background: 'var(--color-scrim)' }} />
-          <form onSubmit={record} className="sheet pop rel grid gap-10" style={{ background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', borderTop: '1px solid var(--color-border)' }}>
+          <form onSubmit={record} className="pop rel grid gap-10" style={{ background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', borderTop: '1px solid var(--color-border)' }}>
           <div className="kicker">Name</div>
           <div className="chiprow" style={{ margin: 0, padding: 0 }}>
             {previousNames.map(n => (

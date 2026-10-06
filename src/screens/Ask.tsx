@@ -69,10 +69,10 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
 
   return (
     <div className="scroll">
-      <div className="topbar" style={{ padding: '8px 0 4px' }}>
+      <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={() => go('home')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
         <span className="topbar__title">Should I buy this?</span>
-        <span style={{ width: 36 }} />
+        <span className="topbar__spacer" aria-hidden="true" />
       </div>
 
       <Card className="mt-8" variant="compact">

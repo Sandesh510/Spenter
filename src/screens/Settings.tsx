@@ -11,6 +11,7 @@ import { currentMonth } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import type { Account, HomeData, Profile } from '../lib/types';
+import { MAX_ACCOUNTS } from '../lib/limits';
 
 const SHOW_FIRST = 5;
 
@@ -273,7 +274,7 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
   const [nickname, setNickname] = useState('');
   const [bank, setBank] = useState('');
 
-  if (count >= 6) return <div className="fs-12 c-mut" style={{ padding: '12px 14px' }}>Up to 6 accounts</div>;
+  if (count >= MAX_ACCOUNTS) return <div className="fs-12 c-mut" style={{ padding: '12px 14px' }}>Up to {MAX_ACCOUNTS} accounts</div>;
   if (!open) return (
     <button onClick={() => setOpen(true)} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 12.5, justifyContent: 'center' }}>+ Add account</button>
   );
