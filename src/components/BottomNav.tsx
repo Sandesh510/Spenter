@@ -23,7 +23,7 @@ export function BottomNav({ active, onGo, onAdd }: { active: Tab; onGo: (t: Tab)
         <span className="nav__fab">
           <Icon name="plus" size={26} />
         </span>
-        <span className="label" style={{ fontSize: 10 }}>Add</span>
+        <span className="label fs-11">Add</span>
       </button>
       {slot('trends', 'bar-chart-3', 'Trends')}
       {slot('settings', 'settings', 'Settings')}

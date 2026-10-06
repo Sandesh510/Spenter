@@ -64,33 +64,33 @@ export function Verdict({ amountPaise, category, spendableBalancePaise }: Props)
 
   return (
     <div className="pop" style={{ border: `1px solid ${colour}`, borderRadius: 16, padding: '15px 16px', background: 'transparent' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--color-surface-muted)', color: colour, display: 'grid', placeItems: 'center' }}>
+      <div className="flex ai-c gap-8">
+        <span className="grid" style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--color-surface-muted)', color: colour, placeItems: 'center' }}>
           <Icon name={icon} size={15} />
         </span>
-        <span style={{ fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', color: colour }}>{head}</span>
-        <span style={{ marginLeft: 'auto', padding: '3px 9px', borderRadius: 6, background: 'var(--color-accent-tint)', color: 'var(--color-accent-text)', fontSize: 11 }}>
+        <span className="fs-12" style={{ letterSpacing: '.06em', textTransform: 'uppercase', color: colour }}>{head}</span>
+        <span className="c-accent fs-11" style={{ marginLeft: 'auto', padding: '3px 9px', borderRadius: 6, background: 'var(--color-accent-tint)' }}>
           {category.name} · {BUCKET_TAG[category.bucket]}
         </span>
       </div>
-      <div className="heading" style={{ fontSize: 19, lineHeight: 1.2, margin: '11px 0 3px' }}>{title}</div>
-      <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{body}</div>
+      <div className="heading fs-18" style={{ lineHeight: 1.2, margin: '11px 0 3px' }}>{title}</div>
+      <div className="fs-13 c-sec" style={{ lineHeight: 1.5 }}>{body}</div>
 
       {v.status === 'over_plan' && plan > 0 && (
         <>
-          <div className="track" style={{ height: 8, marginTop: 12, display: 'flex' }}>
+          <div className="track mt-12 flex" style={{ height: 8 }}>
             <div style={{ height: '100%', width: `${spentShare * 100}%`, background: 'var(--color-accent)' }} />
             <div style={{ height: '100%', width: `${overShare * 100}%`, background: 'var(--color-danger)' }} />
           </div>
-          <div className="num" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7, fontSize: 11, color: 'var(--color-text-secondary)' }}>
+          <div className="num flex jc-sb fs-11 c-sec" style={{ marginTop: 7 }}>
             <span>{formatINR(category.spentPaise)} spent</span>
-            <span style={{ color: 'var(--color-danger)' }}>+{formatINR(v.overByPaise)} over</span>
+            <span className="c-danger">+{formatINR(v.overByPaise)} over</span>
           </div>
         </>
       )}
 
       {v.cannotAfford && (
-        <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--color-danger)' }}>
+        <div className="mt-10 fs-13 c-danger">
           This is more than your balance left to spend ({formatINR(spendableBalancePaise)}).
         </div>
       )}

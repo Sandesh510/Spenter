@@ -44,23 +44,23 @@ export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void 
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
 
   return (
-    <div className="phone" style={{ justifyContent: 'space-between', padding: '0 24px 26px' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--color-accent)', display: 'grid', placeItems: 'center', color: 'var(--color-accent-text)' }}>
+    <div className="phone jc-sb" style={{ padding: '0 24px 26px' }}>
+      <div className="flex-1 flex ai-c jc-c gap-20" style={{ flexDirection: 'column' }}>
+        <div className="grid c-accent" style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--color-accent)', placeItems: 'center' }}>
           <Icon name="lock-keyhole" size={26} />
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div className="heading" style={{ fontSize: 23 }}>SpendCheck</div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>Enter your passcode</div>
+        <div className="ta-c">
+          <div className="heading fs-24">SpendCheck</div>
+          <div className="fs-13 c-sec mt-4">Enter your passcode</div>
         </div>
-        <div style={{ display: 'flex', gap: 15 }} aria-label={`${pin.length} of 4 digits entered`}>
+        <div className="flex" style={{ gap: 15 }} aria-label={`${pin.length} of 4 digits entered`}>
           {[0, 1, 2, 3].map(i => (
             <span key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: i < pin.length ? 'var(--color-accent)' : 'transparent', border: i < pin.length ? 'none' : '1.5px solid var(--color-border)' }} />
           ))}
         </div>
-        {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>{error}</p>}
+        {error && <p className="c-danger fs-13" role="alert" style={{ margin: 0 }}>{error}</p>}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 250, margin: '0 auto' }}>
+      <div className="grid gap-12 w-full" style={{ gridTemplateColumns: 'repeat(3, 1fr)', maxWidth: 250, margin: '0 auto' }}>
         {keys.map((k, i) => (
           <button
             key={i}

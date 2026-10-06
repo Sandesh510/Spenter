@@ -62,8 +62,8 @@ export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => vo
 
   return (
     <div className="scroll" style={{ paddingBottom: 92 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0 0' }}>
-        <h1 className="heading" style={{ fontSize: 24 }}>Transactions</h1>
+      <div className="flex ai-c jc-sb" style={{ margin: '8px 0 0' }}>
+        <h1 className="heading fs-24">Transactions</h1>
         <button className="iconbtn" onClick={() => go('quickadd')} aria-label="Add transaction">
           <Icon name="plus" size={17} />
         </button>
@@ -76,17 +76,17 @@ export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => vo
         <FilterSelect label={monthLabelShort(month)} value={month} onChange={setMonth} options={monthOptions.map(m => ({ value: m.value, label: m.label }))} allowAll={false} />
       </div>
 
-      {(txns.error || error) && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{txns.error ?? error}</p>}
+      {(txns.error || error) && <p className="c-danger fs-13" role="alert">{txns.error ?? error}</p>}
 
       {groups.length === 0 && !txns.error && (
-        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 24 }}>No transactions for this filter.</p>
+        <p className="fs-13 c-sec mt-24">No transactions for this filter.</p>
       )}
 
       {groups.map(g => (
         <section key={g.date}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '16px 2px 6px' }}>
+          <div className="flex ai-base jc-sb" style={{ margin: '16px 2px 6px' }}>
             <span className="kicker">{dayLabel(g.date)}</span>
-            <span className="num" style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{formatINR(g.total)}</span>
+            <span className="num fs-12 c-mut">{formatINR(g.total)}</span>
           </div>
           {g.items.map(t => {
             const cat = categoryOf(t.category_id);
@@ -100,19 +100,19 @@ export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => vo
               : accountName(t.account_id);
             return (
               <button key={t.id} className="row" onClick={() => setSelected(t)} style={{ width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', color: 'inherit', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }} aria-label={`Edit or delete ${title}`}>
-                <div style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, display: 'grid', placeItems: 'center', background: tint.bg, color: tint.fg }}>
+                <div className="flex-none grid" style={{ width: 38, height: 38, borderRadius: 11, placeItems: 'center', background: tint.bg, color: tint.fg }}>
                   <Icon name={icon} size={17} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                <div className="flex-1 min-0">
+                  <div className="fs-14 nowrap ovh ellipsis">{title}</div>
+                  <div className="flex ai-c gap-6" style={{ marginTop: 3 }}>
                     {cat && t.type !== 'transfer' && (
-                      <span style={{ fontSize: 10.5, padding: '2px 7px', borderRadius: 5, background: tint.bg, color: tint.fg }}>{cat.name}</span>
+                      <span className="fs-11" style={{ padding: '2px 7px', borderRadius: 5, background: tint.bg, color: tint.fg }}>{cat.name}</span>
                     )}
-                    <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{meta}</span>
+                    <span className="fs-11 c-mut">{meta}</span>
                   </div>
                 </div>
-                <div className="num" style={{ fontSize: 14.5, color: isIn ? 'var(--color-success)' : 'var(--color-text-primary)' }}>
+                <div className="num fs-15" style={{ color: isIn ? 'var(--color-success)' : 'var(--color-text-primary)' }}>
                   {isIn ? '+' : ''}{formatINR(t.amount_paise)}
                 </div>
               </button>
@@ -133,7 +133,7 @@ export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => vo
             onClick={e => e.stopPropagation()}
             style={{ width: '100%', maxWidth: 420, background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '14px 16px 22px', display: 'grid', gap: 9 }}
           >
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', textAlign: 'center', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div className="fs-13 c-sec ta-c ovh ellipsis nowrap" style={{ marginBottom: 4 }}>
               {titleOf(selected)} · {formatINR(selected.amount_paise)}
             </div>
             <Button block onClick={() => { const t = selected; setSelected(null); onEdit(t); }}>

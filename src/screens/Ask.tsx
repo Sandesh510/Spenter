@@ -75,12 +75,12 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
         <span style={{ width: 36 }} />
       </div>
 
-      <Card variant="compact" style={{ marginTop: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 8, borderBottom: '1px solid var(--color-border)' }}>
-          <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
-          <Input
+      <Card className="mt-8" variant="compact">
+        <div className="flex ai-c gap-8" style={{ paddingBottom: 8, borderBottom: '1px solid var(--color-border)' }}>
+          <span className="c-mut"><Icon name="pencil-line" size={15} /></span>
+          <Input className="fs-14"
             
-            style={{ fontSize: 14, borderBottom: 'none', padding: 0 }}
+            style={{ borderBottom: 'none', padding: 0 }}
             placeholder="What is it?"
             value={item}
             onChange={e => setItem(e.target.value)}
@@ -88,9 +88,9 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
             aria-label="Item"
           />
         </div>
-        <div className="num" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '10px 0 2px' }}>
-          <span className="heading" style={{ fontSize: 26, color: 'var(--color-text-secondary)' }}>₹</span>
-          <span className="heading" style={{ fontSize: 46, lineHeight: 1 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
+        <div className="num flex ai-c jc-c gap-2" style={{ padding: '10px 0 2px' }}>
+          <span className="heading fs-26 c-sec">₹</span>
+          <span className="heading fs-44" style={{ lineHeight: 1 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
           <span className="caret" />
         </div>
       </Card>
@@ -104,24 +104,24 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
         ))}
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div className="mt-12">
         <Keypad onKey={k => setAmount(a => applyKey(a, k))} />
       </div>
 
       {selected && amountPaise > 0 && home.data && (
-        <div style={{ marginTop: 16 }}>
+        <div className="mt-16">
           <Verdict
             amountPaise={amountPaise}
             category={{ name: selected.name, bucket: selected.bucket, plannedPaise: selected.plannedPaise, spentPaise: selected.spentPaise }}
             spendableBalancePaise={home.data.spendableBalancePaise}
           />
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 6 }}>{BUCKET_LABEL[selected.bucket]} · {BUCKET_TAG[selected.bucket]}</div>
+          <div className="fs-11 c-mut mt-6">{BUCKET_LABEL[selected.bucket]} · {BUCKET_TAG[selected.bucket]}</div>
         </div>
       )}
 
-      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 12 }}>{error}</p>}
+      {error && <p className="c-danger fs-13 mt-12" role="alert">{error}</p>}
 
-      <div style={{ display: 'flex', gap: 9, marginTop: 16 }}>
+      <div className="flex mt-16" style={{ gap: 9 }}>
         <DecisionButton label="Bought" colour="var(--color-success)" disabled={busy} onClick={() => decide('bought')} />
         <DecisionButton label="Skipped" colour="var(--color-danger)" disabled={busy} onClick={() => decide('skipped')} />
         <DecisionButton label="Delayed" colour="var(--color-accent)" disabled={busy} onClick={() => decide('delayed')} />
@@ -132,10 +132,10 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
 
 function DecisionButton({ label, colour, disabled, onClick }: { label: string; colour: string; disabled: boolean; onClick: () => void }) {
   return (
-    <button
+    <button className="flex-1 ff-heading fw-600 fs-14 pointer"
       disabled={disabled}
       onClick={onClick}
-      style={{ flex: 1, height: 56, borderRadius: 14, background: 'transparent', border: `1.5px solid ${colour}`, color: colour, fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+      style={{ height: 56, borderRadius: 14, background: 'transparent', border: `1.5px solid ${colour}`, color: colour }}
     >
       {label}
     </button>

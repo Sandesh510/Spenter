@@ -6,6 +6,7 @@ import { applyFontSize } from './lib/prefs';
 applyFontSize();
 import './styles/tokens.css';
 import './styles/components.css';
+import './styles/utilities.css';
 import './styles/app.css';
 
 if (import.meta.env.DEV && new URLSearchParams(location.search).has('mock')) {

@@ -83,40 +83,40 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
         <span style={{ width: 36 }} />
       </div>
 
-      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
+      {error && <p className="c-danger fs-13" role="alert">{error}</p>}
 
-      <Card as="section" style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Yet to get back</div>
-        <div className="heading num" style={{ fontSize: 42, lineHeight: 1.05, marginTop: 4 }}>{formatINR(totalOwed)}</div>
-        <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 4 }}>{outstanding.length} {outstanding.length === 1 ? 'person owes' : 'people owe'} you</div>
+      <Card className="mt-8" as="section">
+        <div className="fs-13 c-sec">Yet to get back</div>
+        <div className="heading num fs-44 mt-4" style={{ lineHeight: 1.05 }}>{formatINR(totalOwed)}</div>
+        <div className="fs-13 c-sec mt-4">{outstanding.length} {outstanding.length === 1 ? 'person owes' : 'people owe'} you</div>
       </Card>
 
       <div className="kicker" style={{ margin: '22px 2px 10px' }}>Outstanding</div>
-      {outstanding.length === 0 && <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nothing outstanding.</p>}
-      <div style={{ display: 'grid', gap: 10 }}>
+      {outstanding.length === 0 && <p className="fs-13 c-sec">Nothing outstanding.</p>}
+      <div className="grid gap-10">
         {outstanding.map(p => (
           <Card key={p.name} variant="flush">
             <button onClick={() => setOpen(open === p.name ? null : p.name)} style={rowBtn}>
               <span style={avatar}>{p.name.slice(0, 1).toUpperCase()}</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 14 }}>{p.name}</span>
-                <span style={{ display: 'block', fontSize: 11.5, color: 'var(--color-text-secondary)' }}>{p.open.length} {p.open.length === 1 ? 'loan' : 'loans'} · since {p.since}</span>
+              <span className="flex-1">
+                <span className="fs-14" style={{ display: 'block' }}>{p.name}</span>
+                <span className="fs-12 c-sec" style={{ display: 'block' }}>{p.open.length} {p.open.length === 1 ? 'loan' : 'loans'} · since {p.since}</span>
               </span>
-              <span className="num" style={{ fontSize: 14.5 }}>{formatINR(p.owed)}</span>
+              <span className="num fs-15">{formatINR(p.owed)}</span>
               <Icon name={open === p.name ? 'chevron-down' : 'chevron-right'} size={15} />
             </button>
             {open === p.name && (
-              <div style={{ borderTop: '1px solid var(--color-border)', padding: '6px 14px 14px', display: 'grid', gap: 8 }}>
+              <div className="grid gap-8" style={{ borderTop: '1px solid var(--color-border)', padding: '6px 14px 14px' }}>
                 {p.open.map(l => (
-                  <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="num" style={{ fontSize: 13.5 }}>{formatINR(l.amount_paise)}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)' }}>{l.note ?? 'No note'} · {l.lent_on}</div>
+                  <div className="flex ai-c gap-10" key={l.id} >
+                    <div className="flex-1 min-0">
+                      <div className="num fs-14">{formatINR(l.amount_paise)}</div>
+                      <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}</div>
                     </div>
                     <button className="link" disabled={busy} onClick={() => run({ action: 'settle', id: l.id }, `${p.name} returned ${formatINR(l.amount_paise)}`)}>Got back</button>
                   </div>
                 ))}
-                <div style={{ display: 'flex', gap: 14, marginTop: 4 }}>
+                <div className="flex gap-14 mt-4">
                   <button className="link" disabled={busy} onClick={() => run({ action: 'settle_person', name: p.name }, `${p.name} has returned everything`)}>All returned</button>
                   <button className="link" onClick={() => { setAdding(true); setName(p.name); }}>Lend more</button>
                 </div>
@@ -133,27 +133,27 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
             {settled.map(p => (
               <div key={p.name} className="row" style={{ padding: '12px 14px', margin: 0 }}>
                 <span style={{ ...avatar, opacity: 0.6 }}>{p.name.slice(0, 1).toUpperCase()}</span>
-                <span style={{ flex: 1, fontSize: 13.5, color: 'var(--color-text-secondary)' }}>{p.name}</span>
-                <span className="num" style={{ fontSize: 13, color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
+                <span className="flex-1 fs-14 c-sec">{p.name}</span>
+                <span className="num fs-13 c-mut" style={{ textDecoration: 'line-through' }}>
                   {formatINR(loans.filter(l => l.person_name === p.name).reduce((s, l) => s + l.amount_paise, 0))}
                 </span>
-                <span style={{ color: 'var(--color-success)' }}><Icon name="check" size={16} /></span>
+                <span className="c-success"><Icon name="check" size={16} /></span>
               </div>
             ))}
           </Card>
         </>
       )}
 
-      <div style={{ position: 'sticky', bottom: 16, marginTop: 20 }}>
+      <div className="mt-20" style={{ position: 'sticky', bottom: 16 }}>
         <Button block size="lg" onClick={() => setAdding(a => !a)}>
           <Icon name="plus" size={17} /> Record money lent
         </Button>
       </div>
 
       {adding && (
-        <div role="dialog" aria-modal="true" aria-label="Record money lent" style={{ position: 'absolute', inset: 0, zIndex: 30, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <div className="abs inset-0 flex" role="dialog" aria-modal="true" aria-label="Record money lent" style={{ zIndex: 30, flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setAdding(false)} style={{ position: 'absolute', inset: 0, background: 'var(--color-scrim)' }} />
-          <form onSubmit={record} className="sheet pop" style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', display: 'grid', gap: 10, borderTop: '1px solid var(--color-border)' }}>
+          <form onSubmit={record} className="sheet pop rel grid gap-10" style={{ background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', borderTop: '1px solid var(--color-border)' }}>
           <div className="kicker">Name</div>
           <div className="chiprow" style={{ margin: 0, padding: 0 }}>
             {previousNames.map(n => (
@@ -163,7 +163,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
           <Input  placeholder="Person" value={name} onChange={e => setName(e.target.value)} required maxLength={60} />
           <Input numeric inputMode="decimal" placeholder="Amount, e.g. 1500" value={amount} onChange={e => setAmount(e.target.value)} required />
           <Input  placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
-          {err && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>{err}</p>}
+          {err && <p className="c-danger fs-13" role="alert" style={{ margin: 0 }}>{err}</p>}
           <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
           </form>
         </div>

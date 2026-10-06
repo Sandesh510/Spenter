@@ -87,9 +87,9 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
         <button className="iconbtn" onClick={back} aria-label={step === 'amount' ? 'Close' : 'Back'}>
           <Icon name={step === 'amount' ? 'x' : 'chevron-left'} size={18} />
         </button>
-        <div style={{ textAlign: 'center' }}>
+        <div className="ta-c">
           <div className="topbar__title">{TITLES[step]}</div>
-          <div className="kicker kicker--amber" style={{ fontSize: 10 }}>Step {STEP_NUMBER[step]} of 4</div>
+          <div className="kicker kicker--amber fs-11">Step {STEP_NUMBER[step]} of 4</div>
         </div>
         <button className="iconbtn" onClick={() => go('log')} aria-label="Close" style={{ visibility: step === 'amount' ? 'hidden' : 'visible' }}>
           <Icon name="x" size={18} />
@@ -102,7 +102,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
       {step === 'amount' && (
         <>
-          <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary)', margin: '4px 0 12px' }}>
+          <p className="ta-c fs-13 c-sec" style={{ margin: '4px 0 12px' }}>
             {amountPaise > 0 ? 'Pause a second — we’ll move on automatically.' : 'Type the amount'}
           </p>
           <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
@@ -125,12 +125,12 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           {groups.map(g => {
             const items = home.data?.categories.filter(c => c.bucket === g.bucket) ?? [];
             return (
-              <div key={g.bucket} style={{ marginTop: 14 }}>
+              <div className="mt-14" key={g.bucket} >
                 <div className="kicker" style={{ color: g.bucket === 'need' ? 'var(--color-need)' : g.bucket === 'want' ? 'var(--color-accent)' : 'var(--color-success)', marginBottom: 8 }}>{g.label}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="flex gap-8" style={{ flexWrap: 'wrap' }}>
                   {items.map(c => (
                     <button key={c.id} className={`chip ${categoryId === c.id ? 'chip--on' : ''}`} onClick={() => setCategoryId(c.id)}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <span className="ai-c gap-6" style={{ display: 'inline-flex' }}>
                         <Icon name={iconFor(c.name)} size={13} />
                         {c.name}
                       </span>
@@ -141,7 +141,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
             );
           })}
           {category && home.data && (
-            <div style={{ marginTop: 16 }}>
+            <div className="mt-16">
               <Verdict
                 amountPaise={amountPaise}
                 category={{ name: category.name, bucket: category.bucket, plannedPaise: category.plannedPaise, spentPaise: category.spentPaise }}
@@ -157,10 +157,10 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
       {step === 'desc' && (
         <>
-          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+          <div className="ta-c fs-12 c-sec mt-6">
             {category && <span className="chip chip--on" style={{ cursor: 'default' }}>{category.name}</span>}
           </div>
-          <div className="kicker" style={{ marginTop: 20 }}>What was it for?</div>
+          <div className="kicker mt-20">What was it for?</div>
           <Input
             
             autoFocus
@@ -176,14 +176,14 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
       {step === 'account' && (
         <>
-          <div style={{ textAlign: 'center', marginTop: 6 }}>
-            <div className="num heading" style={{ fontSize: 34 }}>{formatINR(amountPaise)}</div>
-            <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 4 }}>
+          <div className="ta-c mt-6">
+            <div className="num heading fs-34">{formatINR(amountPaise)}</div>
+            <div className="fs-13 c-sec mt-4">
               {category?.name} · {desc.trim() || 'No note'} · Today
             </div>
           </div>
-          <div className="kicker" style={{ marginTop: 22 }}>Paid from</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+          <div className="kicker mt-22">Paid from</div>
+          <div className="grid gap-10 mt-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
             {(accounts.data?.items ?? []).map(a => (
               <Card
                 as="button"
@@ -193,8 +193,8 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
                 style={{ padding: 14, textAlign: 'left', cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit' }}
               >
                 <Icon name={a.icon ?? 'wallet'} size={18} />
-                <div style={{ fontSize: 13.5, marginTop: 8 }}>{a.nickname}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>{a.bank ?? a.kind ?? ''}</div>
+                <div className="fs-14 mt-8">{a.nickname}</div>
+                <div className="fs-11 c-mut mt-2">{a.bank ?? a.kind ?? ''}</div>
               </Card>
             ))}
             {(accounts.data?.items.length ?? 0) < 6 && (
@@ -206,7 +206,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
               </button>
             )}
           </div>
-          {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 12 }}>{error}</p>}
+          {error && <p className="c-danger fs-13 mt-12" role="alert">{error}</p>}
         </>
       )}
     </div>
@@ -216,9 +216,9 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 /** Amount readout, as in the mockups: ₹ glyph, figure, and a blinking caret while typing. */
 function AmountDisplay({ value, big }: { value: string; big: boolean }) {
   return (
-    <div className="num" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: big ? '18px 0 12px' : '14px 0 10px' }}>
-      <span className="heading" style={{ fontSize: big ? 34 : 24, color: 'var(--color-text-secondary)' }}>₹</span>
-      <span className="heading" style={{ fontSize: big ? 66 : 42, lineHeight: 1, fontWeight: 600 }}>{value ? Number(value).toLocaleString('en-IN') : '0'}</span>
+    <div className="num flex ai-c jc-c gap-2" style={{ padding: big ? '18px 0 12px' : '14px 0 10px' }}>
+      <span className="heading c-sec" style={{ fontSize: big ? 34 : 24 }}>₹</span>
+      <span className="heading fw-600" style={{ fontSize: big ? 66 : 42, lineHeight: 1 }}>{value ? Number(value).toLocaleString('en-IN') : '0'}</span>
       {big && <span className="caret" style={{ height: 52 }} />}
     </div>
   );

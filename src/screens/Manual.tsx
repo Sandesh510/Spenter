@@ -93,7 +93,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
         <span style={{ width: 36 }} />
       </div>
 
-      <div className="chiprow" style={{ marginTop: 8 }}>
+      <div className="chiprow mt-8">
         {KINDS.map(k => (
           <button key={k.id} className={`chip ${kind === k.id ? 'chip--on' : ''}`} onClick={() => setKind(k.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <Icon name={k.icon} size={13} />
@@ -102,16 +102,16 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--color-border)', borderRadius: 12, padding: '11px 13px', background: 'var(--color-surface)', marginTop: 12 }}>
-        <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
-        <Input  style={{ fontSize: 14, borderBottom: 'none', padding: 0 }} placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} aria-label="Description" />
+      <div className="flex ai-c gap-10 mt-12" style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: '11px 13px', background: 'var(--color-surface)' }}>
+        <span className="c-mut"><Icon name="pencil-line" size={15} /></span>
+        <Input className="fs-14"  style={{ borderBottom: 'none', padding: 0 }} placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} aria-label="Description" />
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+      <div className="flex gap-10 mt-10">
         <Picker label={isTransfer ? 'From' : 'Account'} icon="wallet" value={accountName(from)} options={accountList} selected={from} onPick={setAccountId} />
         {isTransfer ? (
           external ? (
-            <div style={{ ...pickerStyle, cursor: 'default', color: 'var(--color-text-secondary)', fontSize: 13 }}>
+            <div className="c-sec fs-13" style={{ ...pickerStyle, cursor: 'default' }}>
               <Icon name="arrow-right" size={15} /> Outside
             </div>
           ) : (
@@ -119,7 +119,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
           )
         ) : (
           <label style={pickerStyle}>
-            <span style={{ color: 'var(--color-text-muted)' }}><Icon name="calendar" size={14} /></span>
+            <span className="c-mut"><Icon name="calendar" size={14} /></span>
             <input type="date" value={date} max={todayIST()} onChange={e => setDate(e.target.value)} aria-label="Date" style={{ background: 'transparent', border: 'none', color: 'var(--color-text-primary)', fontFamily: 'inherit', fontSize: 13, padding: 0, flex: 1, minWidth: 0 }} />
           </label>
         )}
@@ -136,16 +136,16 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
         </>
       )}
 
-      <div className="num" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '16px 0 12px' }}>
-        <span className="heading" style={{ fontSize: 24, color: 'var(--color-text-secondary)' }}>₹</span>
-        <span className="heading" style={{ fontSize: 42, lineHeight: 1, fontWeight: 600 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
+      <div className="num flex ai-c jc-c gap-2" style={{ padding: '16px 0 12px' }}>
+        <span className="heading fs-24 c-sec">₹</span>
+        <span className="heading fs-44 fw-600" style={{ lineHeight: 1 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
       </div>
 
       <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
 
-      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 10 }}>{error}</p>}
+      {error && <p className="c-danger fs-13 mt-10" role="alert">{error}</p>}
 
-      <Button size="lg" block onClick={save} disabled={saving} style={{ marginTop: 12 }}>
+      <Button className="mt-12" size="lg" block onClick={save} disabled={saving} >
         <Icon name="check" size={18} /> {saving ? 'Saving…' : saveLabel}
       </Button>
     </div>
@@ -157,9 +157,9 @@ const pickerStyle = { flex: 1, display: 'flex', alignItems: 'center', gap: 8, bo
 /** Account picker: a native select styled as the mockup's bordered card. */
 function Picker({ label, icon, value, options, selected, onPick }: { label: string; icon: string; value: string; options: Account[]; selected: string | null; onPick: (id: string) => void }) {
   return (
-    <label style={{ ...pickerStyle, position: 'relative' }}>
-      <span style={{ color: 'var(--color-text-muted)' }}><Icon name={icon} size={15} /></span>
-      <span style={{ fontSize: 13, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+    <label className="rel" style={{ ...pickerStyle }}>
+      <span className="c-mut"><Icon name={icon} size={15} /></span>
+      <span className="fs-13 flex-1 min-0 ovh ellipsis nowrap">{value}</span>
       <Icon name="chevron-down" size={14} />
       <select aria-label={label} value={selected ?? ''} onChange={e => onPick(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}>
         {options.map(a => (

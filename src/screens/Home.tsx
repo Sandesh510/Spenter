@@ -12,18 +12,18 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
   const month = currentMonth();
   const { data, error } = useApi<HomeData>(`home?month=${month}`, token);
 
-  if (error) return <div className="scroll" role="alert" style={{ color: 'var(--color-danger)' }}>{error}</div>;
-  if (!data) return <div className="scroll" style={{ color: 'var(--color-text-secondary)' }}>Loading…</div>;
+  if (error) return <div className="scroll c-danger" role="alert">{error}</div>;
+  if (!data) return <div className="scroll c-sec">Loading…</div>;
 
   const spent = data.spendPaise + data.savingsPaise;
   const progress = data.openingPaise > 0 ? Math.min(1, spent / data.openingPaise) : 0;
 
   return (
     <div className="scroll">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '6px 0 18px' }}>
+      <div className="flex ai-c jc-sb" style={{ margin: '6px 0 18px' }}>
         <div>
           <div className="kicker kicker--amber" style={{ letterSpacing: '.14em' }}>This month</div>
-          <h1 className="heading" style={{ fontSize: 22, lineHeight: 1.1, marginTop: 2 }}>{monthTitle(month)}</h1>
+          <h1 className="heading fs-22 mt-2" style={{ lineHeight: 1.1 }}>{monthTitle(month)}</h1>
         </div>
         <button className="iconbtn" onClick={() => go('settings')} aria-label="Settings">
           <Icon name="user" size={19} />
@@ -31,19 +31,19 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
       </div>
 
       <Card as="section">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Balance left to spend</span>
-          <span style={{ color: 'var(--color-text-muted)' }}><Icon name="info" size={15} /></span>
+        <div className="flex ai-c jc-sb">
+          <span className="fs-12 c-sec">Balance left to spend</span>
+          <span className="c-mut"><Icon name="info" size={15} /></span>
         </div>
-        <div className="heading num" style={{ fontSize: 44, lineHeight: 1, margin: '8px 0 14px', color: data.spendableBalancePaise < 0 ? 'var(--color-danger)' : 'var(--color-text-primary)' }}>
+        <div className="heading num fs-44" style={{ lineHeight: 1, margin: '8px 0 14px', color: data.spendableBalancePaise < 0 ? 'var(--color-danger)' : 'var(--color-text-primary)' }}>
           {formatINR(data.spendableBalancePaise)}
         </div>
         <div className="track">
           <div className="fill" style={{ width: `${progress * 100}%` }} />
         </div>
-        <div className="num" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 9, fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          <span>Started <span style={{ color: 'var(--color-text-primary)' }}>{formatINR(data.openingPaise)}</span></span>
-          <span>Spent <span style={{ color: 'var(--color-text-primary)' }}>{formatINR(spent)}</span></span>
+        <div className="num flex jc-sb fs-12 c-sec" style={{ marginTop: 9 }}>
+          <span>Started <span className="c-text">{formatINR(data.openingPaise)}</span></span>
+          <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
         </div>
       </Card>
 
@@ -52,31 +52,31 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
         onClick={() => go('lent')}
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 12, padding: 14, cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit', textAlign: 'left' }}
       >
-        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Money lent · yet to get back</span>
-        <span className="num" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span className="fs-13 c-sec">Money lent · yet to get back</span>
+        <span className="num flex ai-c gap-6">
           <LentTotal token={token} />
           <Icon name="chevron-right" size={16} />
         </span>
       </Card>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '24px 2px 14px' }}>
+      <div className="flex ai-c jc-sb" style={{ margin: '24px 2px 14px' }}>
         <span className="kicker">Budgets</span>
         <span className="kicker num">day {dayOfMonth()} / {daysInMonth(month)}</span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div className="flex gap-18" style={{ flexDirection: 'column' }}>
         {data.buckets.map(b => (
           <BudgetBar key={b.bucket} b={b} />
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '26px 2px 12px' }}>
+      <div className="flex ai-c jc-sb" style={{ margin: '26px 2px 12px' }}>
         <span className="kicker">Recent asks</span>
         <button className="link" onClick={() => go('log')} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           See all <Icon name="chevron-right" size={14} />
         </button>
       </div>
       {data.asks.length === 0 ? (
-        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>No decisions yet. Tap the centre button to check a purchase.</p>
+        <p className="fs-13 c-sec" style={{ margin: 0 }}>No decisions yet. Tap the centre button to check a purchase.</p>
       ) : (
         <div>{data.asks.map(a => <AskRow key={a.id} a={a} />)}</div>
       )}
@@ -111,17 +111,17 @@ function BudgetBar({ b }: { b: HomeBucket }) {
   const pct = Math.min(1, ratio);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: 13.5, color: 'var(--color-text-primary)' }}>{BUCKET_LABEL[b.bucket as Bucket]}</span>
-        <span className="num" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          <span style={{ color: 'var(--color-text-primary)' }}>{formatINR(b.spentPaise)}</span> / {b.hasBudget ? formatINR(b.plannedPaise) : '—'}
+    <div className="flex" style={{ flexDirection: 'column', gap: 7 }}>
+      <div className="flex jc-sb ai-base">
+        <span className="fs-14 c-text">{BUCKET_LABEL[b.bucket as Bucket]}</span>
+        <span className="num fs-12 c-sec">
+          <span className="c-text">{formatINR(b.spentPaise)}</span> / {b.hasBudget ? formatINR(b.plannedPaise) : '—'}
         </span>
       </div>
       <div className="track track--thin">
         <div style={{ height: '100%', width: `${pct * 100}%`, background: color, borderRadius: 6 }} />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-secondary)' }}>
+      <div className="flex jc-sb fs-11 c-sec">
         <span>{sub}</span>
         {note && <span className="num" style={{ color: noteColor }}>{note}</span>}
       </div>
@@ -138,14 +138,14 @@ function AskRow({ a }: { a: AskItem }) {
 
   return (
     <div className="row" style={{ padding: '11px 4px' }}>
-      <div style={{ width: 34, height: 34, flex: 'none', borderRadius: '50%', display: 'grid', placeItems: 'center', background: v.bg, color: v.color }}>
+      <div className="flex-none grid" style={{ width: 34, height: 34, borderRadius: '50%', placeItems: 'center', background: v.bg, color: v.color }}>
         <Icon name={v.icon} size={17} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.item}</div>
-        <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)', marginTop: 1 }}>{v.label} · {a.categoryName ?? 'No category'}</div>
+      <div className="flex-1 min-0">
+        <div className="fs-14 nowrap ovh ellipsis">{a.item}</div>
+        <div className="fs-12 c-sec" style={{ marginTop: 1 }}>{v.label} · {a.categoryName ?? 'No category'}</div>
       </div>
-      <div className="num" style={{ fontSize: 14 }}>{formatINR(a.amountPaise)}</div>
+      <div className="num fs-14">{formatINR(a.amountPaise)}</div>
     </div>
   );
 }

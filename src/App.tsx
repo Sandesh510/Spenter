@@ -150,7 +150,7 @@ export function App() {
     setUnlocked(false);
   }
 
-  if (checking) return <Frame><p style={{ padding: 24, color: 'var(--color-text-secondary)' }}>Loading…</p></Frame>;
+  if (checking) return <Frame><p className="c-sec" style={{ padding: 24 }}>Loading…</p></Frame>;
   if (!user || !token) return <SignIn onSignedIn={signedIn} />;
   if (profile?.lockEnabled && !unlocked) {
     return (
@@ -229,15 +229,15 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
 
   return (
     <div className="phone" style={{ padding: '56px 24px 24px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--color-accent)', display: 'grid', placeItems: 'center', color: 'var(--color-accent-text)', margin: '0 auto' }}>
+      <div className="ta-c" style={{ marginBottom: 28 }}>
+        <div className="grid c-accent" style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--color-accent)', placeItems: 'center', margin: '0 auto' }}>
           <Icon name="wallet" size={26} />
         </div>
-        <div className="heading" style={{ fontSize: 23, marginTop: 14 }}>SpendCheck</div>
-        <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>{mode === 'login' ? 'Sign in to continue' : 'Create your account'}</div>
+        <div className="heading fs-24 mt-14">SpendCheck</div>
+        <div className="fs-13 c-sec mt-4">{mode === 'login' ? 'Sign in to continue' : 'Create your account'}</div>
       </div>
 
-      <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
+      <form className="grid gap-12" onSubmit={submit} >
         <Input  type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
         <Input
           
@@ -249,13 +249,13 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
           minLength={mode === 'signup' ? 8 : undefined}
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
         />
-        <Button type="submit" disabled={busy} style={{ marginTop: 6 }}>
+        <Button className="mt-6" type="submit" disabled={busy} >
           {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
         </Button>
       </form>
 
-      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
-      {notice && <p style={{ color: 'var(--color-success)', fontSize: 13 }}>{notice}</p>}
+      {error && <p className="c-danger fs-13" role="alert">{error}</p>}
+      {notice && <p className="c-success fs-13">{notice}</p>}
 
       <button
         className="link"

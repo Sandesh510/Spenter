@@ -75,8 +75,8 @@ export function Settings({
 
   return (
     <div className="scroll">
-      <h1 className="heading" style={{ fontSize: 24, margin: '8px 0 0' }}>Settings</h1>
-      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
+      <h1 className="heading fs-24" style={{ margin: '8px 0 0' }}>Settings</h1>
+      {error && <p className="c-danger fs-13" role="alert">{error}</p>}
 
       <SectionTitle>Budgets &amp; categories</SectionTitle>
       <Group>
@@ -86,10 +86,10 @@ export function Settings({
               onClick={() => { setEditing(c.id); setDraft(c.plannedPaise ? String(c.plannedPaise / 100) : ''); }}
               style={rowButton}
             >
-              <span style={{ width: 9, height: 9, borderRadius: 3, flex: 'none', background: c.bucket === 'need' ? 'var(--color-need)' : c.bucket === 'want' ? 'var(--color-accent)' : 'var(--color-success)' }} />
-              <span style={{ flex: 1, fontSize: 13.5 }}>{c.name}</span>
-              <span style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{BUCKET_LABEL[c.bucket]}</span>
-              <span className="num" style={{ fontSize: 13, minWidth: 64, textAlign: 'right' }}>{c.plannedPaise ? formatINR(c.plannedPaise) : '—'}</span>
+              <span className="flex-none" style={{ width: 9, height: 9, borderRadius: 3, background: c.bucket === 'need' ? 'var(--color-need)' : c.bucket === 'want' ? 'var(--color-accent)' : 'var(--color-success)' }} />
+              <span className="flex-1 fs-14">{c.name}</span>
+              <span className="fs-11 c-mut" style={{ textTransform: 'uppercase', letterSpacing: '.06em' }}>{BUCKET_LABEL[c.bucket]}</span>
+              <span className="num fs-13 ta-r" style={{ minWidth: 64 }}>{c.plannedPaise ? formatINR(c.plannedPaise) : '—'}</span>
             </button>
             {editing === c.id && (
               <form
@@ -124,33 +124,33 @@ export function Settings({
       <Group>
         {profile.lockEnabled && (
           <button onClick={onLockNow} style={{ ...rowButton, borderBottom: '1px solid var(--color-border)' }}>
-            <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="lock-keyhole" size={17} /></span>
-            <span style={{ flex: 1, fontSize: 13.5 }}>Lock now</span>
-            <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>passcode</span>
+            <span className="c-sec"><Icon name="lock-keyhole" size={17} /></span>
+            <span className="flex-1 fs-14">Lock now</span>
+            <span className="fs-12 c-mut">passcode</span>
           </button>
         )}
         <PasscodeRow token={token} profile={profile} onProfile={onProfile} onToast={onToast} onError={setError} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="scan-face" size={17} /></span>
-          <span style={{ flex: 1, fontSize: 13.5 }}>Biometric unlock</span>
-          <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Not on web</span>
+        <div className="flex ai-c gap-12" style={{ padding: '13px 14px' }}>
+          <span className="c-sec"><Icon name="scan-face" size={17} /></span>
+          <span className="flex-1 fs-14">Biometric unlock</span>
+          <span className="fs-11 c-mut">Not on web</span>
         </div>
       </Group>
 
       <SectionTitle>Account</SectionTitle>
       <Group>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
-          <span style={{ flex: 1, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email ?? 'Signed in'}</span>
+        <div className="flex ai-c gap-12" style={{ padding: '13px 14px' }}>
+          <span className="flex-1 fs-14 ovh ellipsis">{email ?? 'Signed in'}</span>
           <button className="link" onClick={onSignOut} style={{ padding: 0 }}>Sign out</button>
         </div>
       </Group>
 
       <SectionTitle>Appearance</SectionTitle>
       <Group>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="type" size={17} /></span>
-          <span style={{ flex: 1, fontSize: 13.5 }}>Text size</span>
-          <span style={{ display: 'inline-flex', border: '1px solid var(--color-border)', borderRadius: 9, overflow: 'hidden' }}>
+        <div className="flex ai-c gap-12" style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+          <span className="c-sec"><Icon name="type" size={17} /></span>
+          <span className="flex-1 fs-14">Text size</span>
+          <span className="ovh" style={{ display: 'inline-flex', border: '1px solid var(--color-border)', borderRadius: 9 }}>
             {(['low', 'medium', 'high'] as const).map(f => (
               <button
                 key={f}
@@ -163,21 +163,21 @@ export function Settings({
             ))}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="vibrate" size={17} /></span>
-          <span style={{ flex: 1, fontSize: 13.5 }}>Haptic feedback</span>
+        <div className="flex ai-c gap-12" style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+          <span className="c-sec"><Icon name="vibrate" size={17} /></span>
+          <span className="flex-1 fs-14">Haptic feedback</span>
           <button
             onClick={() => { const on = !haptics; setHaptics(on); setHapticsOn(on); if (on) haptic('tap'); }}
             aria-pressed={haptics}
             style={{ width: 42, height: 24, borderRadius: 14, border: 'none', cursor: 'pointer', background: haptics ? 'var(--color-accent)' : 'var(--color-surface-muted)', position: 'relative', padding: 0 }}
           >
-            <span style={{ position: 'absolute', top: 2, left: haptics ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: haptics ? 'var(--color-on-accent)' : 'var(--color-text-secondary)', transition: 'left .2s' }} />
+            <span className="abs" style={{ top: 2, left: haptics ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: haptics ? 'var(--color-on-accent)' : 'var(--color-text-secondary)', transition: 'left .2s' }} />
           </button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="moon" size={17} /></span>
-          <span style={{ flex: 1, fontSize: 13.5 }}>Theme</span>
-          <span style={{ display: 'inline-flex', border: '1px solid var(--color-border)', borderRadius: 9, overflow: 'hidden' }}>
+        <div className="flex ai-c gap-12" style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+          <span className="c-sec"><Icon name="moon" size={17} /></span>
+          <span className="flex-1 fs-14">Theme</span>
+          <span className="ovh" style={{ display: 'inline-flex', border: '1px solid var(--color-border)', borderRadius: 9 }}>
             {(['dark', 'light'] as const).map(t => (
               <button
                 key={t}
@@ -190,10 +190,10 @@ export function Settings({
             ))}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
-          <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="indian-rupee" size={17} /></span>
-          <span style={{ flex: 1, fontSize: 13.5 }}>Currency</span>
-          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>₹ INR</span>
+        <div className="flex ai-c gap-12" style={{ padding: '13px 14px' }}>
+          <span className="c-sec"><Icon name="indian-rupee" size={17} /></span>
+          <span className="flex-1 fs-14">Currency</span>
+          <span className="fs-13 c-sec">₹ INR</span>
         </div>
       </Group>
     </div>
@@ -202,7 +202,7 @@ export function Settings({
 
 function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '22px 2px 10px' }}>
+    <div className="flex ai-c jc-sb" style={{ margin: '22px 2px 10px' }}>
       <span className="kicker">{children}</span>
       {action}
     </div>
@@ -239,11 +239,11 @@ function StartingBalance({ token, month, onSaved }: { token: string; month: stri
 
   return (
     <Group>
-      <form onSubmit={save} style={{ display: 'flex', gap: 8, padding: 12 }}>
+      <form className="flex gap-8" onSubmit={save} style={{ padding: 12 }}>
         <Input numeric inputMode="decimal" placeholder="Amount for this month, e.g. 92400" value={amount} onChange={e => setAmount(e.target.value)} required style={{ fontSize: 15 }} aria-label="Starting balance" />
         <Button type="submit" disabled={busy} size="sm">{busy ? '…' : 'Save'}</Button>
       </form>
-      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 12.5, margin: '0 14px 12px' }}>{error}</p>}
+      {error && <p className="c-danger fs-13" role="alert" style={{ margin: '0 14px 12px' }}>{error}</p>}
     </Group>
   );
 }
@@ -280,23 +280,23 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
   return (
     <div style={{ borderBottom: '1px solid var(--color-border)' }}>
       <button onClick={() => setEditing(e => !e)} style={rowButton}>
-        <span style={{ width: 34, height: 34, borderRadius: 9, flex: 'none', display: 'grid', placeItems: 'center', background: 'var(--color-surface-muted)', color: 'var(--color-text-secondary)' }}>
+        <span className="flex-none grid c-sec" style={{ width: 34, height: 34, borderRadius: 9, placeItems: 'center', background: 'var(--color-surface-muted)' }}>
           <Icon name={a.icon ?? 'wallet'} size={16} />
         </span>
-        <span style={{ flex: 1 }}>
-          <span style={{ display: 'block', fontSize: 13.5 }}>{a.nickname}</span>
-          {(a.bank || a.kind) && <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-muted)' }}>{[a.bank, a.kind].filter(Boolean).join(' · ')}</span>}
+        <span className="flex-1">
+          <span className="fs-14" style={{ display: 'block' }}>{a.nickname}</span>
+          {(a.bank || a.kind) && <span className="fs-11 c-mut" style={{ display: 'block' }}>{[a.bank, a.kind].filter(Boolean).join(' · ')}</span>}
         </span>
-        <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
+        <span className="c-mut"><Icon name="pencil-line" size={15} /></span>
       </button>
       {editing && (
         <>
-          <form onSubmit={rename} style={{ display: 'flex', gap: 8, padding: '0 14px 12px' }}>
+          <form className="flex gap-8" onSubmit={rename} style={{ padding: '0 14px 12px' }}>
             <Input  value={name} onChange={e => setName(e.target.value)} maxLength={40} style={{ fontSize: 15 }} aria-label="Account name" />
             <Button type="submit" size="sm">Save</Button>
           </form>
           <div style={{ padding: '0 14px 12px' }}>
-            <button className="link" onClick={remove} style={{ padding: 0, color: 'var(--color-danger)', fontSize: 12.5 }}>Delete account</button>
+            <button className="link c-danger fs-13" onClick={remove} style={{ padding: 0 }}>Delete account</button>
           </div>
         </>
       )}
@@ -309,7 +309,7 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
   const [nickname, setNickname] = useState('');
   const [bank, setBank] = useState('');
 
-  if (count >= 6) return <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--color-text-muted)' }}>Up to 6 accounts</div>;
+  if (count >= 6) return <div className="fs-12 c-mut" style={{ padding: '12px 14px' }}>Up to 6 accounts</div>;
   if (!open) return (
     <button onClick={() => setOpen(true)} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 12.5, justifyContent: 'center' }}>+ Add account</button>
   );
@@ -329,7 +329,7 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
   }
 
   return (
-    <form onSubmit={add} style={{ display: 'grid', gap: 8, padding: 12 }}>
+    <form className="grid gap-8" onSubmit={add} style={{ padding: 12 }}>
       <Input  placeholder="Nickname, e.g. HDFC Salary" value={nickname} onChange={e => setNickname(e.target.value)} required maxLength={40} style={{ fontSize: 15 }} />
       <Input  placeholder="Bank (optional)" value={bank} onChange={e => setBank(e.target.value)} maxLength={60} style={{ fontSize: 15 }} />
       <Button type="submit">Add account</Button>
@@ -372,24 +372,24 @@ function PasscodeRow({ token, profile, onProfile, onToast, onError }: { token: s
 
   return (
     <div style={{ borderBottom: '1px solid var(--color-border)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
-        <span style={{ color: 'var(--color-text-secondary)' }}><Icon name="lock-keyhole" size={17} /></span>
-        <span style={{ flex: 1, fontSize: 13.5 }}>App passcode</span>
+      <div className="flex ai-c gap-12" style={{ padding: '13px 14px' }}>
+        <span className="c-sec"><Icon name="lock-keyhole" size={17} /></span>
+        <span className="flex-1 fs-14">App passcode</span>
         <button className="link" onClick={() => setMode(mode === 'set' ? 'idle' : 'set')} style={{ padding: 0 }}>
           {profile.lockEnabled ? 'Change' : 'Set'}
         </button>
         {profile.lockEnabled && <button className="link" onClick={() => setMode(mode === 'off' ? 'idle' : 'off')} style={{ padding: 0, color: 'var(--color-text-secondary)' }}>Turn off</button>}
       </div>
       {mode === 'set' && (
-        <form onSubmit={setPasscode} style={{ display: 'grid', gap: 8, padding: '0 14px 12px' }}>
+        <form className="grid gap-8" onSubmit={setPasscode} style={{ padding: '0 14px 12px' }}>
           <Input numeric inputMode="numeric" maxLength={4} placeholder="New 4-digit passcode" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ''))} required style={{ fontSize: 15 }} />
           <Input numeric inputMode="numeric" maxLength={4} placeholder="Repeat passcode" value={confirm} onChange={e => setConfirm(e.target.value.replace(/\D/g, ''))} required style={{ fontSize: 15 }} />
           <Button type="submit">Save passcode</Button>
         </form>
       )}
       {mode === 'off' && (
-        <div style={{ display: 'flex', gap: 10, padding: '0 14px 12px', alignItems: 'center' }}>
-          <span style={{ flex: 1, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Turn off the passcode lock?</span>
+        <div className="flex gap-10 ai-c" style={{ padding: '0 14px 12px' }}>
+          <span className="flex-1 fs-13 c-sec">Turn off the passcode lock?</span>
           <Button variant="secondary" size="sm" onClick={turnOff}>Turn off</Button>
         </div>
       )}

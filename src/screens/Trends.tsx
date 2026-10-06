@@ -15,8 +15,8 @@ export function Trends({ token }: { token: string }) {
   const month = currentMonth();
   const { data, error } = useApi<HomeData>(`home?month=${month}`, token);
 
-  if (error) return <div className="scroll" role="alert" style={{ color: 'var(--color-danger)' }}>{error}</div>;
-  if (!data) return <div className="scroll" style={{ color: 'var(--color-text-secondary)' }}>Loading…</div>;
+  if (error) return <div className="scroll c-danger" role="alert">{error}</div>;
+  if (!data) return <div className="scroll c-sec">Loading…</div>;
 
   const bucketSpent = (b: Bucket) => data.buckets.find(x => x.bucket === b)?.spentPaise ?? 0;
   const total = (['need', 'want', 'save'] as Bucket[]).reduce((s, b) => s + bucketSpent(b), 0);
@@ -37,13 +37,13 @@ export function Trends({ token }: { token: string }) {
 
   return (
     <div className="scroll">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0 8px' }}>
-        <h1 className="heading" style={{ fontSize: 24 }}>{monthTitle(month).split(' ')[0]}</h1>
-        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>This month</span>
+      <div className="flex ai-c jc-sb" style={{ margin: '8px 0 8px' }}>
+        <h1 className="heading fs-24">{monthTitle(month).split(' ')[0]}</h1>
+        <span className="fs-12 c-sec">This month</span>
       </div>
 
-      <Card as="section" style={{ display: 'flex', alignItems: 'center', gap: 18, padding: 18 }}>
-        <div style={{ position: 'relative', width: 120, height: 120, flex: 'none' }}>
+      <Card className="flex ai-c gap-18" as="section" style={{ padding: 18 }}>
+        <div className="rel flex-none" style={{ width: 120, height: 120 }}>
           <div
             style={{
               width: 120,
@@ -54,46 +54,46 @@ export function Trends({ token }: { token: string }) {
                 : 'var(--color-surface-muted)',
             }}
           />
-          <div style={{ position: 'absolute', inset: 19, borderRadius: '50%', background: 'var(--color-surface)', display: 'grid', placeItems: 'center', textAlign: 'center' }}>
+          <div className="abs grid ta-c" style={{ inset: 19, borderRadius: '50%', background: 'var(--color-surface)', placeItems: 'center' }}>
             <div>
-              <div className="heading num" style={{ fontSize: 18, lineHeight: 1 }}>{formatK(total)}</div>
-              <div style={{ fontSize: 9.5, color: 'var(--color-text-secondary)', marginTop: 1 }}>spent</div>
+              <div className="heading num fs-18" style={{ lineHeight: 1 }}>{formatK(total)}</div>
+              <div className="fs-11 c-sec" style={{ marginTop: 1 }}>spent</div>
             </div>
           </div>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11 }}>
+        <div className="flex-1 flex" style={{ flexDirection: 'column', gap: 11 }}>
           {(['need', 'want', 'save'] as Bucket[]).map(b => (
-            <div key={b} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div className="flex ai-c" key={b} style={{ gap: 9 }}>
               <span style={{ width: 10, height: 10, borderRadius: 3, background: COLOUR[b] }} />
-              <span style={{ fontSize: 13, flex: 1 }}>{LABEL[b]}</span>
-              <span className="num" style={{ fontSize: 13 }}>{pct[b]}%</span>
-              <span className="num" style={{ fontSize: 10.5, color: Math.abs(pct[b] - TARGET[b]) <= 5 ? 'var(--color-success)' : 'var(--color-text-muted)', width: 34, textAlign: 'right' }}>/ {TARGET[b]}</span>
+              <span className="fs-13 flex-1">{LABEL[b]}</span>
+              <span className="num fs-13">{pct[b]}%</span>
+              <span className="num fs-11 ta-r" style={{ color: Math.abs(pct[b] - TARGET[b]) <= 5 ? 'var(--color-success)' : 'var(--color-text-muted)', width: 34 }}>/ {TARGET[b]}</span>
             </div>
           ))}
         </div>
       </Card>
-      <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--color-text-secondary)', margin: '9px 0 0' }}>{caption}</div>
+      <div className="ta-c fs-12 c-sec" style={{ margin: '9px 0 0' }}>{caption}</div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 2px 14px' }}>
+      <div className="flex jc-sb ai-c" style={{ margin: '24px 2px 14px' }}>
         <span className="kicker">Planned vs actual</span>
-        <span style={{ display: 'flex', gap: 10, fontSize: 11 }}>
-          <span style={{ color: 'var(--color-text-muted)' }}>▬ plan</span>
-          <span style={{ color: 'var(--color-text-primary)' }}>▬ spent</span>
+        <span className="flex gap-10 fs-11">
+          <span className="c-mut">▬ plan</span>
+          <span className="c-text">▬ spent</span>
         </span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-        {bars.length === 0 && <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>Set budgets in Settings to compare plan and spending.</p>}
+      <div className="flex" style={{ flexDirection: 'column', gap: 15 }}>
+        {bars.length === 0 && <p className="fs-13 c-sec" style={{ margin: 0 }}>Set budgets in Settings to compare plan and spending.</p>}
         {bars.map(c => <PlanBar key={c.id} c={c} max={maxValue} />)}
       </div>
 
       {patterns.length > 0 && (
         <>
           <div className="kicker" style={{ margin: '26px 2px 12px' }}>Patterns</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex gap-10" style={{ flexDirection: 'column' }}>
             {patterns.map((p, i) => (
-              <div key={i} style={{ display: 'flex', gap: 12, border: '1px solid var(--color-border)', borderLeft: `3px solid ${p.colour}`, borderRadius: 12, padding: '13px 14px', background: 'var(--color-surface)' }}>
+              <div className="flex gap-12" key={i} style={{ border: '1px solid var(--color-border)', borderLeft: `3px solid ${p.colour}`, borderRadius: 12, padding: '13px 14px', background: 'var(--color-surface)' }}>
                 <span style={{ color: p.colour, marginTop: 1 }}><Icon name={p.icon} size={18} /></span>
-                <div style={{ fontSize: 12.5, lineHeight: 1.5 }}>{p.text}</div>
+                <div className="fs-13" style={{ lineHeight: 1.5 }}>{p.text}</div>
               </div>
             ))}
           </div>
@@ -116,18 +116,18 @@ function PlanBar({ c, max }: { c: Category; max: number }) {
   const isSave = c.bucket === 'save';
   const colour = isSave ? 'var(--color-need)' : plan === 0 ? 'var(--color-text-muted)' : ratio > 1 ? 'var(--color-danger)' : ratio > 0.9 ? 'var(--color-accent)' : 'var(--color-success)';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="flex gap-6" style={{ flexDirection: 'column' }}>
+      <div className="flex jc-sb ai-base">
+        <span className="fs-13 flex ai-c gap-6">
           <Icon name={iconFor(c.name)} size={13} /> {c.name}
         </span>
-        <span className="num" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+        <span className="num fs-11 c-sec">
           <span style={{ color: colour }}>{formatINR(c.spentPaise)}</span> / {plan > 0 ? formatINR(plan) : 'no plan'}
         </span>
       </div>
-      <div style={{ position: 'relative', height: 14 }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, height: 5, borderRadius: 4, background: 'var(--color-plan-marker)', width: `${(plan / max) * 100}%` }} />
-        <div style={{ position: 'absolute', top: 8, left: 0, height: 6, borderRadius: 4, background: colour, width: `${Math.min(100, (c.spentPaise / max) * 100)}%` }} />
+      <div className="rel" style={{ height: 14 }}>
+        <div className="abs" style={{ top: 0, left: 0, height: 5, borderRadius: 4, background: 'var(--color-plan-marker)', width: `${(plan / max) * 100}%` }} />
+        <div className="abs" style={{ top: 8, left: 0, height: 6, borderRadius: 4, background: colour, width: `${Math.min(100, (c.spentPaise / max) * 100)}%` }} />
       </div>
     </div>
   );
