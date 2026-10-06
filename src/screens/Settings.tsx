@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
+import { getFontSize, getHaptics, setFontSize, setHaptics, type FontSize } from '../lib/prefs';
 import { BUCKET_LABEL } from '../lib/categories';
 import { currentMonth } from '../lib/dates';
 import { formatINR } from '../lib/money';
@@ -34,6 +36,8 @@ export function Settings({
   const home = useApi<HomeData>(`home?month=${month}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
   const [showAll, setShowAll] = useState(false);
+  const [font, setFont] = useState<FontSize>(getFontSize);
+  const [haptics, setHapticsOn] = useState(getHaptics);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +48,10 @@ export function Settings({
       await api('budgets', { token, body: { categoryId, month, amount: draft.trim() || '0' } });
       setEditing(null);
       home.reload();
+      haptic('success');
       onToast('Budget saved');
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
     }
   }
@@ -54,6 +60,7 @@ export function Settings({
     try {
       await api('profile', { method: 'PATCH', token, body: { theme } });
       document.documentElement.dataset.theme = theme;
+      haptic('tap');
       onProfile({ ...profile, theme });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not change theme');
@@ -138,6 +145,33 @@ export function Settings({
       <SectionTitle>Appearance</SectionTitle>
       <Group>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid var(--line)' }}>
+          <span style={{ color: 'var(--muted)' }}><Icon name="type" size={17} /></span>
+          <span style={{ flex: 1, fontSize: 13.5 }}>Text size</span>
+          <span style={{ display: 'inline-flex', border: '1px solid var(--line)', borderRadius: 9, overflow: 'hidden' }}>
+            {(['low', 'medium', 'high'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => { haptic('tap'); setFontSize(f); setFont(f); }}
+                aria-pressed={font === f}
+                style={{ padding: '5px 10px', fontSize: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit', background: font === f ? 'var(--amber)' : 'transparent', color: font === f ? 'var(--on-amber)' : 'var(--muted)', textTransform: 'capitalize' }}
+              >
+                {f}
+              </button>
+            ))}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid var(--line)' }}>
+          <span style={{ color: 'var(--muted)' }}><Icon name="vibrate" size={17} /></span>
+          <span style={{ flex: 1, fontSize: 13.5 }}>Haptic feedback</span>
+          <button
+            onClick={() => { const on = !haptics; setHaptics(on); setHapticsOn(on); if (on) haptic('tap'); }}
+            aria-pressed={haptics}
+            style={{ width: 42, height: 24, borderRadius: 14, border: 'none', cursor: 'pointer', background: haptics ? 'var(--amber)' : 'var(--surface2)', position: 'relative', padding: 0 }}
+          >
+            <span style={{ position: 'absolute', top: 2, left: haptics ? 20 : 2, width: 20, height: 20, borderRadius: '50%', background: haptics ? 'var(--on-amber)' : 'var(--muted)', transition: 'left .2s' }} />
+          </button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: '1px solid var(--line)' }}>
           <span style={{ color: 'var(--muted)' }}><Icon name="moon" size={17} /></span>
           <span style={{ flex: 1, fontSize: 13.5 }}>Theme</span>
           <span style={{ display: 'inline-flex', border: '1px solid var(--line)', borderRadius: 9, overflow: 'hidden' }}>
@@ -190,8 +224,10 @@ function StartingBalance({ token, month, onSaved }: { token: string; month: stri
     try {
       await api('month-opening', { token, body: { month, amount } });
       setAmount('');
+      haptic('success');
       onSaved();
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
     } finally {
       setBusy(false);
@@ -217,6 +253,7 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
     e.preventDefault();
     try {
       await api('accounts', { method: 'PATCH', token, body: { id: a.id, nickname: name } });
+      haptic('success');
       setEditing(false);
       onChanged();
     } catch (err) {
@@ -263,6 +300,7 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
       setNickname('');
       setBank('');
       setOpen(false);
+      haptic('success');
       onAdded();
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Could not add account');
@@ -292,6 +330,7 @@ function PasscodeRow({ token, profile, onProfile, onToast, onError }: { token: s
       setMode('idle');
       setPin('');
       setConfirm('');
+      haptic('success');
       onToast('Passcode set');
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Could not set passcode');
@@ -303,6 +342,7 @@ function PasscodeRow({ token, profile, onProfile, onToast, onError }: { token: s
       await api('profile', { method: 'PATCH', token, body: { clearPin: true } });
       onProfile({ ...profile, lockEnabled: false });
       setMode('idle');
+      haptic('warning');
       onToast('Passcode turned off');
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Could not turn off passcode');

@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import type { Loan } from '../lib/types';
@@ -51,9 +52,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
     setBusy(true);
     try {
       await api('lent', { token, body });
+      haptic('success');
       reload();
       onToast(done);
     } catch (e) {
+      haptic('error');
       setErr(e instanceof Error ? e.message : 'Could not save');
     } finally {
       setBusy(false);

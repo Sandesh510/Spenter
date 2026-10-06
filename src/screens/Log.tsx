@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
 import { BUCKET_TINT, iconFor } from '../lib/categories';
 import { currentMonth, dayLabel } from '../lib/dates';
 import { formatINR } from '../lib/money';
@@ -45,9 +46,11 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
     if (!window.confirm('Delete this transaction? It will be hidden from totals.')) return;
     try {
       await api(`transactions?id=${t.id}`, { method: 'DELETE', token });
+      haptic('warning');
       txns.reload();
       home.reload();
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not delete');
     }
   }

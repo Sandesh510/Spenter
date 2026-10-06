@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
 import { BUCKET_LABEL, BUCKET_TAG } from '../lib/categories';
 import { currentMonth } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
@@ -51,9 +52,11 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
           accountId: decision === 'bought' ? account?.id : undefined,
         },
       });
+      haptic(decision === 'skipped' ? 'warning' : 'success');
       onToast(decision === 'bought' ? `Bought · ${formatINR(amountPaise)} to ${selected.name}` : decision === 'skipped' ? 'Skipped' : 'Delayed');
       go('home');
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
     } finally {
       setBusy(false);

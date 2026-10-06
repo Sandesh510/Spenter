@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
 import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
@@ -55,9 +56,11 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
     setSaving(true);
     try {
       await api('transactions', { token, body });
+      haptic('success');
       onToast(`Saved ${formatINR(paise)}`);
       go('log');
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
     } finally {
       setSaving(false);

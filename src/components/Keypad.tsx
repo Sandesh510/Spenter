@@ -1,3 +1,5 @@
+import { haptic } from '../lib/haptics';
+
 /** Numeric keypad from the mockups. Builds a rupee string; the caller converts it to paise. */
 
 export const MAX_DIGITS = 9;
@@ -15,7 +17,7 @@ export function Keypad({ onKey }: { onKey: (key: string) => void }) {
   return (
     <div className="keypad" role="group" aria-label="Keypad">
       {KEYS.map(k => (
-        <button key={k} className={k === '⌫' || k === '00' ? 'muted' : ''} onClick={() => onKey(k)} aria-label={k === '⌫' ? 'Delete' : k}>
+        <button key={k} className={k === '⌫' || k === '00' ? 'muted' : ''} onClick={() => { haptic('tap'); onKey(k); }} aria-label={k === '⌫' ? 'Delete' : k}>
           {k}
         </button>
       ))}

@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
 import { iconFor } from '../lib/categories';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { currentMonth } from '../lib/dates';
@@ -60,9 +61,11 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
         token,
         body: { type: 'spend', amount, categoryId: category.id, accountId, description: desc.trim() || null },
       });
+      haptic('success');
       onToast(`Added ${formatINR(amountPaise)} · ${category.name}`);
       go('log');
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
     } finally {
       setSaving(false);

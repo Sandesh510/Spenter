@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { Icon } from './components/Icon';
+import { IDLE_LOCK_MS, isStillActive, touchActive, getLastActive } from './lib/prefs';
 import { api, ApiError } from './lib/api';
 import { cache, isStale, refreshAll, restoreSnapshot, type Bootstrap, type User } from './lib/cache';
 import type { Profile } from './lib/types';
@@ -56,7 +57,7 @@ export function App() {
       setToken(stored);
       setUser(snap.user);
       setProfile(snap.profile);
-      setUnlocked(!snap.profile.lockEnabled);
+      setUnlocked(!snap.profile.lockEnabled || isStillActive());
       setChecking(false);
     }
     refreshAll(stored)
@@ -77,6 +78,36 @@ export function App() {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [token]);
 
+  // Idle lock: while unlocked, record activity and lock after IDLE_LOCK_MS without any interaction.
+  // A refresh or reopen keeps the session if the user was active within that window.
+  useEffect(() => {
+    if (!token || !profile?.lockEnabled || !unlocked) return;
+    let lastWrite = 0;
+    const mark = () => {
+      const now = Date.now();
+      if (now - lastWrite > 15_000) {
+        lastWrite = now;
+        touchActive();
+      }
+    };
+    const checkIdle = () => {
+      if (Date.now() - getLastActive() >= IDLE_LOCK_MS) setUnlocked(false);
+    };
+    const events = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const;
+    for (const e of events) window.addEventListener(e, mark, { passive: true });
+    const timer = window.setInterval(checkIdle, 30_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') checkIdle();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    mark();
+    return () => {
+      for (const e of events) window.removeEventListener(e, mark);
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [token, profile?.lockEnabled, unlocked]);
+
   // Theme is applied whenever the profile changes.
   useEffect(() => {
     if (profile) document.documentElement.dataset.theme = profile.theme;
@@ -93,7 +124,7 @@ export function App() {
     setToken(t);
     setUser(boot.user);
     setProfile(boot.data.profile);
-    setUnlocked(prev => prev || !boot.data.profile.lockEnabled);
+    setUnlocked(prev => prev || !boot.data.profile.lockEnabled || isStillActive());
   }
 
   function signedIn(t: string, u: User) {
@@ -103,7 +134,8 @@ export function App() {
     setRoute('home');
     refreshAll(t)
       .then(boot => applyBoot(t, boot))
-      .catch(() => setUnlocked(true));
+      .catch(() => setUnlocked(true))
+      .finally(() => touchActive());
   }
 
   function signOutLocally() {
@@ -120,7 +152,7 @@ export function App() {
   if (profile?.lockEnabled && !unlocked) {
     return (
       <Frame>
-        <Lock token={token} onUnlock={() => setUnlocked(true)} />
+        <Lock token={token} onUnlock={() => { touchActive(); setUnlocked(true); }} />
       </Frame>
     );
   }
@@ -136,7 +168,7 @@ export function App() {
       {route === 'ask' && <Ask token={token} go={go} onToast={showToast} />}
       {route === 'trends' && <Trends token={token} />}
       {route === 'settings' && profile && (
-        <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => setUnlocked(false)} email={user.email} />
+        <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => { setUnlocked(false); }} email={user.email} />
       )}
       {route === 'quickadd' && <QuickAdd token={token} go={go} onToast={showToast} />}
       {route === 'manual' && <Manual token={token} go={go} onToast={showToast} />}

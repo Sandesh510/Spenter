@@ -269,3 +269,17 @@ body {
     animation: none;
   }
 }
+
+/* Text size (Settings → Appearance). Scales the screen body; the nav keeps its own size. */
+[data-font=low] .scroll > * {
+  zoom: 0.92;
+}
+[data-font=high] .scroll > * {
+  zoom: 1.15;
+}
+[data-font=high] .nav__slot span.label {
+  font-size: 12px;
+}
+[data-font=low] .nav__slot span.label {
+  font-size: 9px;
+}

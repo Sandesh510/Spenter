@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { haptic } from '../lib/haptics';
 
 /** Passcode lock, per screens/ScreenLock.dc.html. The PIN is checked on the server; the hash never reaches the browser. */
 export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void }) {
@@ -13,12 +14,15 @@ export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void 
     try {
       const res = await api<{ ok: boolean; attemptsLeft?: number }>('profile', { method: 'POST', token, body: { action: 'unlock', pin: code } });
       if (res.ok) {
+        haptic('success');
         onUnlock();
       } else {
+        haptic('error');
         setError((res.attemptsLeft ?? 0) > 0 ? `Wrong passcode. ${res.attemptsLeft} ${res.attemptsLeft === 1 ? "try" : "tries"} left.` : "Wrong passcode");
         setPin('');
       }
     } catch (err) {
+      haptic('error');
       setError(err instanceof Error ? err.message : 'Could not check passcode');
       setPin('');
     } finally {
@@ -28,6 +32,7 @@ export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void 
 
   function press(k: string) {
     if (busy) return;
+    if (k) haptic('tap');
     setError(null);
     if (k === '⌫') return setPin(p => p.slice(0, -1));
     if (k === '') return;
