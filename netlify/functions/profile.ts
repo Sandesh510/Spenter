@@ -4,6 +4,8 @@ import { readJson, reqStr } from './_lib/input';
 import { HttpError, json } from './_lib/response';
 
 const PIN = /^\d{4}$/;
+const MAX_PIN_FAILURES = 5;
+const LOCK_MINUTES = 15;
 
 function hashPin(salt: string, pin: string): string {
   return createHash('sha256').update(`${salt}:${pin}`).digest('hex');
@@ -31,14 +33,43 @@ export const handler = authed(['GET', 'PATCH', 'POST'], async ({ admin, userId, 
   if (event.httpMethod === 'POST') {
     if (reqStr(b, 'action', 10) !== 'unlock') throw new HttpError(400, 'Unknown action');
     const pin = reqStr(b, 'pin', 4);
-    const { data, error } = await admin.from('spend_profiles').select('lock_salt,lock_hash').eq('user_id', userId).single();
+    const { data, error } = await admin
+      .from('spend_profiles')
+      .select('lock_salt,lock_hash,pin_failures,pin_locked_until')
+      .eq('user_id', userId)
+      .single();
     if (error) throw error;
     if (!data.lock_hash || !data.lock_salt) return json(200, { ok: true });
+
+    // Lockout: refuse while locked, so guessing the 4-digit PIN is slow.
+    const lockedUntil = data.pin_locked_until ? Date.parse(data.pin_locked_until) : 0;
+    if (lockedUntil > Date.now()) {
+      const mins = Math.ceil((lockedUntil - Date.now()) / 60_000);
+      throw new HttpError(429, `Too many wrong passcodes. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`);
+    }
 
     const given = Buffer.from(hashPin(data.lock_salt, pin), 'hex');
     const stored = Buffer.from(data.lock_hash, 'hex');
     const ok = given.length === stored.length && timingSafeEqual(given, stored);
-    return json(200, { ok });
+
+    if (ok) {
+      if (data.pin_failures || data.pin_locked_until) {
+        await admin.from('spend_profiles').update({ pin_failures: 0, pin_locked_until: null }).eq('user_id', userId);
+      }
+      return json(200, { ok: true });
+    }
+
+    const failures = data.pin_failures + 1;
+    const lockNow = failures >= MAX_PIN_FAILURES;
+    await admin
+      .from('spend_profiles')
+      .update({
+        pin_failures: lockNow ? 0 : failures,
+        pin_locked_until: lockNow ? new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString() : null,
+      })
+      .eq('user_id', userId);
+    if (lockNow) throw new HttpError(429, `Too many wrong passcodes. Try again in ${LOCK_MINUTES} minutes.`);
+    return json(200, { ok: false, attemptsLeft: MAX_PIN_FAILURES - failures });
   }
 
   // PATCH

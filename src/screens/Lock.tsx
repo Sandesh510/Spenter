@@ -11,11 +11,11 @@ export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void 
   async function check(code: string) {
     setBusy(true);
     try {
-      const res = await api<{ ok: boolean }>('profile', { method: 'POST', token, body: { action: 'unlock', pin: code } });
+      const res = await api<{ ok: boolean; attemptsLeft?: number }>('profile', { method: 'POST', token, body: { action: 'unlock', pin: code } });
       if (res.ok) {
         onUnlock();
       } else {
-        setError('Wrong passcode');
+        setError((res.attemptsLeft ?? 0) > 0 ? `Wrong passcode. ${res.attemptsLeft} ${res.attemptsLeft === 1 ? "try" : "tries"} left.` : "Wrong passcode");
         setPin('');
       }
     } catch (err) {
