@@ -9,6 +9,7 @@ import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import { refreshAll } from '../lib/cache';
+import { AddAnotherPrompt } from '../components/ui/AddAnotherPrompt';
 import type { Account, HomeData, Loan, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
@@ -45,6 +46,8 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
   const [date, setDate] = useState(editing?.txn_date ?? todayIST());
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  /** Set after a new entry is saved, so the user can add another on the same date. */
+  const [savedNew, setSavedNew] = useState(false);
 
   const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
@@ -98,14 +101,30 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
       // Log, Home and Lent read from the cache, so a saved entry must refresh it.
       await refreshAll(token).catch(() => {});
       haptic('success');
-      onToast(editing ? 'Transaction updated' : `Saved ${formatINR(paise)}`);
-      go('log');
+      if (editing) {
+        onToast('Transaction updated');
+        go('log');
+      } else {
+        onToast(`Saved ${formatINR(paise)}`);
+        setSavedNew(true);
+      }
     } catch (err) {
       haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
     } finally {
       setSaving(false);
     }
+  }
+
+  /** Yes: clear the amount, category and note. Date, account and transaction type stay. */
+  function addAnother() {
+    setAmount('');
+    setCategoryId(null);
+    setDesc('');
+    setReference('');
+    setLentLoanId(null);
+    setError(null);
+    setSavedNew(false);
   }
 
   const accountName = (id: string | null) => accountList.find(a => a.id === id)?.nickname ?? 'Choose';
@@ -115,6 +134,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
 
   return (
     <div className="scroll scroll--stack" style={{ paddingBottom: 24 }}>
+      {savedNew && <AddAnotherPrompt date={date} onYes={addAnother} onNo={() => go('log')} />}
       <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={() => go(editing ? 'log' : 'quickadd')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
         <span className="topbar__title">{editing ? 'Edit transaction' : 'Add transaction'}</span>
