@@ -3,6 +3,7 @@ import { monthTotals, type Bucket, type Txn } from '../../../src/lib/ledger';
 import { monthRange } from './month';
 import { postDue } from './commitments';
 import { postInsurance } from './insurance';
+import { billsStillDue, safeToSpend } from '../../../src/lib/safeToSpend';
 import { todayIST } from './input';
 
 /**
@@ -22,8 +23,11 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   // Due commitments are posted before reading, so Home always shows this month's SIPs, EMIs and subscriptions.
   await postDue(admin, userId, todayIST());
   await postInsurance(admin, userId, todayIST());
+  await carryBudgetsForward(admin, userId, firstDay);
+  const today = todayIST();
+  const isCurrentMonth = today.slice(0, 7) === month;
 
-  const [catRes, openRes, budgetRes, txnRes, askRes, lentRes] = await Promise.all([
+  const [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes] = await Promise.all([
     admin.from('spend_categories').select('id,name,bucket,icon,sort_order').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
     admin.from('spend_budgets').select('category_id,planned_paise').eq('user_id', userId).eq('month', firstDay),
@@ -43,8 +47,14 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
       .order('created_at', { ascending: false })
       .limit(4),
     admin.from('spend_lent_loans').select('amount_paise').eq('user_id', userId).gte('lent_on', start).lt('lent_on', end),
+    admin
+      .from('spend_commitments')
+      .select('name,kind,amount_paise,day_of_month,starts_on,active,outstanding_paise,tenure_remaining')
+      .eq('user_id', userId)
+      .eq('active', true),
+    admin.from('spend_insurance_policies').select('name,premium_paise,next_due_on,active').eq('user_id', userId).eq('active', true),
   ]);
-  for (const r of [catRes, openRes, budgetRes, txnRes, askRes, lentRes]) if (r.error) throw r.error;
+  for (const r of [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes]) if (r.error) throw r.error;
   const lentOutPaise = (lentRes.data ?? []).reduce((s, l) => s + l.amount_paise, 0);
 
   const categories = (catRes.data as CategoryRow[]) ?? [];
@@ -97,6 +107,24 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     lentPaise: lentOutPaise,
   };
 
+  // Bills still to come this month are held back from what is safe to spend. Past months have none.
+  const upcoming = isCurrentMonth
+    ? billsStillDue({
+        today,
+        commitments: (commitRes.data ?? []).map(c => ({
+          name: c.name,
+          amountPaise: c.amount_paise,
+          day: c.day_of_month,
+          startsOn: c.starts_on,
+          active: c.active,
+          isLoan: c.kind === 'loan',
+          outstandingPaise: c.outstanding_paise,
+          tenureRemaining: c.tenure_remaining,
+        })),
+        policies: (policyRes.data ?? []).map(p => ({ name: p.name, premiumPaise: p.premium_paise, nextDueOn: p.next_due_on, active: p.active })),
+      })
+    : [];
+
   const planByCategory = new Map<string, number>();
   for (const b of budgetRes.data ?? []) planByCategory.set(b.category_id, b.planned_paise);
 
@@ -128,6 +156,8 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     spendPaise: totals.spendPaise,
     savingsPaise: totals.savingsPaise,
     spendableBalancePaise: totals.spendableBalancePaise,
+    safeToSpendPaise: safeToSpend(totals.spendableBalancePaise, upcoming),
+    upcomingBills: upcoming,
     moneyIn,
     moneyOut,
     categories: categoryRows,
@@ -218,4 +248,44 @@ export async function loadProfile(admin: SupabaseClient, userId: string) {
   const { data, error } = await admin.from('spend_profiles').select('theme,lock_hash').eq('user_id', userId).single();
   if (error) throw error;
   return { theme: data.theme, lockEnabled: data.lock_hash !== null };
+}
+
+/**
+ * A month with no budgets starts with the most recent earlier month's budgets. Runs only when the month
+ * has no budget rows at all, so a plan the user cleared (saved as 0) is not copied back over.
+ * The upsert ignores rows that already exist, so two loads at once cannot double the copy.
+ */
+async function carryBudgetsForward(admin: SupabaseClient, userId: string, firstDay: string): Promise<void> {
+  const { count, error: countErr } = await admin
+    .from('spend_budgets')
+    .select('category_id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('month', firstDay);
+  if (countErr) throw countErr;
+  if ((count ?? 0) > 0) return;
+
+  const { data: latest, error: latestErr } = await admin
+    .from('spend_budgets')
+    .select('month')
+    .eq('user_id', userId)
+    .lt('month', firstDay)
+    .order('month', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (latestErr) throw latestErr;
+  if (!latest) return;
+
+  const { data: rows, error: rowsErr } = await admin
+    .from('spend_budgets')
+    .select('category_id,planned_paise')
+    .eq('user_id', userId)
+    .eq('month', latest.month);
+  if (rowsErr) throw rowsErr;
+  if (!rows?.length) return;
+
+  const { error } = await admin.from('spend_budgets').upsert(
+    rows.map(r => ({ user_id: userId, category_id: r.category_id, month: firstDay, planned_paise: r.planned_paise })),
+    { onConflict: 'user_id,category_id,month', ignoreDuplicates: true },
+  );
+  if (error) throw error;
 }

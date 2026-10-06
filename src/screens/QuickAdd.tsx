@@ -163,7 +163,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
               <Verdict
                 amountPaise={amountPaise}
                 category={{ name: category.name, bucket: category.bucket, plannedPaise: category.plannedPaise, spentPaise: category.spentPaise }}
-                spendableBalancePaise={home.data.spendableBalancePaise}
+                spendableBalancePaise={home.data.safeToSpendPaise ?? home.data.spendableBalancePaise}
               />
             </div>
           )}

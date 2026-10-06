@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
-import { BUCKET_TINT, categoryIcon } from '../lib/categories';
+import { BUCKET_LABEL, BUCKET_TINT, categoryIcon } from '../lib/categories';
 import { currentMonth, dayLabel, monthTitle } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
@@ -11,16 +11,18 @@ import type { Account, Bucket, Category, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 /** Transactions, per screens/ScreenLog.dc.html. Filter chips narrow the list client-side. */
-export function Log({ token, go, onEdit, initialCategoryId, initialMonth }: {
+export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initialMonth }: {
   token: string;
   go: (r: Route) => void;
   onEdit: (t: TxnRow) => void;
-  /** Set when opened from a Home category: the Log starts filtered to it. */
+  /** Set when opened from Home (a category or a budget bar): the Log starts filtered to it. */
   initialCategoryId?: string;
+  initialBucket?: Bucket;
   initialMonth?: string;
 }) {
   const [month, setMonth] = useState(initialMonth ?? currentMonth());
   const [categoryId, setCategoryId] = useState(initialCategoryId ?? '');
+  const [bucket, setBucket] = useState<Bucket | ''>(initialBucket ?? '');
   const [accountId, setAccountId] = useState('');
   const [selected, setSelected] = useState<TxnRow | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +39,12 @@ export function Log({ token, go, onEdit, initialCategoryId, initialMonth }: {
   const rows = useMemo(() => {
     return (txns.data?.items ?? []).filter(t => {
       if (categoryId && t.category_id !== categoryId) return false;
+      // A budget filter shows spends in that bucket's categories; credits and transfers have no bucket.
+      if (bucket && categoryOf(t.category_id)?.bucket !== bucket) return false;
       if (accountId && t.account_id !== accountId && t.to_account_id !== accountId) return false;
       return true;
     });
-  }, [txns.data, categoryId, accountId]);
+  }, [txns.data, categoryId, accountId, bucket, categories]);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, TxnRow[]>();
@@ -79,8 +83,19 @@ export function Log({ token, go, onEdit, initialCategoryId, initialMonth }: {
       </div>
 
       <div className="chiprow" style={{ margin: '14px -18px 0', padding: '0 18px 2px' }}>
-        <button className={`chip ${!categoryId && !accountId ? 'chip--on' : ''}`} onClick={() => { setCategoryId(''); setAccountId(''); }}>All</button>
-        <FilterSelect label="Category" value={categoryId} onChange={setCategoryId} options={categories.map((c: Category) => ({ value: c.id, label: c.name }))} />
+        <button className={`chip ${!categoryId && !accountId && !bucket ? 'chip--on' : ''}`} onClick={() => { setCategoryId(''); setAccountId(''); setBucket(''); }}>All</button>
+        <FilterSelect
+          label="Budget"
+          value={bucket}
+          onChange={v => {
+            const next = v as Bucket | '';
+            setBucket(next);
+            // Keep a chosen category only if it belongs to the new budget.
+            if (next && categoryOf(categoryId)?.bucket !== next) setCategoryId('');
+          }}
+          options={(['need', 'want', 'save'] as Bucket[]).map(b => ({ value: b, label: BUCKET_LABEL[b] }))}
+        />
+        <FilterSelect label="Category" value={categoryId} onChange={setCategoryId} options={categories.filter((c: Category) => !bucket || c.bucket === bucket).map((c: Category) => ({ value: c.id, label: c.name }))} />
         <FilterSelect label="Account" value={accountId} onChange={setAccountId} options={(accounts.data?.items ?? []).map(a => ({ value: a.id, label: a.nickname }))} />
         <FilterSelect label={monthLabelShort(month)} value={month} onChange={setMonth} options={monthOptions.map(m => ({ value: m.value, label: m.label }))} allowAll={false} />
       </div>
@@ -162,7 +177,7 @@ export function Log({ token, go, onEdit, initialCategoryId, initialMonth }: {
   );
 }
 
-const ALL_LABEL: Record<string, string> = { Category: 'All categories', Account: 'All accounts' };
+const ALL_LABEL: Record<string, string> = { Category: 'All categories', Account: 'All accounts', Budget: 'All budgets' };
 
 /** A chip that opens a native select, styled as the mockup's outlined filter chip. */
 function FilterSelect({

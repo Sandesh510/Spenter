@@ -19,7 +19,12 @@ import type { Route } from '../App';
  * Home, per screens/ScreenHome.dc.html. Bucket colour rules come from the README.
  * The month can be stepped back to earlier months; the current month cannot be passed.
  */
-export function Home({ token, go, onOpenCategory }: { token: string; go: (r: Route) => void; onOpenCategory: (categoryId: string, month: string) => void }) {
+export function Home({ token, go, onOpenCategory, onOpenBucket }: {
+  token: string;
+  go: (r: Route) => void;
+  onOpenCategory: (categoryId: string, month: string) => void;
+  onOpenBucket: (bucket: Bucket, month: string) => void;
+}) {
   const today = currentMonth();
   const [month, setMonth] = useState(today);
   const isCurrent = month === today;
@@ -69,6 +74,7 @@ export function Home({ token, go, onOpenCategory }: { token: string; go: (r: Rou
           <span>Started <span className="c-text">{data.hasOpening ? formatINR(data.openingPaise) : 'none'}</span></span>
           <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
         </div>
+        {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
 
       <Card
@@ -93,7 +99,7 @@ export function Home({ token, go, onOpenCategory }: { token: string; go: (r: Rou
       </div>
       <div className="flex gap-18" style={{ flexDirection: 'column' }}>
         {data.buckets.map(b => (
-          <BudgetBar key={b.bucket} b={b} />
+          <BudgetBar key={b.bucket} b={b} onOpen={() => onOpenBucket(b.bucket as Bucket, month)} />
         ))}
       </div>
 
@@ -157,7 +163,7 @@ function OpeningDecision({ token, month, onDone }: { token: string; month: strin
 }
 
 /** Colour rules from the README: green ≤90% of plan, amber 90–100%, red over. Savings is blue until the goal is met. */
-function BudgetBar({ b }: { b: HomeBucket }) {
+function BudgetBar({ b, onOpen }: { b: HomeBucket; onOpen: () => void }) {
   const ratio = b.plannedPaise > 0 ? b.spentPaise / b.plannedPaise : 0;
   const isSave = b.bucket === 'save';
   const left = b.plannedPaise - b.spentPaise;
@@ -183,7 +189,7 @@ function BudgetBar({ b }: { b: HomeBucket }) {
   const pct = Math.min(1, ratio);
 
   return (
-    <div className="flex" style={{ flexDirection: 'column', gap: 7 }}>
+    <button className="budget-bar" onClick={onOpen} aria-label={`${BUCKET_LABEL[b.bucket as Bucket]}: show transactions`}>
       <div className="flex jc-sb ai-base">
         <span className="fs-14 c-text">{BUCKET_LABEL[b.bucket as Bucket]}</span>
         <span className="num fs-12 c-sec">
@@ -197,7 +203,7 @@ function BudgetBar({ b }: { b: HomeBucket }) {
         <span>{sub}</span>
         {note && <span className="num" style={{ color: noteColor }}>{note}</span>}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -289,5 +295,42 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
         </ul>
       </Card>
     </section>
+  );
+}
+
+/**
+ * Balance left to spend less the subscriptions, SIPs, EMIs and premiums still due this month.
+ * The bills list opens on tap so the card stays short.
+ */
+function SafeToSpend({ safePaise, bills }: { safePaise: number; bills: NonNullable<HomeData['upcomingBills']> }) {
+  const [open, setOpen] = useState(false);
+  const total = bills.reduce((s, b) => s + b.amountPaise, 0);
+  return (
+    <div className="safe mt-12">
+      <div className="flex ai-c jc-sb">
+        <span className="fs-13 c-sec">Safe to spend</span>
+        <span className={`num fs-18 ${safePaise < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(safePaise)}</span>
+      </div>
+      {bills.length === 0 ? (
+        <p className="fs-12 c-mut m-0 mt-4">No more bills due this month.</p>
+      ) : (
+        <>
+          <button className="link fs-12 flex ai-c gap-4" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+            {formatINR(total)} of bills still due this month
+            <Icon name={open ? 'chevron-down' : 'chevron-right'} size={13} />
+          </button>
+          {open && (
+            <ul className="list-reset grid gap-4 fs-12">
+              {bills.map(b => (
+                <li key={`${b.name}-${b.dueOn}`} className="flex jc-sb">
+                  <span className="c-sec">{b.name} · {b.dueOn.slice(8)} {monthTitle(b.dueOn.slice(0, 7)).slice(0, 3)}</span>
+                  <span className="num">{formatINR(b.amountPaise)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
   );
 }

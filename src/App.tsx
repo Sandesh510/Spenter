@@ -6,7 +6,7 @@ import { Icon } from './components/Icon';
 import { IDLE_LOCK_MS, isStillActive, touchActive, getLastActive } from './lib/prefs';
 import { api, ApiError } from './lib/api';
 import { cache, isStale, refreshAll, restoreSnapshot, type Bootstrap, type User } from './lib/cache';
-import type { Profile, TxnRow } from './lib/types';
+import type { Bucket, Profile, TxnRow } from './lib/types';
 import { Ask } from './screens/Ask';
 import { Home } from './screens/Home';
 import { Lent } from './screens/Lent';
@@ -18,6 +18,12 @@ import { Manual } from './screens/Manual';
 import { QuickAdd } from './screens/QuickAdd';
 import { Settings } from './screens/Settings';
 import { Trends } from './screens/Trends';
+
+interface LogFilter {
+  categoryId?: string;
+  bucket?: Bucket;
+  month: string;
+}
 
 export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules';
 
@@ -59,7 +65,7 @@ export function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [unlocked, setUnlocked] = useState(false);
   const [route, setRoute] = useState<Route>(initialRoute);
-  const [logFilter, setLogFilter] = useState<{ categoryId: string; month: string } | null>(null);
+  const [logFilter, setLogFilter] = useState<LogFilter | null>(null);
   // Mirrors `route` for event handlers, which would otherwise see a stale value.
   const routeRef = useRef<Route>(route);
   const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
@@ -212,12 +218,17 @@ export function App() {
     go('log');
     setLogFilter({ categoryId, month });
   };
+  /** Opens the Log filtered to one budget (Needs, Wants or Savings) and month (from Home's budget bars). */
+  const openBucket = (bucket: Bucket, month: string) => {
+    go('log');
+    setLogFilter({ bucket, month });
+  };
 
   return (
     <Frame>
-      {route === 'home' && <Home token={token} go={go} onOpenCategory={openCategory} />}
+      {route === 'home' && <Home token={token} go={go} onOpenCategory={openCategory} onOpenBucket={openBucket} />}
       {route === 'log' && (
-        <Log key={logFilter ? `${logFilter.categoryId}:${logFilter.month}` : 'all'} token={token} go={go} onEdit={edit} initialCategoryId={logFilter?.categoryId} initialMonth={logFilter?.month} />
+        <Log key={logFilter ? `${logFilter.categoryId ?? ''}:${logFilter.bucket ?? ''}:${logFilter.month}` : 'all'} token={token} go={go} onEdit={edit} initialCategoryId={logFilter?.categoryId} initialBucket={logFilter?.bucket} initialMonth={logFilter?.month} />
       )}
       {route === 'ask' && <Ask token={token} go={go} onToast={showToast} />}
       {route === 'trends' && <Trends token={token} />}

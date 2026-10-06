@@ -91,7 +91,7 @@ export function Verdict({ amountPaise, category, spendableBalancePaise }: Props)
 
       {v.cannotAfford && (
         <div className="mt-10 fs-13 c-danger">
-          This is more than your balance left to spend ({formatINR(spendableBalancePaise)}).
+          This is more than you can safely spend ({formatINR(spendableBalancePaise)}, after bills still due this month).
         </div>
       )}
     </div>

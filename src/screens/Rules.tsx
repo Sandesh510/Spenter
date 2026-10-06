@@ -18,6 +18,7 @@ const GROUPS: RuleGroup[] = [
       'Balance = starting balance + money in − spend − savings − transfers outside your accounts − money lent.',
       'Totals are always worked out from your entries. Edit or delete an entry and every total updates.',
       'Each month starts fresh. Set a starting balance once a month, or choose "none". Nothing carries over by itself.',
+      'Safe to spend = balance left to spend − subscriptions, SIPs, EMIs and insurance premiums still due this month. "Should I buy this?" checks against it.',
     ],
   },
   {
@@ -44,7 +45,8 @@ const GROUPS: RuleGroup[] = [
     rules: [
       'Every spend needs a category. Its bucket (Needs, Wants or Savings) decides which budget it counts against.',
       'Savings (such as SIPs) leave your balance but count towards your savings goal, not your spending.',
-      'Budgets are set per month and category. A bar is marked tight above 90% of plan and turns red when over.',
+      "Budgets are set per month and category. A new month starts with the previous month's budgets; a change applies from that month on.",
+      'A bar is marked tight above 90% of plan and turns red when over.',
       'Deleting a category that has entries asks you to move them to another category first.',
     ],
   },

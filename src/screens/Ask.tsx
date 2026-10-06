@@ -113,7 +113,7 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
           <Verdict
             amountPaise={amountPaise}
             category={{ name: selected.name, bucket: selected.bucket, plannedPaise: selected.plannedPaise, spentPaise: selected.spentPaise }}
-            spendableBalancePaise={home.data.spendableBalancePaise}
+            spendableBalancePaise={home.data.safeToSpendPaise ?? home.data.spendableBalancePaise}
           />
           <div className="fs-11 c-mut mt-6">{BUCKET_LABEL[selected.bucket]} · {BUCKET_TAG[selected.bucket]}</div>
         </div>

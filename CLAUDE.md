@@ -45,6 +45,8 @@ Apply these to every new or changed screen.
 - Balance = opening + income + got back + borrowed − spend − savings − outside transfers − money lent. Only Salary and Others are income; `gone_back` and `borrowed` credits never count as income.
 - Recurring postings (commitments, insurance auto-debit) are idempotent through unique keys: `(commitment_id, commitment_month)` and `(policy_id, policy_due_on)`. Resuming moves the start or due date forward, so paused periods are never backfilled.
 - Commitments post only months after `last_posted_month`; never cap posting by a count from the start date.
+- A month with no budget rows copies the latest earlier month's budgets on first Home load (`carryBudgetsForward`). A budget cleared to 0 is a row, so it is not copied back.
+- Safe to spend (`src/lib/safeToSpend.ts`) = balance − commitments due after today this month − unrecorded premiums due by month end. Verdicts check against it.
 - The user-facing version of these rules is `src/screens/Rules.tsx` (Settings → Rules to remember). Update it whenever a money rule changes.
 
 ## Commands

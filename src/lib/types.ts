@@ -74,6 +74,10 @@ export interface HomeData {
   spendPaise: number;
   savingsPaise: number;
   spendableBalancePaise: number;
+  /** Balance left to spend less bills still to come this month (equal to the balance for past months). */
+  /** Missing in Home data cached by versions before safe to spend. */
+  safeToSpendPaise?: number;
+  upcomingBills?: { name: string; amountPaise: number; dueOn: string }[];
   moneyIn: MoneyIn;
   moneyOut: MoneyOut;
   categories: Category[];

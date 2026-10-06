@@ -320,3 +320,24 @@
 li:last-child > .list-row {
   border-bottom: none;
 }
+
+/* Safe to spend: a divided block at the foot of the balance card */
+.safe {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+}
+
+/* A Home budget bar that opens the Log filtered to that budget */
+.budget-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}

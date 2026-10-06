@@ -58,6 +58,11 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
       spendPaise: spend,
       savingsPaise: savings,
       spendableBalancePaise: 9240000 - spend - savings,
+      safeToSpendPaise: 9240000 - spend - savings - 1564900,
+      upcomingBills: [
+        { name: 'Netflix', amountPaise: 64900, dueOn: '2026-10-15' },
+        { name: 'Home loan EMI', amountPaise: 1500000, dueOn: '2026-10-20' },
+      ],
       moneyIn: { totalPaise: 6000000, incomePaise: 6000000, salaryPaise: 6000000, goneBackPaise: 0, borrowedPaise: 0, othersPaise: 0 },
       moneyOut: { totalPaise: spend + savings, spendPaise: spend, savingsPaise: savings, outsidePaise: 0, lentPaise: 0 },
       categories: cats,
