@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { monthTotals, type Bucket, type Txn } from '../../../src/lib/ledger';
 import { monthRange } from './month';
+import { postDue } from './commitments';
+import { todayIST } from './input';
 
 /**
  * Shared loaders. Each one is scoped to a user id. The admin client bypasses RLS,
@@ -16,6 +18,8 @@ interface CategoryRow {
 
 export async function loadHome(admin: SupabaseClient, userId: string, month: string) {
   const { start, end, firstDay } = monthRange(month);
+  // Due commitments are posted before reading, so Home always shows this month's SIPs, EMIs and subscriptions.
+  await postDue(admin, userId, todayIST());
 
   const [catRes, openRes, budgetRes, txnRes, askRes] = await Promise.all([
     admin.from('spend_categories').select('id,name,bucket,icon').eq('user_id', userId),

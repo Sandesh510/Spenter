@@ -77,6 +77,15 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     ],
   }),
   transactions: () => ({ items: [] }),
+  commitments: () => ({
+    month: '2026-10',
+    items: [
+      { id: 'k1', kind: 'subscription', name: 'Netflix', amountPaise: 64900, dayOfMonth: 5, categoryId: 'c12', categoryName: 'Food Wants', bucket: 'want', accountId: 'acc2', active: true, startsOn: '2026-01-05', postedThisMonth: true, nextDueDate: '2026-11-05', loan: null },
+      { id: 'k2', kind: 'investment', name: 'Index fund SIP', amountPaise: 1000000, dayOfMonth: 10, categoryId: 'c13', categoryName: 'Investment', bucket: 'save', accountId: 'acc1', active: true, startsOn: '2026-01-10', postedThisMonth: false, nextDueDate: '2026-10-10', loan: null },
+      { id: 'k3', kind: 'loan', name: 'Home loan', amountPaise: 2000000, dayOfMonth: 15, categoryId: 'c4', categoryName: 'EMI', bucket: 'need', accountId: 'acc1', active: true, startsOn: '2026-01-15', postedThisMonth: false, nextDueDate: '2026-10-15', loan: { isNew: false, outstandingPaise: 45000000, rateBps: 850, tenureRemaining: 180, nextEmiDate: '2026-10-15', nextInterestPaise: 318750, nextPrincipalPaise: 1681250, remainingAfterNextPaise: 44318750 } },
+    ],
+    totals: { subscriptionsPaise: 64900, investmentsPaise: 1000000, emisPaise: 2000000 },
+  }),
   lent: () => ({ items: [] }),
   asks: () => ({ items: [] }),
 };

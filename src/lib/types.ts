@@ -89,6 +89,40 @@ export interface Loan {
   outstanding_paise: number;
 }
 
+export interface LoanView {
+  isNew: boolean;
+  outstandingPaise: number;
+  rateBps: number;
+  tenureRemaining: number;
+  nextEmiDate: string;
+  nextInterestPaise: number;
+  nextPrincipalPaise: number;
+  remainingAfterNextPaise: number;
+}
+
+export interface CommitmentItem {
+  id: string;
+  kind: 'subscription' | 'investment' | 'loan';
+  name: string;
+  amountPaise: number;
+  dayOfMonth: number;
+  categoryId: string;
+  categoryName: string | null;
+  bucket: Bucket | null;
+  accountId: string;
+  active: boolean;
+  startsOn: string;
+  postedThisMonth: boolean;
+  nextDueDate: string;
+  loan: LoanView | null;
+}
+
+export interface CommitmentsData {
+  month: string;
+  items: CommitmentItem[];
+  totals: { subscriptionsPaise: number; investmentsPaise: number; emisPaise: number };
+}
+
 export interface Profile {
   theme: 'dark' | 'light';
   lockEnabled: boolean;

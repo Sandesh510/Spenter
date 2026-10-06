@@ -9,7 +9,7 @@ import { formatINR } from '../lib/money';
 import { BUCKET_LABEL } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
-import type { Bucket, HomeBucket, HomeData, AskItem, Loan } from '../lib/types';
+import type { Bucket, CommitmentsData, HomeBucket, HomeData, AskItem, Loan } from '../lib/types';
 import type { Route } from '../App';
 
 /**
@@ -78,6 +78,8 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
           <Icon name="chevron-right" size={16} />
         </span>
       </Card>
+
+      <CommitmentsCard token={token} onOpen={() => go('commitments')} />
 
       <div className="flex ai-c jc-sb" style={{ margin: '24px 2px 14px' }}>
         <span className="kicker">Budgets</span>
@@ -209,6 +211,29 @@ function AskRow({ a }: { a: AskItem }) {
       </div>
       <div className="num fs-14">{formatINR(a.amountPaise)}</div>
     </div>
+  );
+}
+
+/** This month's subscriptions, SIPs and EMIs. Each posts on its day; the card opens the full view. */
+function CommitmentsCard({ token, onOpen }: { token: string; onOpen: () => void }) {
+  const { data } = useApi<CommitmentsData>('commitments', token);
+  const t = data?.totals;
+  return (
+    <Card
+      as="button"
+      onClick={onOpen}
+      style={{ display: 'block', width: '100%', marginTop: 12, padding: 14, cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit', textAlign: 'left' }}
+    >
+      <div className="flex ai-c jc-sb">
+        <span className="fs-13 c-sec">Commitments · every month</span>
+        <Icon name="chevron-right" size={16} />
+      </div>
+      <div className="num fs-12 c-sec mt-8 flex jc-sb">
+        <span>Subs <span className="c-text">{formatINR(t?.subscriptionsPaise ?? 0)}</span></span>
+        <span>SIP <span className="c-text">{formatINR(t?.investmentsPaise ?? 0)}</span></span>
+        <span>EMI <span className="c-text">{formatINR(t?.emisPaise ?? 0)}</span></span>
+      </div>
+    </Card>
   );
 }
 
