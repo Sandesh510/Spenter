@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:312px;height:712px;background:var(--sc-bg);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;font-family:var(--font-body)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 22px 5px;font-size:12px;color:var(--sc-text);font-feature-settings:'tnum'">
+    <span style="font-weight:600">9:41</span>
+    <span style="display:flex;gap:6px;align-items:center;color:var(--sc-muted)"><span style="font-size:13px"><i data-lucide="signal"></i></span><span style="font-size:13px"><i data-lucide="wifi"></i></span><span style="font-size:14px"><i data-lucide="battery-full"></i></span></span>
+  </div>
+
+  <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:8px 18px 92px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;color:var(--sc-text)">August</span>
+      <span style="font-size:12px;color:var(--sc-muted);display:flex;align-items:center;gap:3px">This month <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+    </div>
+
+    <!-- donut 50/30/20 -->
+    <div style="border:1px solid var(--sc-line);border-radius:16px;padding:18px;background:var(--sc-surface);display:flex;align-items:center;gap:18px">
+      <div style="position:relative;width:120px;height:120px;flex:none">
+        <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--sc-need) 0 50%, var(--sc-amber) 50% 79%, var(--sc-green) 79% 100%)"></div>
+        <div style="position:absolute;inset:19px;border-radius:50%;background:var(--sc-surface);display:grid;place-items:center;text-align:center">
+          <div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;color:var(--sc-text);line-height:1">₹57.5k</div>
+            <div style="font-size:9.5px;color:var(--sc-muted);margin-top:1px">spent</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:11px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="width:10px;height:10px;border-radius:3px;background:var(--sc-need)"></span>
+          <span style="font-size:13px;color:var(--sc-text);flex:1">Needs</span>
+          <span style="font-size:13px;color:var(--sc-text);font-feature-settings:'tnum'">50%</span>
+          <span style="font-size:10.5px;color:var(--sc-faint);width:34px;text-align:right">/ 50</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="width:10px;height:10px;border-radius:3px;background:var(--sc-amber)"></span>
+          <span style="font-size:13px;color:var(--sc-text);flex:1">Wants</span>
+          <span style="font-size:13px;color:var(--sc-text);font-feature-settings:'tnum'">29%</span>
+          <span style="font-size:10.5px;color:var(--sc-green);width:34px;text-align:right">/ 30</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="width:10px;height:10px;border-radius:3px;background:var(--sc-green)"></span>
+          <span style="font-size:13px;color:var(--sc-text);flex:1">Savings</span>
+          <span style="font-size:13px;color:var(--sc-text);font-feature-settings:'tnum'">21%</span>
+          <span style="font-size:10.5px;color:var(--sc-green);width:34px;text-align:right">/ 20</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:11.5px;color:var(--sc-muted);margin:9px 0 0">Close to your 50 / 30 / 20 target</div>
+
+    <!-- bar chart -->
+    <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted);margin:24px 2px 14px;display:flex;justify-content:space-between">
+      <span>Planned vs actual</span>
+      <span style="display:flex;gap:10px;text-transform:none;letter-spacing:0"><span style="color:var(--sc-faint)">▬ plan</span><span style="color:var(--sc-text)">▬ spent</span></span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:15px">
+      <sc-for list="{{ bars }}" as="b" hint-placeholder-count="8">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span style="font-size:12.5px;color:var(--sc-text)">{{ b.name }}</span>
+            <span style="font-size:11px;color:var(--sc-muted);font-feature-settings:'tnum'"><span style="color:{{ b.color }}">{{ b.aStr }}</span> / {{ b.pStr }}</span>
+          </div>
+          <div style="position:relative;height:14px">
+            <div style="position:absolute;top:0;left:0;height:5px;border-radius:4px;background:rgba(241,237,228,.16);width:{{ b.pw }}"></div>
+            <div style="position:absolute;top:8px;left:0;height:6px;border-radius:4px;background:{{ b.color }};width:{{ b.aw }}"></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- patterns -->
+    <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted);margin:26px 2px 12px">Patterns</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ patterns }}" as="p" hint-placeholder-count="3">
+        <div style="display:flex;gap:12px;border:1px solid var(--sc-line);border-left:3px solid {{ p.color }};border-radius:12px;padding:13px 14px;background:var(--sc-surface)">
+          <span style="font-size:18px;color:{{ p.color }};margin-top:1px"><i data-lucide="{{ p.icon }}"></i></span>
+          <div style="font-size:12.5px;line-height:1.5;color:var(--sc-text)">{{ p.text }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:76px;background:linear-gradient(to top,var(--sc-bg) 62%,transparent);border-top:1px solid var(--sc-line);display:flex;align-items:flex-start;justify-content:space-around;padding:9px 12px 0">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px"><span style="font-size:21px"><i data-lucide="home"></i></span><span style="font-size:10px">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px"><span style="font-size:21px"><i data-lucide="receipt-text"></i></span><span style="font-size:10px">Log</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;width:56px;margin-top:-20px">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--sc-amber);display:grid;place-items:center;color:#231a0c;font-size:25px;box-shadow:0 10px 22px -6px color-mix(in srgb,var(--sc-amber) 70%,transparent)"><i data-lucide="help-circle"></i></div>
+      <span style="font-size:10px;color:var(--sc-amber)">Ask</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-amber);width:52px"><span style="font-size:21px"><i data-lucide="bar-chart-3"></i></span><span style="font-size:10px">Trends</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px"><span style="font-size:21px"><i data-lucide="settings"></i></span><span style="font-size:10px">Settings</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const max = 20000;
+    const g='var(--sc-green)', a='var(--sc-amber)', r='var(--sc-red)', s='var(--sc-need)';
+    const raw = [
+      {name:'Food Needs', p:12000, act:9200, color:g},
+      {name:'EMI', p:11000, act:11000, color:a},
+      {name:'Home', p:8000, act:8000, color:a},
+      {name:'Transportation', p:6000, act:4100, color:g},
+      {name:'Personal', p:5000, act:4200, color:a},
+      {name:'Food Wants', p:3000, act:3600, color:r},
+      {name:'Clothes', p:2000, act:2400, color:r},
+      {name:'Investment', p:20000, act:12000, color:s},
+    ];
+    const fmt = n => '₹' + n.toLocaleString('en-IN');
+    const bars = raw.map(b => ({
+      name:b.name, color:b.color,
+      pStr: fmt(b.p), aStr: fmt(b.act),
+      pw: (b.p/max*100).toFixed(1)+'%',
+      aw: (Math.min(b.act,max)/max*100).toFixed(1)+'%',
+    }));
+    const patterns = [
+      {icon:'utensils', color:'var(--sc-red)', text:'Food Wants: asked 6× this month, skipped 2. Spent ₹3,600 vs ₹3,000 planned — ₹600 over.'},
+      {icon:'shirt', color:'var(--sc-amber)', text:'Clothes ran ₹400 over plan. 2 delayed asks are still open — revisit or drop them.'},
+      {icon:'circle-check', color:'var(--sc-green)', text:'Needs held at 68% of plan with 10 days left. Comfortably on track.'},
+    ];
+    return { bars, patterns };
+  }
+}
+</script>
+</body>
+</html>

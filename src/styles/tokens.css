@@ -1,0 +1,159 @@
+/* Design tokens from design_handoff_spendcheck/README.md. Dark is the default; light overrides below. */
+
+:root {
+  color-scheme: dark;
+  --page: #0e0d0a;
+  --bg: #181510;
+  --surface: #211d17;
+  --surface2: #2b2620;
+  --text: #f1ede4;
+  --muted: #a89f8e;
+  --faint: #6f685c;
+  --line: rgba(241, 237, 228, 0.1);
+  --amber: #e3a458;
+  --green: #84b06f;
+  --red: #d76f5e;
+  --need: #93a0b8;
+  --on-amber: #231a0c;
+
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --page: #e7e5e1;
+    --bg: #f6f5f3;
+    --surface: #ffffff;
+    --surface2: #ecebe7;
+    --text: #201f1d;
+    --muted: #6b665e;
+    --faint: #9a948a;
+    --line: rgba(32, 31, 29, 0.12);
+    --amber: #b68235;
+    --green: #5f8a4c;
+    --red: #c0503d;
+    --need: #5b6683;
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --page: #e7e5e1;
+  --bg: #f6f5f3;
+  --surface: #ffffff;
+  --surface2: #ecebe7;
+  --text: #201f1d;
+  --muted: #6b665e;
+  --faint: #9a948a;
+  --line: rgba(32, 31, 29, 0.12);
+  --amber: #b68235;
+  --green: #5f8a4c;
+  --red: #c0503d;
+  --need: #5b6683;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Layout: a single phone-width column. */
+.screen {
+  max-width: 440px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 8px 20px 108px;
+}
+
+.kicker {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.kicker--amber {
+  color: var(--amber);
+  letter-spacing: 0.14em;
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin: 0;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px 20px 17px;
+}
+
+.track {
+  height: 7px;
+  border-radius: 6px;
+  background: var(--surface2);
+  overflow: hidden;
+}
+
+.track--thin {
+  height: 9px;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--amber);
+}
+
+.btn {
+  background: var(--amber);
+  color: var(--on-amber);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.link {
+  background: none;
+  border: none;
+  color: var(--amber);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--amber);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 18px;
+  padding: 8px 0;
+  outline: none;
+}

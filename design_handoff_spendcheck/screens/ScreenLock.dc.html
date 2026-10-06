@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:312px;height:712px;background:var(--sc-bg);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;font-family:var(--font-body)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 22px 5px;font-size:12px;color:var(--sc-text);font-feature-settings:'tnum'">
+    <span style="font-weight:600">9:41</span>
+    <span style="display:flex;gap:6px;align-items:center;color:var(--sc-muted)"><span style="font-size:13px"><i data-lucide="signal"></i></span><span style="font-size:13px"><i data-lucide="wifi"></i></span><span style="font-size:14px"><i data-lucide="battery-full"></i></span></span>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:0 24px 26px">
+
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+      <div style="width:60px;height:60px;border-radius:18px;border:1px solid var(--sc-amber);display:grid;place-items:center;color:var(--sc-amber);font-size:26px"><i data-lucide="lock-keyhole"></i></div>
+      <div style="text-align:center">
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:23px;color:var(--sc-text)">SpendCheck</div>
+        <div style="font-size:13px;color:var(--sc-muted);margin-top:4px">Enter your passcode</div>
+      </div>
+      <div style="display:flex;gap:15px;margin-top:2px">
+        <span style="width:13px;height:13px;border-radius:50%;background:var(--sc-amber)"></span>
+        <span style="width:13px;height:13px;border-radius:50%;background:var(--sc-amber)"></span>
+        <span style="width:13px;height:13px;border-radius:50%;background:var(--sc-amber)"></span>
+        <span style="width:13px;height:13px;border-radius:50%;border:1.5px solid var(--sc-line)"></span>
+      </div>
+    </div>
+
+    <!-- keypad -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:250px">
+      <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+        <div style="height:58px;display:grid;place-items:center;border-radius:50%;font-family:var(--font-heading);font-weight:600;font-size:24px;color:{{ k.color }}">{{ k.label }}</div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:7px;margin-top:22px;color:var(--sc-amber);font-size:13px">
+      <span style="font-size:17px"><i data-lucide="scan-face"></i></span>Use Face ID
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const t='var(--sc-text)', m='var(--sc-faint)';
+    const keys = [
+      {label:'1',color:t},{label:'2',color:t},{label:'3',color:t},
+      {label:'4',color:t},{label:'5',color:t},{label:'6',color:t},
+      {label:'7',color:t},{label:'8',color:t},{label:'9',color:t},
+      {label:'',color:m},{label:'0',color:t},{label:'⌫',color:m},
+    ];
+    return { keys };
+  }
+}
+</script>
+</body>
+</html>

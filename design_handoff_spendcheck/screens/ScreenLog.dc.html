@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:312px;height:712px;background:var(--sc-bg);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;font-family:var(--font-body)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 22px 5px;font-size:12px;color:var(--sc-text);font-feature-settings:'tnum'">
+    <span style="font-weight:600">9:41</span>
+    <span style="display:flex;gap:6px;align-items:center;color:var(--sc-muted)"><span style="font-size:13px"><i data-lucide="signal"></i></span><span style="font-size:13px"><i data-lucide="wifi"></i></span><span style="font-size:14px"><i data-lucide="battery-full"></i></span></span>
+  </div>
+
+  <div style="padding:8px 18px 10px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;color:var(--sc-text)">Transactions</span>
+      <span style="width:36px;height:36px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:17px"><i data-lucide="search"></i></span>
+    </div>
+    <div class="sc-scroll" style="display:flex;gap:8px;overflow-x:auto;margin:14px -18px 0;padding:0 18px 2px">
+      <span style="flex:none;padding:7px 13px;border-radius:20px;font-size:12.5px;white-space:nowrap;background:var(--sc-amber);color:#231a0c">All</span>
+      <span style="flex:none;padding:7px 13px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid var(--sc-line);color:var(--sc-muted);display:flex;align-items:center;gap:4px">Category <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+      <span style="flex:none;padding:7px 13px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid var(--sc-line);color:var(--sc-muted);display:flex;align-items:center;gap:4px">Account <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+      <span style="flex:none;padding:7px 13px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid var(--sc-line);color:var(--sc-muted);display:flex;align-items:center;gap:4px">August <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+    </div>
+  </div>
+
+  <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:2px 18px 92px">
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:16px 2px 6px">
+        <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)">{{ g.date }}</span>
+        <span style="font-size:11.5px;color:var(--sc-faint);font-feature-settings:'tnum'">{{ g.total }}</span>
+      </div>
+      <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--sc-line)">
+          <div style="width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:17px;background:{{ r.bg }};color:{{ r.fg }}"><i data-lucide="{{ r.icon }}"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;color:var(--sc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.desc }}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+              <span style="font-size:10.5px;padding:2px 7px;border-radius:5px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.cat }}</span>
+              <span style="font-size:11px;color:var(--sc-faint)">{{ r.account }}</span>
+            </div>
+          </div>
+          <div style="font-size:14.5px;color:var(--sc-text);font-feature-settings:'tnum'">{{ r.amount }}</div>
+        </div>
+      </sc-for>
+    </sc-for>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:76px;background:linear-gradient(to top,var(--sc-bg) 62%,transparent);border-top:1px solid var(--sc-line);display:flex;align-items:flex-start;justify-content:space-around;padding:9px 12px 0">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px"><span style="font-size:21px"><i data-lucide="home"></i></span><span style="font-size:10px">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-amber);width:52px"><span style="font-size:21px"><i data-lucide="receipt-text"></i></span><span style="font-size:10px">Log</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;width:56px;margin-top:-20px">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--sc-amber);display:grid;place-items:center;color:#231a0c;font-size:25px;box-shadow:0 10px 22px -6px color-mix(in srgb,var(--sc-amber) 70%,transparent)"><i data-lucide="help-circle"></i></div>
+      <span style="font-size:10px;color:var(--sc-amber)">Ask</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px"><span style="font-size:21px"><i data-lucide="bar-chart-3"></i></span><span style="font-size:10px">Trends</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px"><span style="font-size:21px"><i data-lucide="settings"></i></span><span style="font-size:10px">Settings</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const K = {
+      need:{bg:'rgba(147,160,184,.15)',fg:'#aeb9cf'},
+      want:{bg:'rgba(227,164,88,.15)',fg:'var(--sc-amber)'},
+      save:{bg:'rgba(132,176,111,.16)',fg:'var(--sc-green)'}
+    };
+    const ic = {'Food Wants':'utensils','Transportation':'bus','Clothes':'shirt','Food Needs':'shopping-basket','Utilities':'tv','Investment':'trending-up','EMI':'landmark','Home':'zap','Health/medical':'cross'};
+    const raw = [
+      {date:'Today', total:'₹1,970', rows:[
+        {desc:'Zomato — dinner', amount:'₹640', cat:'Food Wants', kind:'want', account:'Paytm Wallet'},
+        {desc:'Auto rickshaw', amount:'₹90', cat:'Transportation', kind:'need', account:'Cash'},
+        {desc:'Nykaa order', amount:'₹1,240', cat:'Clothes', kind:'want', account:'ICICI Credit'},
+      ]},
+      {date:'Yesterday', total:'₹8,029', rows:[
+        {desc:'BigBasket groceries', amount:'₹2,380', cat:'Food Needs', kind:'need', account:'HDFC Debit'},
+        {desc:'Netflix', amount:'₹649', cat:'Utilities', kind:'want', account:'ICICI Credit'},
+        {desc:'SIP — Index fund', amount:'₹5,000', cat:'Investment', kind:'save', account:'HDFC Debit'},
+      ]},
+      {date:'Fri, 1 Aug', total:'₹12,240', rows:[
+        {desc:'House rent', amount:'₹11,000', cat:'EMI', kind:'need', account:'HDFC Debit'},
+        {desc:'Electricity bill', amount:'₹1,180', cat:'Home', kind:'need', account:'HDFC Debit'},
+        {desc:'Chai + samosa', amount:'₹60', cat:'Food Wants', kind:'want', account:'UPI Lite'},
+      ]},
+    ];
+    const groups = raw.map(g => ({...g, rows: g.rows.map(r => ({...r, bg:K[r.kind].bg, fg:K[r.kind].fg, icon: ic[r.cat] || 'circle'}))}));
+    return { groups };
+  }
+}
+</script>
+</body>
+</html>

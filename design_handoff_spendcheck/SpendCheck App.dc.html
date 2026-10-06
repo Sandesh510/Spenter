@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-7c4a7ea5-01e2-44c0-924a-6a276b9d6691/styles.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body{margin:0;background:#0e0d0a;font-family:var(--font-body)}
+  .sc-app{--sc-page:#0e0d0a;--sc-bg:#181510;--sc-surface:#211d17;--sc-surface2:#2b2620;--sc-text:#f1ede4;--sc-muted:#a89f8e;--sc-faint:#6f685c;--sc-line:rgba(241,237,228,.10);--sc-amber:#e3a458;--sc-green:#84b06f;--sc-red:#d76f5e;--sc-need:#93a0b8;--sc-want:#e3a458;--sc-save:#84b06f;background:var(--sc-page);color:var(--sc-text);transition:background .25s}
+  .sc-app.sc-light{--sc-page:#e7e5e1;--sc-bg:#f6f5f3;--sc-surface:#ffffff;--sc-surface2:#ecebe7;--sc-text:#201f1d;--sc-muted:#6b665e;--sc-faint:#9a948a;--sc-line:rgba(32,31,29,.12);--sc-amber:#b68235;--sc-green:#5f8a4c;--sc-red:#c0503d;--sc-need:#5b6683;--sc-want:#b68235;--sc-save:#5f8a4c}
+  .sc-app svg.lucide{width:1em;height:1em;stroke-width:1.6;display:block}
+  .sc-scroll::-webkit-scrollbar{width:0;height:0;display:none}
+  .sc-scroll{scrollbar-width:none}
+  @keyframes scpop{0%{transform:translateY(10px) scale(.985);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes scblink{0%,100%{opacity:1}50%{opacity:.2}}
+  @keyframes scin{0%{transform:translateX(28px);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes sctoast{0%{transform:translateY(20px);opacity:0}12%{transform:none;opacity:1}88%{transform:none;opacity:1}100%{transform:translateY(20px);opacity:0}}
+  .sc-key{cursor:pointer;user-select:none;transition:background .12s}
+  .sc-key:active{background:var(--sc-surface2)!important}
+  .sc-press{cursor:pointer}
+  .sc-press:active{transform:scale(.97)}
+  .sc-app input::placeholder{color:var(--sc-faint)}
+</style>
+</helmet>
+<div class="sc-app {{ themeCls }}" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:30px 16px 56px;gap:14px">
+
+  <div style="text-align:center">
+    <div style="font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--sc-text)">SpendCheck <span style="font-size:12px;color:var(--sc-amber);letter-spacing:.12em;text-transform:uppercase">· working prototype</span></div>
+    <div style="font-size:12.5px;color:var(--sc-muted);margin-top:3px">Tap around. The center <span style="color:var(--sc-amber)">Add</span> button opens the fast flow — pick a category and the budget check appears automatically · toggle theme in Settings · resets on reload</div>
+  </div>
+
+  <div style="width:384px;height:812px;background:var(--sc-bg);border:1px solid var(--sc-line);border-radius:44px;padding:9px;box-shadow:0 40px 90px -30px rgba(0,0,0,.8)">
+    <div style="position:relative;width:100%;height:100%;background:var(--sc-bg);border-radius:36px;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- status bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 26px 4px;font-size:13px;color:var(--sc-text);font-feature-settings:'tnum';flex:none">
+        <span style="font-weight:600">9:41</span>
+        <span style="display:flex;gap:7px;align-items:center;color:var(--sc-muted)"><span style="font-size:14px"><i data-lucide="signal"></i></span><span style="font-size:14px"><i data-lucide="wifi"></i></span><span style="font-size:15px"><i data-lucide="battery-full"></i></span></span>
+      </div>
+
+      <!-- STAGE -->
+      <div class="sc-scroll" style="position:relative;flex:1;overflow-y:auto;overflow-x:hidden">
+
+        <!-- ══════════════ HOME ══════════════ -->
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:8px 20px 108px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px">
+            <div>
+              <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sc-amber)">This month</div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:23px;color:var(--sc-text);line-height:1.1;margin-top:2px">August 2026</div>
+            </div>
+            <div class="sc-press" onClick="{{ goSettings }}" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:20px"><i data-lucide="user"></i></div>
+          </div>
+
+          <div style="border:1px solid var(--sc-line);border-radius:18px;padding:20px 20px 17px;background:var(--sc-surface)">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12.5px;color:var(--sc-muted)">Balance left to spend</span>
+              <span style="font-size:16px;color:var(--sc-faint)"><i data-lucide="info"></i></span>
+            </div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:47px;line-height:1;color:var(--sc-text);margin:9px 0 15px;font-feature-settings:'tnum'">{{ homeBalance }}</div>
+            <div style="height:7px;border-radius:6px;background:var(--sc-surface2);overflow:hidden"><div style="height:100%;background:var(--sc-amber);border-radius:6px;width:{{ homeSpentPct }}"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px;color:var(--sc-muted);font-feature-settings:'tnum'">
+              <span>Started <span style="color:var(--sc-text)">{{ homeStart }}</span></span>
+              <span>Spent <span style="color:var(--sc-text)">{{ homeSpent }}</span></span>
+            </div>
+          </div>
+
+          <div class="sc-press" onClick="{{ goLent }}" style="display:flex;align-items:center;gap:12px;margin-top:12px;border:1px solid var(--sc-line);border-radius:14px;padding:12px 14px;background:var(--sc-surface)">
+            <span style="width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;border:1px solid var(--sc-amber);color:var(--sc-amber);font-size:17px"><i data-lucide="hand-coins"></i></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13.5px;color:var(--sc-text)">Money lent</div>
+              <div style="font-size:11.5px;color:var(--sc-muted);margin-top:1px">{{ lentSummaryLine }}</div>
+            </div>
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:18px;color:var(--sc-text);font-feature-settings:'tnum'">{{ lentTotal }}</span>
+            <span style="font-size:15px;color:var(--sc-faint)"><i data-lucide="chevron-right"></i></span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 2px 15px">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Budgets</span>
+            <span style="font-size:11px;color:var(--sc-muted);font-feature-settings:'tnum'">day 21 / 31</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:19px">
+            <sc-for list="{{ homeBars }}" as="b" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <span style="font-size:14px;color:var(--sc-text)">{{ b.label }}</span>
+                  <span style="font-size:12px;color:var(--sc-muted);font-feature-settings:'tnum'"><span style="color:var(--sc-text)">{{ b.spent }}</span> / {{ b.planned }}</span>
+                </div>
+                <div style="height:9px;border-radius:6px;background:var(--sc-surface2);overflow:hidden"><div style="height:100%;border-radius:6px;background:{{ b.color }};width:{{ b.width }}"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sc-muted)"><span>{{ b.pctLabel }}</span><span style="color:{{ b.color }}">{{ b.note }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:28px 2px 12px">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Recent asks</span>
+            <span class="sc-press" onClick="{{ goLog }}" style="font-size:12px;color:var(--sc-amber);display:flex;align-items:center;gap:2px">See all <span style="font-size:14px"><i data-lucide="chevron-right"></i></span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <sc-for list="{{ homeAsks }}" as="a" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--sc-line)">
+                <div style="width:35px;height:35px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:17px;background:{{ a.iconBg }};color:{{ a.iconColor }}"><i data-lucide="{{ a.icon }}"></i></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14px;color:var(--sc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.item }}</div>
+                  <div style="font-size:11.5px;color:var(--sc-muted);margin-top:1px">{{ a.decision }} · {{ a.cat }}</div>
+                </div>
+                <div style="font-size:14px;color:var(--sc-text);font-feature-settings:'tnum'">{{ a.amount }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ LOG ══════════════ -->
+        <sc-if value="{{ isLog }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:8px 20px 108px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:25px;color:var(--sc-text)">Transactions</span>
+            <div class="sc-press" onClick="{{ goQuickAdd }}" style="width:40px;height:40px;border-radius:50%;background:var(--sc-amber);color:#231a0c;display:grid;place-items:center;font-size:21px"><i data-lucide="plus"></i></div>
+          </div>
+          <div class="sc-scroll" style="display:flex;gap:8px;overflow-x:auto;margin:14px -20px 6px;padding:0 20px 2px">
+            <span style="flex:none;padding:7px 14px;border-radius:20px;font-size:12.5px;white-space:nowrap;background:var(--sc-amber);color:#231a0c">All</span>
+            <span style="flex:none;padding:7px 14px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid var(--sc-line);color:var(--sc-muted);display:flex;align-items:center;gap:4px">Category <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+            <span style="flex:none;padding:7px 14px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid var(--sc-line);color:var(--sc-muted);display:flex;align-items:center;gap:4px">Account <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+            <span style="flex:none;padding:7px 14px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid var(--sc-line);color:var(--sc-muted);display:flex;align-items:center;gap:4px">August <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+          </div>
+          <sc-for list="{{ logGroups }}" as="g" hint-placeholder-count="3">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin:16px 2px 6px">
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)">{{ g.date }}</span>
+              <span style="font-size:11.5px;color:var(--sc-faint);font-feature-settings:'tnum'">{{ g.total }}</span>
+            </div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--sc-line);animation:{{ r.anim }}">
+                <div style="width:39px;height:39px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:17px;background:{{ r.bg }};color:{{ r.fg }}"><i data-lucide="{{ r.icon }}"></i></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14px;color:var(--sc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.desc }}</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                    <span style="font-size:10.5px;padding:2px 7px;border-radius:5px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.cat }}</span>
+                    <span style="font-size:11px;color:var(--sc-faint)">{{ r.account }}</span>
+                  </div>
+                </div>
+                <div style="font-size:14.5px;color:{{ r.amtColor }};font-feature-settings:'tnum'">{{ r.amount }}</div>
+              </div>
+            </sc-for>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ TRENDS ══════════════ -->
+        <sc-if value="{{ isTrends }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:8px 20px 108px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:25px;color:var(--sc-text)">August</span>
+            <span style="font-size:12px;color:var(--sc-muted);display:flex;align-items:center;gap:3px">This month <span style="font-size:13px"><i data-lucide="chevron-down"></i></span></span>
+          </div>
+          <div style="border:1px solid var(--sc-line);border-radius:18px;padding:20px;background:var(--sc-surface);display:flex;align-items:center;gap:20px">
+            <div style="position:relative;width:126px;height:126px;flex:none">
+              <div style="width:126px;height:126px;border-radius:50%;background:{{ donutBg }}"></div>
+              <div style="position:absolute;inset:20px;border-radius:50%;background:var(--sc-surface);display:grid;place-items:center;text-align:center">
+                <div><div style="font-family:var(--font-heading);font-weight:600;font-size:19px;color:var(--sc-text);line-height:1">{{ donutTotal }}</div><div style="font-size:10px;color:var(--sc-muted);margin-top:1px">spent</div></div>
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ donutLegend }}" as="d" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <span style="width:10px;height:10px;border-radius:3px;background:{{ d.color }}"></span>
+                  <span style="font-size:13px;color:var(--sc-text);flex:1">{{ d.label }}</span>
+                  <span style="font-size:13px;color:var(--sc-text);font-feature-settings:'tnum'">{{ d.pct }}</span>
+                  <span style="font-size:10.5px;color:var(--sc-faint);width:32px;text-align:right">{{ d.target }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted);margin:24px 2px 14px;display:flex;justify-content:space-between">
+            <span>Planned vs actual</span>
+            <span style="display:flex;gap:10px;text-transform:none;letter-spacing:0"><span style="color:var(--sc-faint)">▬ plan</span><span style="color:var(--sc-text)">▬ spent</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:15px">
+            <sc-for list="{{ trendBars }}" as="b" hint-placeholder-count="8">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <span style="font-size:12.5px;color:var(--sc-text)">{{ b.name }}</span>
+                  <span style="font-size:11px;color:var(--sc-muted);font-feature-settings:'tnum'"><span style="color:{{ b.color }}">{{ b.aStr }}</span> / {{ b.pStr }}</span>
+                </div>
+                <div style="position:relative;height:14px">
+                  <div style="position:absolute;top:0;left:0;height:5px;border-radius:4px;background:rgba(241,237,228,.16);width:{{ b.pw }}"></div>
+                  <div style="position:absolute;top:8px;left:0;height:6px;border-radius:4px;background:{{ b.color }};width:{{ b.aw }}"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted);margin:26px 2px 12px">Patterns</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ trendPatterns }}" as="p" hint-placeholder-count="3">
+              <div style="display:flex;gap:12px;border:1px solid var(--sc-line);border-left:3px solid {{ p.color }};border-radius:12px;padding:13px 14px;background:var(--sc-surface)">
+                <span style="font-size:18px;color:{{ p.color }};margin-top:1px"><i data-lucide="{{ p.icon }}"></i></span>
+                <div style="font-size:12.5px;line-height:1.5;color:var(--sc-text)">{{ p.text }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ SETTINGS ══════════════ -->
+        <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:8px 20px 108px">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:25px;color:var(--sc-text)">Settings</span>
+
+          <div style="margin:22px 2px 10px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Budgets &amp; categories</span>
+            <span style="font-size:11px;color:var(--sc-amber)">Edit</span>
+          </div>
+          <div style="border:1px solid var(--sc-line);border-radius:14px;background:var(--sc-surface);overflow:hidden">
+            <sc-for list="{{ setCats }}" as="c" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--sc-line)">
+                <span style="width:9px;height:9px;border-radius:3px;flex:none;background:{{ c.dot }}"></span>
+                <span style="flex:1;font-size:13.5px;color:var(--sc-text)">{{ c.name }}</span>
+                <span style="font-size:10px;color:var(--sc-faint);text-transform:uppercase;letter-spacing:.06em">{{ c.group }}</span>
+                <span style="font-size:13px;color:var(--sc-text);font-feature-settings:'tnum';min-width:52px;text-align:right">{{ c.amt }}</span>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;color:var(--sc-amber);font-size:12.5px"><span style="font-size:15px"><i data-lucide="chevron-down"></i></span>Show all 15 categories</div>
+          </div>
+
+          <div style="margin:24px 2px 10px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Accounts</span>
+            <span class="sc-press" onClick="{{ addAccount }}" style="font-size:11px;color:var(--sc-amber);display:flex;align-items:center;gap:3px"><span style="font-size:13px"><i data-lucide="plus"></i></span>Add</span>
+          </div>
+          <div style="border:1px solid var(--sc-line);border-radius:14px;background:var(--sc-surface);overflow:hidden">
+            <sc-for list="{{ setAccounts }}" as="a" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--sc-line)">
+                <span style="width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;background:var(--sc-surface2);color:var(--sc-muted);font-size:16px"><i data-lucide="{{ a.icon }}"></i></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;color:var(--sc-text)">{{ a.nick }}</div>
+                  <div style="font-size:11px;color:var(--sc-faint)">{{ a.sub }}</div>
+                </div>
+                <span class="sc-press" onClick="{{ a.onRename }}" style="font-size:15px;color:var(--sc-faint)"><i data-lucide="pencil"></i></span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="margin:24px 2px 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Security</div>
+          <div style="border:1px solid var(--sc-line);border-radius:14px;background:var(--sc-surface);overflow:hidden">
+            <div class="sc-press" onClick="{{ lockNow }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--sc-line)">
+              <span style="font-size:17px;color:var(--sc-muted)"><i data-lucide="lock"></i></span>
+              <span style="flex:1;font-size:13.5px;color:var(--sc-text)">Lock now · passcode</span>
+              <span style="font-size:15px;color:var(--sc-faint)"><i data-lucide="chevron-right"></i></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
+              <span style="font-size:17px;color:var(--sc-muted)"><i data-lucide="fingerprint"></i></span>
+              <span style="flex:1;font-size:13.5px;color:var(--sc-text)">Biometric unlock</span>
+              <span style="width:42px;height:24px;border-radius:14px;background:var(--sc-amber);position:relative;flex:none"><span style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#231a0c"></span></span>
+            </div>
+          </div>
+
+          <div style="margin:24px 2px 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Appearance</div>
+          <div style="border:1px solid var(--sc-line);border-radius:14px;background:var(--sc-surface);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--sc-line)">
+              <span style="font-size:17px;color:var(--sc-muted)"><i data-lucide="moon"></i></span>
+              <span style="flex:1;font-size:13.5px;color:var(--sc-text)">Theme</span>
+              <span style="display:inline-flex;border:1px solid var(--sc-line);border-radius:9px;overflow:hidden">
+                <span class="sc-press" onClick="{{ setDark }}" style="padding:5px 11px;font-size:12px;background:{{ darkBg }};color:{{ darkFg }}">Dark</span>
+                <span class="sc-press" onClick="{{ setLight }}" style="padding:5px 11px;font-size:12px;background:{{ lightBg }};color:{{ lightFg }}">Light</span>
+              </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
+              <span style="font-size:17px;color:var(--sc-muted)"><i data-lucide="indian-rupee"></i></span>
+              <span style="flex:1;font-size:13.5px;color:var(--sc-text)">Currency</span>
+              <span style="font-size:13px;color:var(--sc-muted)">₹ INR</span>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ ASK ══════════════ -->
+        <sc-if value="{{ isAsk }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--sc-bg)">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 4px;flex:none">
+            <div style="width:36px;height:36px"></div>
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:18px;color:var(--sc-text)">Should I buy this?</span>
+            <div class="sc-press" onClick="{{ goHome }}" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--sc-faint);font-size:19px"><i data-lucide="x"></i></div>
+          </div>
+          <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:6px 20px 0;display:flex;flex-direction:column">
+            <div class="sc-press" onClick="{{ askEditAmount }}" style="border:1px solid var(--sc-line);border-radius:16px;padding:14px;background:var(--sc-surface)">
+              <div style="text-align:center;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:4px">Item costs</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:2px">
+                <span style="font-family:var(--font-heading);font-size:26px;color:var(--sc-muted)">₹</span>
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:48px;line-height:1;color:var(--sc-text);font-feature-settings:'tnum'">{{ askAmountDisplay }}</span>
+                <sc-if value="{{ askCaret }}" hint-placeholder-val="{{ true }}"><span style="width:2px;height:40px;background:var(--sc-amber);margin-left:3px;animation:scblink 1.1s steps(1) infinite"></span></sc-if>
+              </div>
+            </div>
+
+            <div style="margin:18px 0 8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)">Which category?</div>
+            <div class="sc-scroll" style="display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px">
+              <sc-for list="{{ askChips }}" as="c" hint-placeholder-count="7">
+                <span class="sc-press" onClick="{{ c.onClick }}" style="flex:none;padding:9px 15px;border-radius:20px;font-size:13px;white-space:nowrap;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</span>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{ askReady }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:18px;border:1px solid {{ verdict.color }};border-radius:16px;padding:16px;background:{{ verdict.tint }};animation:scpop .35s ease both">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="width:26px;height:26px;border-radius:50%;background:{{ verdict.iconBg }};color:{{ verdict.color }};display:grid;place-items:center;font-size:15px"><i data-lucide="{{ verdict.icon }}"></i></span>
+                  <span style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:{{ verdict.color }}">{{ verdict.head }}</span>
+                  <span style="margin-left:auto;padding:3px 9px;border-radius:6px;background:{{ verdict.tagBg }};color:{{ verdict.tagFg }};font-size:11px">{{ verdict.tag }}</span>
+                </div>
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;color:var(--sc-text);margin:11px 0 3px;line-height:1.25">{{ verdict.title }}</div>
+                <div style="font-size:13px;color:var(--sc-muted);line-height:1.5">{{ verdict.body }}</div>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- bottom: keypad OR decisions -->
+          <sc-if value="{{ askReady }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:9px;padding:12px 20px 20px;flex:none">
+              <div class="sc-press" onClick="{{ decideBuy }}" style="flex:1;height:58px;border-radius:14px;border:1.5px solid var(--sc-green);color:var(--sc-green);font-family:var(--font-heading);font-weight:600;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-size:18px"><i data-lucide="check"></i></span>Bought</div>
+              <div class="sc-press" onClick="{{ decideSkip }}" style="flex:1;height:58px;border-radius:14px;border:1.5px solid var(--sc-red);color:var(--sc-red);font-family:var(--font-heading);font-weight:600;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-size:18px"><i data-lucide="x"></i></span>Skipped</div>
+              <div class="sc-press" onClick="{{ decideWait }}" style="flex:1;height:58px;border-radius:14px;border:1.5px solid var(--sc-amber);color:var(--sc-amber);font-family:var(--font-heading);font-weight:600;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><span style="font-size:18px"><i data-lucide="clock"></i></span>Delayed</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ askKeypad }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:4px 16px 18px;flex:none">
+              <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+                <div class="sc-key" onClick="{{ k.onClick }}" style="height:50px;display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--sc-text);border-radius:12px">{{ k.label }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ QUICK ADD ══════════════ -->
+        <sc-if value="{{ isQA }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--sc-bg)">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 4px;flex:none">
+            <div class="sc-press" onClick="{{ qaBack }}" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:18px"><i data-lucide="{{ qaBackIcon }}"></i></div>
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <span style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:var(--sc-text)">{{ qaTitle }}</span>
+              <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sc-amber);margin-top:1px">{{ qaStepLabel }}</span>
+            </div>
+            <div class="sc-press" onClick="{{ goLog }}" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--sc-faint);font-size:19px"><i data-lucide="x"></i></div>
+          </div>
+
+          <!-- step: AMOUNT -->
+          <sc-if value="{{ qaAmountStep }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 24px">
+              <div style="display:flex;align-items:center;justify-content:center;gap:3px">
+                <span style="font-family:var(--font-heading);font-size:34px;color:var(--sc-muted)">₹</span>
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:66px;line-height:1;color:{{ qaAmountColor }};font-feature-settings:'tnum'">{{ qaAmountDisplay }}</span>
+                <span style="width:3px;height:52px;background:var(--sc-amber);margin-left:4px;animation:scblink 1.1s steps(1) infinite"></span>
+              </div>
+              <div style="margin-top:16px;font-size:12.5px;color:var(--sc-faint);display:flex;align-items:center;gap:6px">{{ qaIdleHint }}</div>
+            </div>
+            <sc-if value="{{ qaAmountReady }}" hint-placeholder-val="{{ false }}">
+              <div class="sc-press" onClick="{{ qaToCategory }}" style="margin:0 20px 8px;height:52px;border-radius:14px;background:var(--sc-amber);color:#231a0c;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-heading);font-weight:600;font-size:15px;flex:none">Continue <span style="font-size:18px"><i data-lucide="arrow-right"></i></span></div>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:4px 16px 12px;flex:none">
+              <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+                <div class="sc-key" onClick="{{ k.onClick }}" style="height:52px;display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:23px;color:var(--sc-text);border-radius:12px">{{ k.label }}</div>
+              </sc-for>
+            </div>
+            <div class="sc-press" onClick="{{ goManual }}" style="text-align:center;font-size:12px;color:var(--sc-muted);padding:0 0 16px;flex:none">Adding an older transaction? <span style="color:var(--sc-amber)">Manual entry →</span></div>
+          </sc-if>
+
+          <!-- step: CATEGORY -->
+          <sc-if value="{{ qaCatStep }}" hint-placeholder-val="{{ false }}">
+            <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:6px 20px 20px;animation:scin .28s ease both">
+              <div style="text-align:center;font-family:var(--font-heading);font-weight:600;font-size:30px;color:var(--sc-text);font-feature-settings:'tnum';margin:6px 0 20px">{{ qaAmountBig }}</div>
+              <sc-for list="{{ qaCatGroups }}" as="grp" hint-placeholder-count="3">
+                <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:{{ grp.color }};margin:16px 2px 10px">{{ grp.label }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ grp.items }}" as="c" hint-placeholder-count="6">
+                    <span class="sc-press" onClick="{{ c.onClick }}" style="padding:10px 15px;border-radius:22px;font-size:13.5px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</span>
+                  </sc-for>
+                </div>
+              </sc-for>
+              <sc-if value="{{ qaCatSelected }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:18px;border:1px solid {{ qaVerdict.color }};border-radius:16px;padding:16px;background:{{ qaVerdict.tint }};animation:scpop .35s ease both">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="width:26px;height:26px;border-radius:50%;background:{{ qaVerdict.iconBg }};color:{{ qaVerdict.color }};display:grid;place-items:center;font-size:15px"><i data-lucide="{{ qaVerdict.icon }}"></i></span>
+                    <span style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:{{ qaVerdict.color }}">{{ qaVerdict.head }}</span>
+                    <span style="margin-left:auto;padding:3px 9px;border-radius:6px;background:{{ qaVerdict.tagBg }};color:{{ qaVerdict.tagFg }};font-size:11px">{{ qaVerdict.tag }}</span>
+                  </div>
+                  <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;color:var(--sc-text);margin:11px 0 3px;line-height:1.25">{{ qaVerdict.title }}</div>
+                  <div style="font-size:13px;color:var(--sc-muted);line-height:1.5">{{ qaVerdict.body }}</div>
+                </div>
+                <div class="sc-press" onClick="{{ qaCatContinue }}" style="height:52px;border-radius:14px;background:var(--sc-amber);color:#231a0c;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-heading);font-weight:600;font-size:15px;margin-top:14px">Continue <span style="font-size:18px"><i data-lucide="arrow-right"></i></span></div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- step: DESCRIPTION -->
+          <sc-if value="{{ qaDescStep }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;padding:14px 22px;animation:scin .28s ease both">
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:26px">
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;color:var(--sc-text);font-feature-settings:'tnum'">{{ qaAmountBig }}</span>
+                <span style="padding:4px 11px;border-radius:8px;background:{{ qaCatBg }};color:{{ qaCatFg }};font-size:12.5px">{{ qaCatName }}</span>
+              </div>
+              <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:8px">What was it for?</div>
+              <input value="{{ qaDesc }}" onInput="{{ qaDescChange }}" ref="{{ qaDescRef }}" placeholder="e.g. Coffee with Ana (optional)" style="width:100%;background:transparent;border:none;border-bottom:2px solid var(--sc-amber);color:var(--sc-text);font-family:var(--font-body);font-size:20px;padding:8px 0;outline:none">
+              <div style="flex:1"></div>
+              <div class="sc-press" onClick="{{ qaToAccount }}" style="height:54px;border-radius:14px;background:var(--sc-amber);color:#231a0c;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-heading);font-weight:600;font-size:15px">Next <span style="font-size:18px"><i data-lucide="arrow-right"></i></span></div>
+            </div>
+          </sc-if>
+
+          <!-- step: ACCOUNT -->
+          <sc-if value="{{ qaAccStep }}" hint-placeholder-val="{{ false }}">
+            <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:14px 20px 20px;animation:scin .28s ease both">
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px">
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;color:var(--sc-text);font-feature-settings:'tnum'">{{ qaAmountBig }}</span>
+                <span style="padding:4px 11px;border-radius:8px;background:{{ qaCatBg }};color:{{ qaCatFg }};font-size:12.5px">{{ qaCatName }}</span>
+              </div>
+              <div style="text-align:center;font-size:12px;color:var(--sc-faint);margin-bottom:18px">{{ qaDescPreview }} · Today</div>
+              <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin:0 2px 12px">Paid from</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <sc-for list="{{ qaAccounts }}" as="a" hint-placeholder-count="4">
+                  <div class="sc-press" onClick="{{ a.onSelect }}" style="position:relative;border:1px solid var(--sc-line);border-radius:14px;padding:14px 13px;background:var(--sc-surface);display:flex;flex-direction:column;gap:10px">
+                    <span style="width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--sc-surface2);color:var(--sc-amber);font-size:18px"><i data-lucide="{{ a.icon }}"></i></span>
+                    <div><div style="font-size:14px;color:var(--sc-text)">{{ a.nick }}</div><div style="font-size:11px;color:var(--sc-faint)">{{ a.sub }}</div></div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ qaCanAddAccount }}" hint-placeholder-val="{{ true }}">
+                  <div class="sc-press" onClick="{{ addAccount }}" style="border:1px dashed var(--sc-line);border-radius:14px;padding:14px 13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--sc-muted);min-height:96px">
+                    <span style="font-size:22px"><i data-lucide="plus"></i></span><span style="font-size:12px">Add account</span>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ MANUAL ADD ══════════════ -->
+        <sc-if value="{{ isManual }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--sc-bg)">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 18px 4px;flex:none">
+            <div class="sc-press" onClick="{{ goQuickAdd }}" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:18px"><i data-lucide="chevron-left"></i></div>
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:var(--sc-text)">Manual entry</span>
+            <div style="width:36px;height:36px"></div>
+          </div>
+          <div class="sc-scroll" style="flex:1;min-height:0;overflow-y:auto;padding:6px 20px 4px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+              <sc-for list="{{ manTypes }}" as="t" hint-placeholder-count="4">
+                <span class="sc-press" onClick="{{ t.onClick }}" style="min-height:50px;padding:6px 4px;border-radius:11px;font-size:11.5px;line-height:1.2;text-align:center;border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:15px"><i data-lucide="{{ t.icon }}"></i></span>{{ t.short }}</span>
+              </sc-for>
+            </div>
+            <div style="border:1px solid var(--sc-line);border-radius:12px;background:var(--sc-surface);padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:3px">
+              <span style="font-family:var(--font-heading);font-size:20px;color:var(--sc-muted)">₹</span>
+              <span style="font-family:var(--font-heading);font-weight:600;font-size:34px;line-height:1;color:var(--sc-text);font-feature-settings:'tnum'">{{ manAmountDisplay }}</span>
+            </div>
+            <sc-if value="{{ manIsTransfer }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="sc-press" onClick="{{ manCycleFrom }}" style="flex:1;border:1px solid var(--sc-line);border-radius:12px;background:var(--sc-surface);padding:9px 12px"><div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:2px">From</div><div style="font-size:13.5px;color:var(--sc-text)">{{ manFrom }}</div></div>
+                <span style="color:var(--sc-amber);font-size:17px"><i data-lucide="arrow-right"></i></span>
+                <div class="sc-press" onClick="{{ manCycleTo }}" style="flex:1;border:1px solid var(--sc-line);border-radius:12px;background:var(--sc-surface);padding:9px 12px"><div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:2px">To</div><div style="font-size:13.5px;color:var(--sc-text)">{{ manTo }}</div></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ manNeedsCat }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{ manCatChips }}" as="c" hint-placeholder-count="6">
+                  <span class="sc-press" onClick="{{ c.onClick }}" style="flex:none;padding:7px 12px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+              <sc-if value="{{ manNeedsCat }}" hint-placeholder-val="{{ true }}">
+                <div class="sc-press" onClick="{{ manCycleFrom }}" style="border:1px solid var(--sc-line);border-radius:12px;background:var(--sc-surface);padding:7px 11px;display:flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box">
+                  <span style="font-size:15px;color:var(--sc-muted)"><i data-lucide="wallet"></i></span>
+                  <div style="min-width:0"><div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)">Account</div><div style="font-size:13px;color:var(--sc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ manFrom }}</div></div>
+                </div>
+              </sc-if>
+              <div class="sc-press" onClick="{{ manCycleDate }}" style="border:1px solid var(--sc-line);border-radius:12px;background:var(--sc-surface);padding:7px 11px;display:flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box">
+                <span style="font-size:15px;color:var(--sc-muted)"><i data-lucide="calendar"></i></span>
+                <div style="min-width:0"><div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)">Date</div><div style="font-size:13px;color:var(--sc-text);white-space:nowrap">{{ manDate }}</div></div>
+              </div>
+            </div>
+            <input value="{{ manDesc }}" onInput="{{ manDescChange }}" placeholder="Note (optional)" style="width:100%;border:1px solid var(--sc-line);border-radius:12px;background:var(--sc-surface);color:var(--sc-text);font-family:var(--font-body);font-size:14px;padding:11px 13px;outline:none;box-sizing:border-box;flex:none">
+          </div>
+          <div style="flex:none;padding:4px 16px 14px">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">
+              <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+                <div class="sc-key" onClick="{{ k.onClick }}" style="height:44px;display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:21px;color:var(--sc-text);border-radius:10px">{{ k.label }}</div>
+              </sc-for>
+            </div>
+            <div class="sc-press" onClick="{{ manSave }}" style="height:50px;border-radius:14px;background:var(--sc-amber);color:#231a0c;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-heading);font-weight:600;font-size:15px;margin:8px 4px 0"><span style="font-size:18px"><i data-lucide="check"></i></span>{{ manSaveLabel }}</div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ LENT ══════════════ -->
+        <sc-if value="{{ isLent }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--sc-bg)">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 6px;flex:none">
+            <div class="sc-press" onClick="{{ goHome }}" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:18px"><i data-lucide="chevron-left"></i></div>
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:var(--sc-text)">Money lent</span>
+            <div style="width:36px;height:36px"></div>
+          </div>
+          <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:8px 20px 110px">
+            <div style="border:1px solid var(--sc-line);border-radius:18px;padding:18px 20px;background:var(--sc-surface)">
+              <div style="font-size:12.5px;color:var(--sc-muted)">Yet to get back</div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:42px;line-height:1;color:var(--sc-text);margin:8px 0 10px;font-feature-settings:'tnum'">{{ lentTotal }}</div>
+              <div style="font-size:12px;color:var(--sc-muted)">{{ lentSummaryLine }} · not counted in your budgets</div>
+            </div>
+
+            <div style="margin:24px 2px 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Outstanding</div>
+            <sc-if value="{{ lentHasOpen }}" hint-placeholder-val="{{ true }}">
+              <div style="border:1px solid var(--sc-line);border-radius:14px;background:var(--sc-surface);overflow:hidden">
+                <sc-for list="{{ lentOpenPeople }}" as="p" hint-placeholder-count="3">
+                  <div style="border-bottom:1px solid var(--sc-line)">
+                    <div class="sc-press" onClick="{{ p.onToggle }}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:44px">
+                      <span style="width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;border:1px solid var(--sc-line);color:var(--sc-amber);font-family:var(--font-heading);font-weight:600;font-size:16px">{{ p.initial }}</span>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:14px;color:var(--sc-text)">{{ p.name }}</div>
+                        <div style="font-size:11.5px;color:var(--sc-faint);margin-top:1px">{{ p.sub }}</div>
+                      </div>
+                      <span style="font-size:15px;color:var(--sc-text);font-feature-settings:'tnum'">{{ p.amount }}</span>
+                      <span style="font-size:15px;color:var(--sc-faint)"><i data-lucide="{{ p.chev }}"></i></span>
+                    </div>
+                    <sc-if value="{{ p.open }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:0 14px 14px 62px;display:flex;flex-direction:column;gap:8px;animation:scpop .25s ease both">
+                        <sc-for list="{{ p.entries }}" as="e" hint-placeholder-count="2">
+                          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--sc-line)">
+                            <div style="flex:1;min-width:0">
+                              <div style="font-size:13px;color:{{ e.color }};text-decoration:{{ e.strike }};font-feature-settings:'tnum'">{{ e.amount }}</div>
+                              <div style="font-size:11px;color:var(--sc-faint)">{{ e.meta }}</div>
+                            </div>
+                            <sc-if value="{{ e.canSettle }}" hint-placeholder-val="{{ true }}">
+                              <span class="sc-press" onClick="{{ e.onSettle }}" style="padding:7px 11px;border-radius:9px;border:1px solid var(--sc-green);color:var(--sc-green);font-size:12px;display:flex;align-items:center;gap:5px"><span style="font-size:13px"><i data-lucide="check"></i></span>Got back</span>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+                          <span class="sc-press" onClick="{{ p.onSettleAll }}" style="min-height:40px;border-radius:10px;border:1px solid var(--sc-green);color:var(--sc-green);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:5px"><span style="font-size:14px"><i data-lucide="check-check"></i></span>All returned</span>
+                          <span class="sc-press" onClick="{{ p.onLendMore }}" style="min-height:40px;border-radius:10px;border:1px solid var(--sc-amber);color:var(--sc-amber);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:5px"><span style="font-size:14px"><i data-lucide="plus"></i></span>Lend more</span>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ lentEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px dashed var(--sc-line);border-radius:14px;padding:22px;text-align:center;font-size:13px;color:var(--sc-muted)">Nobody owes you right now.</div>
+            </sc-if>
+
+            <sc-if value="{{ lentHasSettled }}" hint-placeholder-val="{{ true }}">
+              <div style="margin:24px 2px 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Settled</div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ lentSettledPeople }}" as="p" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--sc-line)">
+                    <span style="width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;border:1px solid var(--sc-line);color:var(--sc-faint);font-family:var(--font-heading);font-weight:600;font-size:14px">{{ p.initial }}</span>
+                    <div style="flex:1;min-width:0;font-size:13.5px;color:var(--sc-muted)">{{ p.name }}</div>
+                    <span style="font-size:12px;color:var(--sc-green);display:flex;align-items:center;gap:4px;font-feature-settings:'tnum'"><span style="font-size:13px"><i data-lucide="check"></i></span>{{ p.amount }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:14px 20px 22px;background:linear-gradient(to top,var(--sc-bg) 70%,transparent)">
+            <div class="sc-press" onClick="{{ lentOpenAdd }}" style="height:54px;border-radius:14px;background:var(--sc-amber);color:#231a0c;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-heading);font-weight:600;font-size:15px"><span style="font-size:18px"><i data-lucide="plus"></i></span>Record money lent</div>
+          </div>
+
+          <sc-if value="{{ lentAdding }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ lentCloseAdd }}" style="position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:5"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--sc-bg);border-top:1px solid var(--sc-line);border-radius:22px 22px 0 0;padding:16px 20px 22px;animation:scpop .28s ease both">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                <span style="font-family:var(--font-heading);font-weight:600;font-size:18px;color:var(--sc-text)">Money lent</span>
+                <div class="sc-press" onClick="{{ lentCloseAdd }}" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--sc-faint);font-size:19px"><i data-lucide="x"></i></div>
+              </div>
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin-bottom:6px">Lent to</div>
+              <input value="{{ lentName }}" onInput="{{ lentNameChange }}" ref="{{ lentNameRef }}" placeholder="Name" style="width:100%;box-sizing:border-box;background:var(--sc-surface);border:1px solid var(--sc-line);border-radius:12px;color:var(--sc-text);font-family:var(--font-body);font-size:15px;padding:12px 13px;outline:none">
+              <sc-if value="{{ lentHasPeopleChips }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+                  <sc-for list="{{ lentPeopleChips }}" as="c" hint-placeholder-count="3">
+                    <span class="sc-press" onClick="{{ c.onClick }}" style="padding:7px 12px;border-radius:18px;font-size:12.5px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</span>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin:14px 0 6px">Amount</div>
+              <div style="display:flex;align-items:center;gap:6px;background:var(--sc-surface);border:1px solid var(--sc-line);border-radius:12px;padding:6px 13px">
+                <span style="font-family:var(--font-heading);font-size:22px;color:var(--sc-muted)">₹</span>
+                <input value="{{ lentAmount }}" onInput="{{ lentAmountChange }}" inputMode="numeric" placeholder="0" style="flex:1;min-width:0;background:transparent;border:none;color:var(--sc-text);font-family:var(--font-heading);font-weight:600;font-size:28px;padding:4px 0;outline:none;font-feature-settings:'tnum'">
+              </div>
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted);margin:14px 0 6px">Note (optional)</div>
+              <input value="{{ lentNote }}" onInput="{{ lentNoteChange }}" placeholder="e.g. Goa trip share" style="width:100%;box-sizing:border-box;background:var(--sc-surface);border:1px solid var(--sc-line);border-radius:12px;color:var(--sc-text);font-family:var(--font-body);font-size:14px;padding:12px 13px;outline:none">
+              <div class="sc-press" onClick="{{ lentSave }}" style="height:54px;border-radius:14px;background:var(--sc-amber);color:#231a0c;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-heading);font-weight:600;font-size:15px;margin-top:18px"><span style="font-size:18px"><i data-lucide="check"></i></span>Save</div>
+            </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- ══════════════ LOCK ══════════════ -->
+        <sc-if value="{{ isLock }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:0 24px 26px;background:var(--sc-bg)">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+            <div style="width:60px;height:60px;border-radius:18px;border:1px solid var(--sc-amber);display:grid;place-items:center;color:var(--sc-amber);font-size:26px"><i data-lucide="lock-keyhole"></i></div>
+            <div style="text-align:center"><div style="font-family:var(--font-heading);font-weight:600;font-size:23px;color:var(--sc-text)">SpendCheck</div><div style="font-size:13px;color:var(--sc-muted);margin-top:4px">Enter your passcode</div></div>
+            <div style="display:flex;gap:15px;margin-top:2px">
+              <sc-for list="{{ lockDots }}" as="d" hint-placeholder-count="4">
+                <span style="width:13px;height:13px;border-radius:50%;background:{{ d.bg }};border:1.5px solid {{ d.border }}"></span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:250px">
+            <sc-for list="{{ lockKeys }}" as="k" hint-placeholder-count="12">
+              <div class="sc-key" onClick="{{ k.onClick }}" style="height:58px;display:grid;place-items:center;border-radius:50%;font-family:var(--font-heading);font-weight:600;font-size:24px;color:{{ k.color }}">{{ k.label }}</div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:22px;color:var(--sc-amber);font-size:13px"><span style="font-size:17px"><i data-lucide="scan-face"></i></span>Use Face ID</div>
+        </div>
+        </sc-if>
+
+        <!-- TOAST -->
+        <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;left:20px;right:20px;bottom:100px;z-index:20;animation:sctoast 2.4s ease both">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--sc-surface2);border:1px solid var(--sc-line);border-radius:14px;padding:13px 16px;box-shadow:0 12px 30px -10px rgba(0,0,0,.7)">
+              <span style="width:26px;height:26px;border-radius:50%;background:{{ toastIconBg }};color:{{ toastIconColor }};display:grid;place-items:center;font-size:15px"><i data-lucide="{{ toastIcon }}"></i></span>
+              <span style="font-size:13.5px;color:var(--sc-text);flex:1">{{ toast }}</span>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <!-- BOTTOM NAV -->
+      <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;left:0;right:0;bottom:0;height:82px;background:linear-gradient(to top,var(--sc-bg) 64%,transparent);border-top:1px solid var(--sc-line);display:flex;align-items:flex-start;justify-content:space-around;padding:10px 14px 0">
+          <div class="sc-press" onClick="{{ goHome }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ navHome }};width:54px"><span style="font-size:22px"><i data-lucide="home"></i></span><span style="font-size:10px">Home</span></div>
+          <div class="sc-press" onClick="{{ goLog }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ navLog }};width:54px"><span style="font-size:22px"><i data-lucide="receipt-text"></i></span><span style="font-size:10px">Log</span></div>
+          <div class="sc-press" onClick="{{ goQuickAdd }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;width:58px;margin-top:-20px">
+            <div style="width:58px;height:58px;border-radius:50%;background:var(--sc-amber);display:grid;place-items:center;color:#231a0c;font-size:26px;box-shadow:0 10px 22px -6px color-mix(in srgb,var(--sc-amber) 70%,transparent)"><i data-lucide="plus"></i></div>
+            <span style="font-size:10px;color:var(--sc-amber)">Add</span>
+          </div>
+          <div class="sc-press" onClick="{{ goTrends }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ navTrends }};width:54px"><span style="font-size:22px"><i data-lucide="bar-chart-3"></i></span><span style="font-size:10px">Trends</span></div>
+          <div class="sc-press" onClick="{{ goSettings }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ navSettings }};width:54px"><span style="font-size:22px"><i data-lucide="settings"></i></span><span style="font-size:10px">Settings</span></div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.PLAN = {
+      'Food Needs':12000,'Health/medical':3000,'Home':8000,'Transportation':6000,'EMI':11000,'UPI Lite':2000,
+      'Personal':5000,'Party/Contro':2000,'Utilities':3000,'Trip/Travel':4000,'Other':1500,'Clothes':2000,'CC Bills':6000,'Food Wants':3000,
+      'Investment':20000
+    };
+    this.KIND = {};
+    ['Food Needs','Health/medical','Home','Transportation','EMI','UPI Lite'].forEach(c=>this.KIND[c]='need');
+    ['Personal','Party/Contro','Utilities','Trip/Travel','Other','Clothes','CC Bills','Food Wants'].forEach(c=>this.KIND[c]='want');
+    this.KIND['Investment']='save';
+    this.ICON = {'Food Wants':'utensils','Food Needs':'shopping-basket','Transportation':'bus','Clothes':'shirt','Utilities':'tv','Investment':'trending-up','EMI':'landmark','Home':'zap','Health/medical':'cross','Personal':'user','Party/Contro':'party-popper','Trip/Travel':'plane','Other':'shapes','UPI Lite':'smartphone','CC Bills':'credit-card'};
+    this.state = {
+      route:'home', qaStep:'amount', theme:'dark',
+      qaAmount:'', qaCat:null, qaDesc:'', 
+      askAmount:'', askCat:null,
+      manType:'spend', manAmount:'', manCat:null, manDesc:'', manFromIdx:0, manToIdx:1, manDateIdx:0,
+      lockCode:'', toast:null, toastKind:'ok',
+      lentAdding:false, lentName:'', lentAmount:'', lentNote:'', lentOpen:null,
+      lent:[
+        {id:1,name:'Rohit',amount:1500,date:'Today',note:'Movie + dinner',settled:false},
+        {id:2,name:'Priya',amount:5000,date:'Sat, 2 Aug',note:'Rent top-up',settled:false},
+        {id:3,name:'Rohit',amount:800,date:'Thu, 31 Jul',note:'Cab',settled:false},
+        {id:4,name:'Ankit',amount:2000,date:'Mon, 21 Jul',note:'Concert ticket',settled:true},
+      ],
+      accounts:[
+        {id:1, nick:'Salary', bank:'HDFC Bank', kind:'Debit', icon:'wallet'},
+        {id:2, nick:'Rewards', bank:'ICICI', kind:'Credit card', icon:'credit-card'},
+        {id:3, nick:'Cash', bank:'Wallet', kind:'Cash', icon:'banknote'},
+        {id:4, nick:'Paytm', bank:'Paytm', kind:'UPI wallet', icon:'smartphone'},
+      ],
+      spent:{
+        'Food Needs':9200,'Health/medical':1400,'Home':8000,'Transportation':4100,'EMI':11000,'UPI Lite':900,
+        'Personal':4200,'Party/Contro':2600,'Utilities':2800,'Trip/Travel':3100,'Other':700,'Clothes':2400,'CC Bills':6000,'Food Wants':3600,
+        'Investment':12000
+      },
+      txns:[
+        {id:101,date:'Today',desc:'Zomato — dinner',cat:'Food Wants',account:'Paytm',amount:640,type:'spend'},
+        {id:102,date:'Yesterday',desc:'BigBasket groceries',cat:'Food Needs',account:'HDFC',amount:2380,type:'spend'},
+        {id:103,date:'Yesterday',desc:'SIP — Index fund',cat:'Investment',account:'HDFC',amount:5000,type:'spend'},
+        {id:104,date:'Yesterday',desc:'Netflix',cat:'Utilities',account:'ICICI',amount:649,type:'spend'},
+        {id:105,date:'Fri, 1 Aug',desc:'House rent',cat:'EMI',account:'HDFC',amount:11000,type:'spend'},
+        {id:106,date:'Fri, 1 Aug',desc:'Electricity bill',cat:'Home',account:'HDFC',amount:1180,type:'spend'},
+      ],
+      asks:[
+        {id:1,item:'Zomato dinner',amount:640,cat:'Food Wants',v:'skip',decision:'Skipped'},
+        {id:2,item:'Monthly bus pass',amount:1100,cat:'Transportation',v:'buy',decision:'Bought'},
+        {id:3,item:'Running sneakers',amount:4200,cat:'Clothes',v:'wait',decision:'Delayed'},
+        {id:4,item:'Paracetamol strip',amount:85,cat:'Health/medical',v:'buy',decision:'Bought'},
+      ],
+    };
+    this._seq = 200;
+  }
+  componentDidMount(){ this._icons(); }
+  componentDidUpdate(){
+    this._icons();
+    if(this.state.lentAdding&&!this._lentWas&&!this.state.lentName&&this._lentNameEl){ setTimeout(()=>this._lentNameEl&&this._lentNameEl.focus(),80); }
+    this._lentWas=this.state.lentAdding;
+    const key = this.state.route+'/'+this.state.qaStep;
+    if(key!==this._k){ this._k=key; if(this.state.route==='quickadd'&&this.state.qaStep==='desc'&&this._descEl){ setTimeout(()=>{ this._descEl && this._descEl.focus(); },70); } }
+  }
+  componentWillUnmount(){ clearTimeout(this._idle); clearTimeout(this._toastT); }
+  _icons(){ const run=()=>{ try{ window.lucide && window.lucide.createIcons(); }catch(e){} }; requestAnimationFrame(run); setTimeout(run,120); setTimeout(run,400); }
+
+  fmt(n){ if(n==null) return '0'; let s=String(Math.round(n)); let neg=s[0]==='-'; if(neg) s=s.slice(1); let last3=s.slice(-3), rest=s.slice(0,-3); if(rest) last3=','+last3; rest=rest.replace(/\B(?=(\d{2})+(?!\d))/g,','); return (neg?'-':'')+rest+last3; }
+  rupee(n){ return '₹'+this.fmt(n); }
+  kindColor(k){ return k==='need'?'var(--sc-need)':k==='save'?'var(--sc-save)':'var(--sc-amber)'; }
+  kindTag(k){ if(k==='need') return {bg:'rgba(147,160,184,.15)',fg:'#aeb9cf'}; if(k==='save') return {bg:'rgba(132,176,111,.16)',fg:'var(--sc-green)'}; return {bg:'rgba(227,164,88,.15)',fg:'var(--sc-amber)'}; }
+
+  showToast(msg,kind){ clearTimeout(this._toastT); this.setState({toast:msg,toastKind:kind||'ok'}); this._toastT=setTimeout(()=>this.setState({toast:null}),2300); }
+
+  go(route){ clearTimeout(this._idle); this.setState({route}); }
+  amountTarget(){ const s=this.state; if(s.route==='quickadd'&&s.qaStep==='amount') return 'qaAmount'; if(s.route==='ask') return 'askAmount'; if(s.route==='manualadd') return 'manAmount'; return null; }
+  press(label){
+    const s=this.state;
+    if(s.route==='lock'){
+      if(label==='⌫'){ this.setState({lockCode:s.lockCode.slice(0,-1)}); return; }
+      if(!/^[0-9]$/.test(label)) return;
+      const code=(s.lockCode+label).slice(0,4);
+      this.setState({lockCode:code});
+      if(code.length===4){ setTimeout(()=>this.setState({route:'home',lockCode:''}),180); }
+      return;
+    }
+    const t=this.amountTarget(); if(!t) return;
+    let v=s[t]||'';
+    if(label==='⌫') v=v.slice(0,-1);
+    else if(label==='00'){ if(v==='') return; v=(v+'00').slice(0,9); }
+    else v=(v+label).replace(/^0+(?=\d)/,'').slice(0,9);
+    const patch={}; patch[t]=v; this.setState(patch);
+    if(t==='qaAmount'){
+      clearTimeout(this._idle);
+      this._idle=setTimeout(()=>{ if(this.state.route==='quickadd'&&this.state.qaStep==='amount'&&this.state.qaAmount) this.setState({qaStep:'category'}); },2000);
+    }
+  }
+
+  renderVals(){
+    const s=this.state, self=this;
+    const num = v => parseInt(v||'0',10);
+    const keys = ['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(label=>({label, onClick:()=>self.press(label)}));
+
+    // ── aggregates ──
+    const kinds=['need','want','save'];
+    const agg={need:{p:0,s:0},want:{p:0,s:0},save:{p:0,s:0}};
+    Object.keys(self.PLAN).forEach(c=>{ const k=self.KIND[c]; agg[k].p+=self.PLAN[c]; agg[k].s+=(s.spent[c]||0); });
+    const totalSpent = agg.need.s+agg.want.s+agg.save.s;
+    const start=92400;
+
+    // ── HOME ──
+    const barMeta=[
+      {label:'Needs',k:'need'},{label:'Wants',k:'want'},{label:'Savings',k:'save'}
+    ];
+    const homeBars=barMeta.map(b=>{
+      const {p,s:sp}=agg[b.k]; const pct=p? sp/p:0;
+      let color, note;
+      if(b.k==='save'){ color= pct>=1?'var(--sc-green)':'var(--sc-need)'; note= pct>=1?'goal met':self.rupee(Math.max(0,p-sp))+' to go'; }
+      else { color = pct>1?'var(--sc-red)':pct>=0.9?'var(--sc-amber)':'var(--sc-green)'; note = pct>1? self.rupee(sp-p)+' over' : self.rupee(p-sp)+' left'; }
+      return {label:b.label, spent:self.rupee(sp), planned:self.rupee(p), width:Math.min(100,pct*100).toFixed(0)+'%', pctLabel:Math.round(pct*100)+'% of '+(b.k==='save'?'goal':'plan'), note, color};
+    });
+    const askIcon={buy:{icon:'check',bg:'rgba(132,176,111,.15)',color:'var(--sc-green)'},skip:{icon:'x',bg:'rgba(215,111,94,.15)',color:'var(--sc-red)'},wait:{icon:'clock',bg:'rgba(227,164,88,.15)',color:'var(--sc-amber)'}};
+    const homeAsks=s.asks.slice(0,4).map(a=>({item:a.item,amount:self.rupee(a.amount),cat:a.cat,decision:a.decision,...askIcon[a.v]}));
+
+    // ── LOG ──
+    const order=['Today','Yesterday','Fri, 1 Aug'];
+    const seen={}; s.txns.forEach(t=>{ if(!order.includes(t.date)) order.push(t.date); });
+    const logGroups=order.filter(d=>s.txns.some(t=>t.date===d)).map(d=>{
+      const rows=s.txns.filter(t=>t.date===d).map(t=>{
+        const k=self.KIND[t.cat]||'want'; const tag=self.kindTag(k);
+        const isIn = t.type==='credit'||t.type==='self'||t.type==='transfer';
+        return {desc:t.desc, amount:(isIn?'+':'')+self.rupee(t.amount), amtColor:isIn?'var(--sc-green)':'var(--sc-text)', cat:t.cat||(t.type==='self'?'Self transfer':'Transfer'), account:t.account, icon: t.type==='transfer'||t.type==='self'?'arrow-left-right':(t.type==='credit'?'arrow-down-left':(self.ICON[t.cat]||'circle')), bg:tag.bg, fg:tag.fg, anim: t._new?'scpop .4s ease both':'none'};
+      });
+      const tot=s.txns.filter(t=>t.date===d).reduce((x,t)=>x+t.amount,0);
+      return {date:d, total:self.rupee(tot), rows};
+    });
+
+    // ── TRENDS ──
+    const p1=totalSpent? Math.round(agg.need.s/totalSpent*100):0;
+    const p2=totalSpent? Math.round(agg.want.s/totalSpent*100):0;
+    const p3=100-p1-p2;
+    const donutBg=`conic-gradient(var(--sc-need) 0 ${p1}%, var(--sc-amber) ${p1}% ${p1+p2}%, var(--sc-green) ${p1+p2}% 100%)`;
+    const donutLegend=[
+      {label:'Needs',color:'var(--sc-need)',pct:p1+'%',target:'/ 50'},
+      {label:'Wants',color:'var(--sc-amber)',pct:p2+'%',target:'/ 30'},
+      {label:'Savings',color:'var(--sc-green)',pct:p3+'%',target:'/ 20'},
+    ];
+    const tMax=20000;
+    const trendCats=['Food Needs','EMI','Home','Transportation','Personal','Food Wants','Clothes','Investment'];
+    const trendBars=trendCats.map(c=>{
+      const p=self.PLAN[c], a=s.spent[c]||0, k=self.KIND[c]; const pct=p?a/p:0;
+      let color = k==='save'?'var(--sc-need)':(pct>1?'var(--sc-red)':pct>=0.98?'var(--sc-amber)':'var(--sc-green)');
+      return {name:c, color, pStr:self.rupee(p), aStr:self.rupee(a), pw:(p/tMax*100).toFixed(1)+'%', aw:(Math.min(a,tMax)/tMax*100).toFixed(1)+'%'};
+    });
+    const trendPatterns=[
+      {icon:'utensils',color:'var(--sc-red)',text:'Food Wants: asked 6× this month, skipped 2. Spent ₹3,600 vs ₹3,000 planned — ₹600 over.'},
+      {icon:'shirt',color:'var(--sc-amber)',text:'Clothes ran ₹400 over plan. 2 delayed asks are still open — revisit or drop them.'},
+      {icon:'circle-check',color:'var(--sc-green)',text:'Needs held at '+Math.round(agg.need.s/agg.need.p*100)+'% of plan with 10 days left. On track.'},
+    ];
+
+    // ── SETTINGS ──
+    const setCats=[
+      {name:'Food Needs',group:'Need',amt:'₹12,000'},{name:'EMI',group:'Need',amt:'₹11,000'},
+      {name:'Personal',group:'Want',amt:'₹5,000'},{name:'Food Wants',group:'Want',amt:'₹3,000'},
+      {name:'Investment',group:'Save',amt:'₹20,000'},
+    ].map(c=>({...c, dot: c.group==='Need'?'var(--sc-need)':c.group==='Save'?'var(--sc-save)':'var(--sc-amber)'}));
+    const setAccounts=s.accounts.map(a=>({nick:a.nick, sub:a.bank+' · '+a.kind, icon:a.icon, onRename:()=>self.renameAccount(a.id)}));
+
+    // ── chip builder ──
+    const chipOn={border:'var(--sc-amber)',bg:'rgba(227,164,88,.16)',fg:'var(--sc-amber)'};
+    const chipOff={border:'var(--sc-line)',bg:'transparent',fg:'var(--sc-muted)'};
+    const mkChip=(name,selected,onClick)=>({name, onClick, ...(selected?chipOn:chipOff)});
+
+    // ── ASK ──
+    const askAmt=num(s.askAmount);
+    const askNames=['Personal','Food Wants','Party/Contro','Clothes','Trip/Travel','CC Bills','Utilities','Other'];
+    const askChips=askNames.map(n=>mkChip(n, s.askCat===n, ()=>self.setState({askCat:n})));
+    const askReady = askAmt>0 && !!s.askCat;
+    const verdict = askReady? self.mkVerdict(askAmt, s.askCat) : {};
+    const decide=(v,decision)=>{
+      const cat=s.askCat, amt=askAmt;
+      const ask={id:++self._seq,item:(cat||'Item'),amount:amt,cat,v,decision};
+      const patch={asks:[ask,...s.asks], route:'home', askAmount:'', askCat:null};
+      if(v==='buy'){
+        patch.spent={...s.spent,[cat]:(s.spent[cat]||0)+amt};
+        patch.txns=[{id:++self._seq,date:'Today',desc:cat,cat,account:s.accounts[0].nick,amount:amt,type:'spend',_new:true},...s.txns];
+      }
+      this.setState(patch);
+      this.showToast(decision+' · '+self.rupee(amt)+' '+cat, v==='buy'?'ok':v==='skip'?'skip':'wait');
+    };
+
+    // ── QUICK ADD ──
+    const qaAmt=num(s.qaAmount);
+    const stepIndex={amount:1,category:2,desc:3,account:4}[s.qaStep];
+    const qaCatGroups=[
+      {label:'Needs',color:'var(--sc-need)',list:['Food Needs','Health/medical','Home','Transportation','EMI','UPI Lite']},
+      {label:'Wants',color:'var(--sc-amber)',list:['Personal','Party/Contro','Utilities','Trip/Travel','Other','Clothes','CC Bills','Food Wants']},
+      {label:'Savings',color:'var(--sc-save)',list:['Investment']},
+    ].map(g=>({label:g.label,color:g.color,items:g.list.map(n=>mkChip(n, s.qaCat===n, ()=>self.setState({qaCat:n})))}));
+    const qaCatTag = s.qaCat? self.kindTag(self.KIND[s.qaCat]) : {bg:'transparent',fg:'var(--sc-muted)'};
+    const qaVerdict = s.qaCat? self.mkVerdict(qaAmt, s.qaCat) : {};
+    const qaAccounts=s.accounts.map(a=>({nick:a.nick, sub:a.bank+' · '+a.kind, icon:a.icon, onSelect:()=>self.qaSave(a)}));
+
+    // ── MANUAL ──
+    const manAmt=num(s.manAmount);
+    const manTypeDefs=[{id:'spend',label:'Spend',short:'Spend',icon:'arrow-up-right'},{id:'transfer',label:'Transfer',short:'Transfer',icon:'arrow-left-right'},{id:'self',label:'Self transfer',short:'Self transfer',icon:'repeat'},{id:'credit',label:'Credit',short:'Money in',icon:'arrow-down-left'}];
+    const manTypes=manTypeDefs.map(t=>({label:t.label,short:t.short,icon:t.icon,onClick:()=>self.setState({manType:t.id}),...(s.manType===t.id?chipOn:chipOff)}));
+    const manNeedsCat = s.manType==='spend'||s.manType==='credit';
+    const manIsTransfer = s.manType==='transfer'||s.manType==='self';
+    const manCatNames=['Food Needs','Transportation','Home','EMI','Personal','Clothes','Food Wants','Investment'];
+    const manCatChips=manCatNames.map(n=>mkChip(n, s.manCat===n, ()=>self.setState({manCat:n})));
+    const dates=['Today','Yesterday','Sat, 2 Aug','Thu, 31 Jul'];
+    const accNick=i=>s.accounts[((i%s.accounts.length)+s.accounts.length)%s.accounts.length].nick;
+
+    // ── LENT ──
+    const names=[]; s.lent.forEach(l=>{ if(!names.includes(l.name)) names.push(l.name); });
+    const people=names.map(n=>{
+      const es=s.lent.filter(l=>l.name===n); const open=es.filter(l=>!l.settled);
+      const owed=open.reduce((x,l)=>x+l.amount,0), total=es.reduce((x,l)=>x+l.amount,0);
+      const isOpen=s.lentOpen===n;
+      return {name:n, initial:n.trim()[0].toUpperCase(), owed, total, hasOpen:open.length>0,
+        amount:self.rupee(open.length?owed:total),
+        sub: open.length+(open.length===1?' loan':' loans')+' · since '+open[open.length-1]?.date,
+        open:isOpen, chev:isOpen?'chevron-up':'chevron-down',
+        onToggle:()=>self.setState({lentOpen:isOpen?null:n}),
+        onSettleAll:()=>self.lentSettle(l=>l.name===n, n+' paid back '+self.rupee(owed)),
+        onLendMore:()=>self.setState({lentAdding:true,lentName:n,lentAmount:'',lentNote:''}),
+        entries:es.map(l=>({amount:self.rupee(l.amount), meta:(l.note?l.note+' · ':'')+l.date+(l.settled?' · returned':''), color:l.settled?'var(--sc-faint)':'var(--sc-text)', strike:l.settled?'line-through':'none', canSettle:!l.settled, onSettle:()=>self.lentSettle(x=>x.id===l.id, 'Got back '+self.rupee(l.amount)+' from '+n)}))};
+    });
+    const lentOpenPeople=people.filter(p=>p.hasOpen).sort((a,b)=>b.owed-a.owed);
+    const lentSettledPeople=people.filter(p=>!p.hasOpen);
+    const lentSum=lentOpenPeople.reduce((x,p)=>x+p.owed,0);
+    const lentPeopleChips=names.slice(0,5).map(n=>mkChip(n, s.lentName===n, ()=>self.setState({lentName:n})));
+
+    // ── LOCK ──
+    const lockDots=[0,1,2,3].map(i=>({bg:i<s.lockCode.length?'var(--sc-amber)':'transparent',border:i<s.lockCode.length?'var(--sc-amber)':'var(--sc-line)'}));
+    const lockKeys=['1','2','3','4','5','6','7','8','9','','0','⌫'].map(label=>({label,color:label?'var(--sc-text)':'var(--sc-faint)',onClick:()=>label&&self.press(label)}));
+
+    const toastIconMap={ok:{icon:'check',bg:'rgba(132,176,111,.16)',color:'var(--sc-green)'},skip:{icon:'x',bg:'rgba(215,111,94,.16)',color:'var(--sc-red)'},wait:{icon:'clock',bg:'rgba(227,164,88,.16)',color:'var(--sc-amber)'}};
+    const ti=toastIconMap[s.toastKind]||toastIconMap.ok;
+
+    const active=c=> s.route===c?'var(--sc-amber)':'var(--sc-faint)';
+
+    return {
+      // routing
+      isHome:s.route==='home', isLog:s.route==='log', isTrends:s.route==='trends', isSettings:s.route==='settings',
+      isAsk:s.route==='ask', isQA:s.route==='quickadd', isManual:s.route==='manualadd', isLock:s.route==='lock',
+      showNav: ['home','log','trends','settings'].includes(s.route),
+      navHome:active('home'), navLog:active('log'), navTrends:active('trends'), navSettings:active('settings'),
+      goHome:()=>self.go('home'), goLog:()=>self.go('log'), goTrends:()=>self.go('trends'), goSettings:()=>self.go('settings'),
+      goAsk:()=>self.setState({route:'ask',askAmount:'',askCat:null}),
+      goQuickAdd:()=>self.setState({route:'quickadd',qaStep:'amount',qaAmount:'',qaCat:null,qaDesc:''}),
+      goManual:()=>self.setState({route:'manualadd'}),
+      keys,
+      themeCls: s.theme==='light'?'sc-light':'',
+      setDark:()=>self.setState({theme:'dark'}), setLight:()=>self.setState({theme:'light'}),
+      darkBg:s.theme==='dark'?'var(--sc-amber)':'transparent', darkFg:s.theme==='dark'?'#231a0c':'var(--sc-muted)',
+      lightBg:s.theme==='light'?'var(--sc-amber)':'transparent', lightFg:s.theme==='light'?'#231a0c':'var(--sc-muted)',
+      // home
+      homeBalance:self.rupee(start-totalSpent), homeStart:self.rupee(start), homeSpent:self.rupee(totalSpent), homeSpentPct:Math.min(100,totalSpent/start*100).toFixed(0)+'%',
+      homeBars, homeAsks,
+      // log
+      logGroups,
+      // trends
+      donutBg, donutTotal:'₹'+(totalSpent>=1000?(totalSpent/1000).toFixed(1)+'k':totalSpent), donutLegend, trendBars, trendPatterns,
+      // settings
+      setCats, setAccounts, addAccount:()=>self.addAccount(), lockNow:()=>self.setState({route:'lock',lockCode:''}),
+      // ask
+      askAmountDisplay: s.askAmount? self.fmt(askAmt) : '0', askCaret: !(askAmt>0),
+      askChips, askReady, askKeypad:!askReady, verdict,
+      askEditAmount:()=>self.setState({askCat:s.askCat}),
+      decideBuy:()=>decide('buy','Bought'), decideSkip:()=>decide('skip','Skipped'), decideWait:()=>decide('wait','Delayed'),
+      // quick add
+      qaAmountStep:s.qaStep==='amount', qaCatStep:s.qaStep==='category', qaDescStep:s.qaStep==='desc', qaAccStep:s.qaStep==='account',
+      qaTitle:{amount:'Add money',category:'What kind?',desc:'Add a note',account:'Paid from'}[s.qaStep],
+      qaStepLabel:'Step '+stepIndex+' of 4',
+      qaBackIcon: 'chevron-left',
+      qaBack:()=>{ const ord=['amount','category','desc','account']; const i=ord.indexOf(s.qaStep); if(i<=0){ self.go('log'); } else { self.setState({qaStep:ord[i-1]}); } },
+      qaAmountDisplay: s.qaAmount? self.fmt(qaAmt) : '0', qaAmountColor: qaAmt>0?'var(--sc-text)':'var(--sc-faint)',
+      qaAmountBig: self.rupee(qaAmt),
+      qaAmountReady: qaAmt>0,
+      qaIdleHint: qaAmt>0? 'Pause a second — we\u2019ll move on automatically' : 'Type the amount',
+      qaToCategory:()=>{ clearTimeout(self._idle); self.setState({qaStep:'category'}); },
+      qaCatGroups,
+      qaCatSelected:!!s.qaCat, qaVerdict, qaCatContinue:()=>self.setState({qaStep:'desc'}),
+      qaCatName:s.qaCat||'', qaCatBg:qaCatTag.bg, qaCatFg:qaCatTag.fg,
+      qaDesc:s.qaDesc, qaDescChange:(e)=>self.setState({qaDesc:e.target.value}), qaDescRef:(el)=>{self._descEl=el;},
+      qaToAccount:()=>self.setState({qaStep:'account'}),
+      qaDescPreview: s.qaDesc||s.qaCat||'—',
+      qaAccounts, qaCanAddAccount: s.accounts.length<6,
+      // manual
+      manTypes, manNeedsCat, manIsTransfer,
+      manAmountDisplay: s.manAmount? self.fmt(manAmt):'0',
+      manCatChips, manDesc:s.manDesc, manDescChange:(e)=>self.setState({manDesc:e.target.value}),
+      manFrom:accNick(s.manFromIdx), manTo:accNick(s.manToIdx),
+      manCycleFrom:()=>self.setState({manFromIdx:s.manFromIdx+1}), manCycleTo:()=>self.setState({manToIdx:s.manToIdx+1}),
+      manDate:dates[s.manDateIdx%dates.length], manCycleDate:()=>self.setState({manDateIdx:s.manDateIdx+1}),
+      manSaveLabel:'Save '+(manTypeDefs.find(t=>t.id===s.manType)||{}).label.toLowerCase(),
+      manSave:()=>self.manSave(),
+      // lent
+      isLent:s.route==='lent', goLent:()=>self.setState({route:'lent',lentOpen:null,lentAdding:false}),
+      lentTotal:self.rupee(lentSum),
+      lentSummaryLine: lentOpenPeople.length? lentOpenPeople.length+(lentOpenPeople.length===1?' person owes you':' people owe you') : 'All settled',
+      lentOpenPeople, lentSettledPeople, lentHasOpen:lentOpenPeople.length>0, lentEmpty:lentOpenPeople.length===0, lentHasSettled:lentSettledPeople.length>0,
+      lentAdding:s.lentAdding, lentOpenAdd:()=>self.setState({lentAdding:true,lentName:'',lentAmount:'',lentNote:''}), lentCloseAdd:()=>self.setState({lentAdding:false}),
+      lentName:s.lentName, lentNameChange:e=>self.setState({lentName:e.target.value}), lentNameRef:el=>{self._lentNameEl=el;},
+      lentAmount:s.lentAmount? self.fmt(num(s.lentAmount)):'', lentAmountChange:e=>self.setState({lentAmount:e.target.value.replace(/\D/g,'').slice(0,9)}),
+      lentNote:s.lentNote, lentNoteChange:e=>self.setState({lentNote:e.target.value}),
+      lentPeopleChips, lentHasPeopleChips:lentPeopleChips.length>0,
+      lentSave:()=>self.lentSave(),
+      // lock
+      lockDots, lockKeys,
+      // toast
+      toast:s.toast, toastIcon:ti.icon, toastIconBg:ti.bg, toastIconColor:ti.color,
+    };
+  }
+
+  mkVerdict(amt,cat){
+    const self=this, s=this.state;
+    const plan=self.PLAN[cat], sp=s.spent[cat]||0, remaining=plan-sp, after=remaining-amt, k=self.KIND[cat], tag=self.kindTag(k);
+    if(amt<=remaining){
+      return {ok:true,color:'var(--sc-green)',tint:'rgba(132,176,111,.07)',iconBg:'rgba(132,176,111,.16)',icon:'check',head:'Looks fine',tag:cat,tagBg:tag.bg,tagFg:tag.fg,title:'₹'+self.fmt(remaining)+' left in '+cat,body:'This fits — you\u2019d have ₹'+self.fmt(after)+' left of your ₹'+self.fmt(plan)+' plan.'};
+    }
+    const over=amt-remaining;
+    return {ok:false,color:'var(--sc-red)',tint:'rgba(215,111,94,.07)',iconBg:'rgba(215,111,94,.16)',icon:'alert-triangle',head:'Over plan',tag:cat+' · '+(k==='need'?'Need':k==='save'?'Save':'Want'),tagBg:'rgba(227,164,88,.15)',tagFg:'var(--sc-amber)',title:remaining>0?('Only ₹'+self.fmt(remaining)+' left in '+cat):(cat+' already over plan'),body:'This puts you ₹'+self.fmt(over)+' over your ₹'+self.fmt(plan)+' monthly plan.'};
+  }
+  qaSave(acc){
+    const s=this.state; const amt=parseInt(s.qaAmount||'0',10); const cat=s.qaCat;
+    const desc=s.qaDesc||cat;
+    const txn={id:++this._seq,date:'Today',desc,cat,account:acc.nick,amount:amt,type:'spend',_new:true};
+    const spent={...s.spent,[cat]:(s.spent[cat]||0)+amt};
+    clearTimeout(this._idle);
+    this.setState({txns:[txn,...s.txns], spent, route:'log', qaStep:'amount', qaAmount:'', qaCat:null, qaDesc:''});
+    this.showToast('Added '+this.rupee(amt)+' · '+cat, 'ok');
+  }
+  manSave(){
+    const s=this.state; const amt=parseInt(s.manAmount||'0',10);
+    if(!amt){ this.showToast('Enter an amount first','skip'); return; }
+    const acc=this.state.accounts;
+    const from=acc[((s.manFromIdx%acc.length)+acc.length)%acc.length].nick;
+    const to=acc[((s.manToIdx%acc.length)+acc.length)%acc.length].nick;
+    const date=['Today','Yesterday','Sat, 2 Aug','Thu, 31 Jul'][s.manDateIdx%4];
+    let txn, patch={};
+    if(s.manType==='transfer'||s.manType==='self'){
+      txn={id:++this._seq,date,desc:s.manDesc||(s.manType==='self'?'Self transfer':'Transfer to '+to),cat:null,account:from+' → '+to,amount:amt,type:s.manType};
+    } else {
+      const cat=s.manCat||'Other';
+      txn={id:++this._seq,date,desc:s.manDesc||cat,cat,account:from,amount:amt,type:s.manType};
+      if(s.manType==='spend'){ patch.spent={...s.spent,[cat]:(s.spent[cat]||0)+amt}; }
+    }
+    txn._new=true;
+    patch.txns=[txn,...s.txns]; patch.route='log'; patch.manAmount=''; patch.manDesc=''; patch.manCat=null;
+    this.setState(patch);
+    this.showToast('Saved '+this.rupee(amt), 'ok');
+  }
+  lentSave(){
+    const s=this.state; const name=(s.lentName||'').trim(); const amt=parseInt(s.lentAmount||'0',10);
+    if(!name){ this.showToast('Add a name','skip'); return; }
+    if(!amt){ this.showToast('Enter an amount','skip'); return; }
+    const match=s.lent.find(l=>l.name.toLowerCase()===name.toLowerCase());
+    const n=match?match.name:name;
+    this.setState({lent:[{id:++this._seq,name:n,amount:amt,date:'Today',note:(s.lentNote||'').trim(),settled:false},...s.lent], lentAdding:false, lentOpen:n});
+    this.showToast('Lent '+this.rupee(amt)+' to '+n,'wait');
+  }
+  lentSettle(pred,msg){
+    this.setState({lent:this.state.lent.map(l=>pred(l)?{...l,settled:true}:l)});
+    this.showToast(msg,'ok');
+  }
+  renameAccount(id){
+    const acc=this.state.accounts.find(a=>a.id===id); if(!acc) return;
+    const n=window.prompt('Nickname for '+acc.bank, acc.nick);
+    if(n!=null && n.trim()) this.setState({accounts:this.state.accounts.map(a=>a.id===id?{...a,nick:n.trim()}:a)});
+  }
+  addAccount(){
+    if(this.state.accounts.length>=6){ this.showToast('Up to 6 accounts','skip'); return; }
+    const bank=window.prompt('Bank / wallet name (e.g. SBI)'); if(!bank) return;
+    const nick=window.prompt('Nickname for this account', bank)||bank;
+    const acc={id:Date.now(), nick:nick.trim(), bank:bank.trim(), kind:'Account', icon:'wallet'};
+    this.setState({accounts:[...this.state.accounts, acc]});
+  }
+}
+</script>
+</body>
+</html>

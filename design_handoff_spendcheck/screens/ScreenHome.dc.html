@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:312px;height:712px;background:var(--sc-bg);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;font-family:var(--font-body)">
+
+  <!-- status bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 22px 5px;font-size:12px;color:var(--sc-text);font-feature-settings:'tnum'">
+    <span style="font-weight:600">9:41</span>
+    <span style="display:flex;gap:6px;align-items:center;color:var(--sc-muted)"><span style="font-size:13px"><i data-lucide="signal"></i></span><span style="font-size:13px"><i data-lucide="wifi"></i></span><span style="font-size:14px"><i data-lucide="battery-full"></i></span></span>
+  </div>
+
+  <!-- scroll -->
+  <div class="sc-scroll" style="flex:1;overflow-y:auto;padding:6px 18px 92px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px">
+      <div>
+        <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sc-amber)">This month</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--sc-text);line-height:1.1;margin-top:2px">August 2026</div>
+      </div>
+      <div style="width:40px;height:40px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:19px"><i data-lucide="user"></i></div>
+    </div>
+
+    <!-- balance card -->
+    <div style="border:1px solid var(--sc-line);border-radius:16px;padding:18px 18px 16px;background:var(--sc-surface)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:12px;color:var(--sc-muted)">Balance left to spend</span>
+        <span style="font-size:15px;color:var(--sc-faint)"><i data-lucide="info"></i></span>
+      </div>
+      <div style="font-family:var(--font-heading);font-weight:600;font-size:44px;line-height:1;color:var(--sc-text);margin:8px 0 14px;font-feature-settings:'tnum'">₹34,900</div>
+      <div style="height:7px;border-radius:6px;background:var(--sc-surface2);overflow:hidden"><div style="height:100%;width:62%;background:var(--sc-amber);border-radius:6px"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px;color:var(--sc-muted);font-feature-settings:'tnum'">
+        <span>Started <span style="color:var(--sc-text)">₹92,400</span></span>
+        <span>Spent <span style="color:var(--sc-text)">₹57,500</span></span>
+      </div>
+    </div>
+
+    <!-- budgets -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:24px 2px 14px">
+      <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Budgets</span>
+      <span style="font-size:11px;color:var(--sc-muted);font-feature-settings:'tnum'">day 21 / 31</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <!-- needs -->
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13.5px;color:var(--sc-text)">Needs</span>
+          <span style="font-size:12px;color:var(--sc-muted);font-feature-settings:'tnum'"><span style="color:var(--sc-text)">₹28,600</span> / ₹42,000</span>
+        </div>
+        <div style="height:9px;border-radius:6px;background:var(--sc-surface2);overflow:hidden"><div style="height:100%;width:68%;background:var(--sc-green);border-radius:6px"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sc-muted)"><span>68% of plan</span><span style="color:var(--sc-green)">₹13,400 left</span></div>
+      </div>
+      <!-- wants -->
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13.5px;color:var(--sc-text)">Wants</span>
+          <span style="font-size:12px;color:var(--sc-muted);font-feature-settings:'tnum'"><span style="color:var(--sc-text)">₹16,900</span> / ₹18,000</span>
+        </div>
+        <div style="height:9px;border-radius:6px;background:var(--sc-surface2);overflow:hidden"><div style="height:100%;width:94%;background:var(--sc-amber);border-radius:6px"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sc-muted)"><span>94% of plan</span><span style="color:var(--sc-amber)">₹1,100 left · tight</span></div>
+      </div>
+      <!-- savings -->
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13.5px;color:var(--sc-text)">Savings</span>
+          <span style="font-size:12px;color:var(--sc-muted);font-feature-settings:'tnum'"><span style="color:var(--sc-text)">₹12,000</span> / ₹20,000</span>
+        </div>
+        <div style="height:9px;border-radius:6px;background:var(--sc-surface2);overflow:hidden"><div style="height:100%;width:60%;background:var(--sc-need);border-radius:6px"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sc-muted)"><span>60% of goal</span><span style="color:var(--sc-need)">₹8,000 to go</span></div>
+      </div>
+    </div>
+
+    <!-- recent asks -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 2px 12px">
+      <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sc-muted)">Recent asks</span>
+      <span style="font-size:12px;color:var(--sc-amber);display:flex;align-items:center;gap:2px">See all <span style="font-size:14px"><i data-lucide="chevron-right"></i></span></span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ asks }}" as="a" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--sc-line)">
+          <div style="width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:17px;background:{{ a.iconBg }};color:{{ a.iconColor }}"><i data-lucide="{{ a.icon }}"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;color:var(--sc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.item }}</div>
+            <div style="font-size:11.5px;color:var(--sc-muted);margin-top:1px">{{ a.decision }} · {{ a.cat }}</div>
+          </div>
+          <div style="font-size:14px;color:var(--sc-text);font-feature-settings:'tnum'">{{ a.amount }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+
+  <!-- bottom nav -->
+  <div style="position:absolute;left:0;right:0;bottom:0;height:76px;background:linear-gradient(to top,var(--sc-bg) 62%,transparent);border-top:1px solid var(--sc-line);display:flex;align-items:flex-start;justify-content:space-around;padding:9px 12px 0">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-amber);width:52px">
+      <span style="font-size:21px"><i data-lucide="home"></i></span><span style="font-size:10px">Home</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px">
+      <span style="font-size:21px"><i data-lucide="receipt-text"></i></span><span style="font-size:10px">Log</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;width:56px;margin-top:-20px">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--sc-amber);display:grid;place-items:center;color:#231a0c;font-size:25px;box-shadow:0 10px 22px -6px color-mix(in srgb,var(--sc-amber) 70%,transparent)"><i data-lucide="help-circle"></i></div>
+      <span style="font-size:10px;color:var(--sc-amber)">Ask</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px">
+      <span style="font-size:21px"><i data-lucide="bar-chart-3"></i></span><span style="font-size:10px">Trends</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sc-faint);width:52px">
+      <span style="font-size:21px"><i data-lucide="settings"></i></span><span style="font-size:10px">Settings</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const K = {
+      need:{bg:'rgba(147,160,184,.15)',fg:'#aeb9cf'},
+      want:{bg:'rgba(227,164,88,.15)',fg:'var(--sc-amber)'},
+      save:{bg:'rgba(132,176,111,.16)',fg:'var(--sc-green)'}
+    };
+    const V = {
+      buy:{icon:'check',bg:'rgba(132,176,111,.15)',color:'var(--sc-green)'},
+      skip:{icon:'x',bg:'rgba(215,111,94,.15)',color:'var(--sc-red)'},
+      wait:{icon:'clock',bg:'rgba(227,164,88,.15)',color:'var(--sc-amber)'}
+    };
+    const asks = [
+      {item:'Zomato dinner', amount:'₹640', cat:'Food Wants', v:'skip', decision:'Skipped'},
+      {item:'Monthly bus pass', amount:'₹1,100', cat:'Transportation', v:'buy', decision:'Bought'},
+      {item:'Running sneakers', amount:'₹4,200', cat:'Clothes', v:'wait', decision:'Delayed'},
+      {item:'Paracetamol strip', amount:'₹85', cat:'Health/medical', v:'buy', decision:'Bought'},
+    ].map(a => ({...a, icon:V[a.v].icon, iconBg:V[a.v].bg, iconColor:V[a.v].color}));
+    return { asks };
+  }
+}
+</script>
+</body>
+</html>

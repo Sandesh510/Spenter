@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:312px;height:712px;background:var(--sc-bg);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;font-family:var(--font-body)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 22px 5px;font-size:12px;color:var(--sc-text);font-feature-settings:'tnum'">
+    <span style="font-weight:600">9:41</span>
+    <span style="display:flex;gap:6px;align-items:center;color:var(--sc-muted)"><span style="font-size:13px"><i data-lucide="signal"></i></span><span style="font-size:13px"><i data-lucide="wifi"></i></span><span style="font-size:14px"><i data-lucide="battery-full"></i></span></span>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 4px">
+    <div style="width:36px;height:36px;border-radius:50%;border:1px solid var(--sc-line);display:grid;place-items:center;color:var(--sc-muted);font-size:18px"><i data-lucide="chevron-left"></i></div>
+    <span style="font-family:var(--font-heading);font-weight:600;font-size:17px;color:var(--sc-text)">Add transaction</span>
+    <div style="width:36px;height:36px"></div>
+  </div>
+
+  <div style="flex:1;overflow:hidden;padding:6px 18px 0;display:flex;flex-direction:column">
+
+    <!-- description -->
+    <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--sc-line);border-radius:12px;padding:11px 13px;background:var(--sc-surface)">
+      <span style="font-size:15px;color:var(--sc-faint)"><i data-lucide="pencil-line"></i></span>
+      <span style="font-size:14px;color:var(--sc-text)">BigBasket groceries</span>
+    </div>
+
+    <!-- account + date -->
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--sc-line);border-radius:12px;padding:11px 12px">
+        <span style="font-size:15px;color:var(--sc-faint)"><i data-lucide="wallet"></i></span>
+        <span style="font-size:13px;color:var(--sc-text);flex:1">HDFC Debit</span>
+        <span style="font-size:14px;color:var(--sc-faint)"><i data-lucide="chevron-down"></i></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--sc-line);border-radius:12px;padding:11px 12px">
+        <span style="font-size:14px;color:var(--sc-faint)"><i data-lucide="calendar"></i></span>
+        <span style="font-size:13px;color:var(--sc-text)">Today</span>
+      </div>
+    </div>
+
+    <!-- category chips -->
+    <div style="margin:16px 0 7px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sc-muted)">Category</div>
+    <div class="sc-scroll" style="display:flex;gap:8px;overflow-x:auto;margin:0 -18px;padding:0 18px 4px">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="6">
+        <span style="flex:none;padding:8px 13px;border-radius:20px;font-size:12.5px;white-space:nowrap;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</span>
+      </sc-for>
+    </div>
+
+    <!-- amount -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:2px;padding:16px 0 12px">
+      <span style="font-family:var(--font-heading);font-size:24px;color:var(--sc-muted)">₹</span>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:42px;line-height:1;color:var(--sc-text);font-feature-settings:'tnum'">2,380</span>
+    </div>
+
+    <!-- keypad -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin:0 -4px">
+      <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+        <div style="height:46px;display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--sc-text);border-radius:10px">{{ k }}</div>
+      </sc-for>
+    </div>
+
+    <button style="width:100%;height:52px;margin:12px 0 16px;border-radius:14px;background:var(--sc-amber);color:#231a0c;border:none;font-family:var(--font-heading);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer">
+      <span style="font-size:18px"><i data-lucide="check"></i></span>Save transaction
+    </button>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const on = {border:'var(--sc-amber)', bg:'rgba(227,164,88,.16)', fg:'var(--sc-amber)'};
+    const off = {border:'var(--sc-line)', bg:'transparent', fg:'var(--sc-muted)'};
+    const names = ['Food Needs','Transportation','Home','EMI','Health/medical','UPI Lite'];
+    const chips = names.map((name,i) => ({ name, ...(i===0?on:off) }));
+    return { chips, keys: ['1','2','3','4','5','6','7','8','9','.','0','⌫'] };
+  }
+}
+</script>
+</body>
+</html>
