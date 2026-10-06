@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { formatINR } from '../lib/money';
+import { todayIST } from '../lib/dates';
 import { useApi } from '../lib/useApi';
 import type { Loan } from '../lib/types';
 import type { Route } from '../App';
@@ -22,6 +23,7 @@ interface Person {
  */
 export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
   const { data, error, reload } = useApi<{ items: Loan[] }>('lent', token);
+  const accounts = useApi<{ items: { id: string }[] }>('accounts', token);
   const [open, setOpen] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
@@ -35,9 +37,9 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
     const map = new Map<string, Person>();
     for (const l of loans) {
       const p = map.get(l.person_name) ?? { name: l.person_name, open: [], owed: 0, since: l.lent_on };
-      if (!l.settled_at) {
+      if (l.outstanding_paise > 0) {
         p.open.push(l);
-        p.owed += l.amount_paise;
+        p.owed += l.outstanding_paise;
         if (l.lent_on < p.since) p.since = l.lent_on;
       }
       map.set(l.person_name, p);
@@ -55,6 +57,30 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
     setBusy(true);
     try {
       await api('lent', { token, body });
+      haptic('success');
+      reload();
+      onToast(done);
+    } catch (e) {
+      haptic('error');
+      setErr(e instanceof Error ? e.message : 'Could not save');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Records each loan's outstanding amount as a Gone back credit into the first account. */
+  async function goneBack(list: Loan[], done: string) {
+    const accountId = accounts.data?.items[0]?.id;
+    if (!accountId) return setErr('Add an account in Settings first');
+    setErr(null);
+    setBusy(true);
+    try {
+      for (const l of list) {
+        await api('transactions', {
+          token,
+          body: { type: 'credit', amount: String(l.outstanding_paise / 100), date: todayIST(), accountId, creditCategory: 'gone_back', lentLoanId: l.id },
+        });
+      }
       haptic('success');
       reload();
       onToast(done);
@@ -110,14 +136,14 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
                 {p.open.map(l => (
                   <div className="flex ai-c gap-10" key={l.id} >
                     <div className="flex-1 min-0">
-                      <div className="num fs-14">{formatINR(l.amount_paise)}</div>
+                      <div className="num fs-14">{formatINR(l.outstanding_paise)} <span className="c-mut">of {formatINR(l.amount_paise)}</span></div>
                       <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}</div>
                     </div>
-                    <button className="link" disabled={busy} onClick={() => run({ action: 'settle', id: l.id }, `${p.name} returned ${formatINR(l.amount_paise)}`)}>Got back</button>
+                    <button className="link" disabled={busy} onClick={() => goneBack([l], `${p.name} gone back ${formatINR(l.outstanding_paise)}`)}>Gone back</button>
                   </div>
                 ))}
                 <div className="flex gap-14 mt-4">
-                  <button className="link" disabled={busy} onClick={() => run({ action: 'settle_person', name: p.name }, `${p.name} has returned everything`)}>All returned</button>
+                  <button className="link" disabled={busy} onClick={() => goneBack(p.open, `${p.name} has gone back everything`)}>All gone back</button>
                   <button className="link" onClick={() => { setAdding(true); setName(p.name); }}>Lend more</button>
                 </div>
               </div>

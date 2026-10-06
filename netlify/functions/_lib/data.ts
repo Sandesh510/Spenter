@@ -23,7 +23,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     admin.from('spend_budgets').select('category_id,planned_paise').eq('user_id', userId).eq('month', firstDay),
     admin
       .from('spend_transactions')
-      .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,deleted_at,created_at')
+      .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,deleted_at,created_at,credit_category,reference,lent_loan_id')
       .eq('user_id', userId)
       .gte('txn_date', start)
       .lt('txn_date', end)
@@ -84,7 +84,8 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   return {
     month,
     openingPaise,
-    hasOpening: openRes.data !== null,
+    decided: openRes.data !== null,
+    hasOpening: openRes.data?.opening_paise != null,
     incomePaise: totals.incomePaise,
     spendPaise: totals.spendPaise,
     savingsPaise: totals.savingsPaise,
@@ -114,7 +115,7 @@ export async function loadTransactions(admin: SupabaseClient, userId: string, mo
   const { start, end } = monthRange(month);
   const { data, error } = await admin
     .from('spend_transactions')
-    .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at')
+    .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id')
     .eq('user_id', userId)
     .is('deleted_at', null)
     .gte('txn_date', start)
@@ -135,14 +136,42 @@ export async function loadAccounts(admin: SupabaseClient, userId: string) {
   return { items: data ?? [] };
 }
 
+/**
+ * Loans with what has come back. A Gone back credit links to its loan, so the outstanding amount
+ * is derived from those credits and is never stored. Deleting the credit restores the amount.
+ */
 export async function loadLent(admin: SupabaseClient, userId: string) {
-  const { data, error } = await admin
-    .from('spend_lent_loans')
-    .select('id,person_name,amount_paise,lent_on,note,settled_at,created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return { items: data ?? [] };
+  const [loanRes, backRes] = await Promise.all([
+    admin
+      .from('spend_lent_loans')
+      .select('id,person_name,amount_paise,lent_on,note,settled_at,created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false }),
+    admin
+      .from('spend_transactions')
+      .select('lent_loan_id,amount_paise')
+      .eq('user_id', userId)
+      .eq('type', 'credit')
+      .eq('credit_category', 'gone_back')
+      .is('deleted_at', null)
+      .not('lent_loan_id', 'is', null),
+  ]);
+  if (loanRes.error) throw loanRes.error;
+  if (backRes.error) throw backRes.error;
+
+  const returned = new Map<string, number>();
+  for (const r of backRes.data ?? []) returned.set(r.lent_loan_id, (returned.get(r.lent_loan_id) ?? 0) + r.amount_paise);
+
+  return {
+    items: (loanRes.data ?? []).map(l => {
+      const back = returned.get(l.id) ?? 0;
+      return {
+        ...l,
+        returned_paise: back,
+        outstanding_paise: l.settled_at ? 0 : Math.max(0, l.amount_paise - back),
+      };
+    }),
+  };
 }
 
 export async function loadProfile(admin: SupabaseClient, userId: string) {

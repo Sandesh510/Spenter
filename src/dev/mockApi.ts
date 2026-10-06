@@ -52,6 +52,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     return {
       month: '2026-10',
       openingPaise: 9240000,
+      decided: true,
       hasOpening: true,
       incomePaise: 0,
       spendPaise: spend,

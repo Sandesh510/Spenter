@@ -6,6 +6,7 @@ import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
 
 const TYPES = ['spend', 'credit', 'transfer'] as const;
+const CREDIT_CATEGORIES = ['salary', 'gone_back', 'others'] as const;
 type TxnType = (typeof TYPES)[number];
 
 /**
@@ -20,7 +21,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     const { start, end } = monthRange(month);
     const { data, error } = await admin
       .from('spend_transactions')
-      .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at')
+      .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .gte('txn_date', start)
@@ -87,7 +88,14 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
 
   const txnDate = dateOrToday(optStr(b, 'date', 10));
   const description = optStr(b, 'description', 120);
-  const categoryId = optStr(b, 'categoryId', 60);
+  // Credits are never categorised by spend category: they have their own credit category.
+  const categoryId = type === 'credit' ? null : optStr(b, 'categoryId', 60);
+  const creditCategory = type === 'credit' ? reqStr(b, 'creditCategory', 20) : null;
+  if (creditCategory && !(CREDIT_CATEGORIES as readonly string[]).includes(creditCategory)) {
+    throw new HttpError(400, 'creditCategory must be salary, gone_back or others');
+  }
+  const reference = type === 'credit' ? optStr(b, 'reference', 120) : null;
+  const lentLoanId = creditCategory === 'gone_back' ? reqId(b, 'lentLoanId') : null;
   const accountId = optStr(b, 'accountId', 60);
   const toAccountId = optStr(b, 'toAccountId', 60);
   const external = b.external === true;
@@ -104,6 +112,17 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
     if (toAccountId === accountId) throw new HttpError(400, 'Source and destination must differ');
   }
 
+  if (lentLoanId) {
+    const { data: loan, error: loanErr } = await admin
+      .from('spend_lent_loans')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('id', lentLoanId)
+      .maybeSingle();
+    if (loanErr) throw loanErr;
+    if (!loan) throw new HttpError(400, 'Unknown loan');
+  }
+
   await assertOwned(admin, userId, 'spend_categories', categoryId ? [categoryId] : []);
   await assertOwned(admin, userId, 'spend_accounts', [accountId, ...(toAccountId ? [toAccountId] : [])]);
 
@@ -111,8 +130,11 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
     type,
     amount_paise: amountPaise,
     txn_date: txnDate,
-    description,
+    description: type === 'credit' ? null : description,
     category_id: categoryId,
+    credit_category: creditCategory,
+    reference,
+    lent_loan_id: lentLoanId,
     account_id: accountId,
     to_account_id: type === 'transfer' && !external ? toAccountId : null,
     external: type === 'transfer' && external,

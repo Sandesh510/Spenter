@@ -1,6 +1,7 @@
 import { parseRupeesToPaise } from '../../src/lib/money';
 import { authed } from './_lib/handler';
 import { optStr, readJson, reqStr } from './_lib/input';
+import { loadLent } from './_lib/data';
 import { HttpError, json } from './_lib/response';
 
 /**
@@ -12,13 +13,7 @@ import { HttpError, json } from './_lib/response';
  */
 export const handler = authed(['GET', 'POST'], async ({ admin, userId, event }) => {
   if (event.httpMethod === 'GET') {
-    const { data, error } = await admin
-      .from('spend_lent_loans')
-      .select('id,person_name,amount_paise,lent_on,note,settled_at,created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    return json(200, { items: data ?? [] });
+    return json(200, await loadLent(admin, userId));
   }
 
   const b = readJson(event.body);

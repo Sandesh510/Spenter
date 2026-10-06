@@ -9,7 +9,7 @@ import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import { refreshAll } from '../lib/cache';
-import type { Account, HomeData, TxnRow } from '../lib/types';
+import type { Account, HomeData, Loan, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 type Kind = 'spend' | 'transfer' | 'self' | 'credit';
@@ -20,6 +20,14 @@ const KINDS: { id: Kind; label: string; icon: string }[] = [
   { id: 'credit', label: 'Credit / money in', icon: 'arrow-down-left' },
 ];
 
+/** The only credit categories. A credit is always one of these, never a spend category. */
+type CreditCategory = 'salary' | 'gone_back' | 'others';
+const CREDIT_SECTIONS: { id: CreditCategory; label: string }[] = [
+  { id: 'salary', label: 'Salary' },
+  { id: 'gone_back', label: 'Gone back' },
+  { id: 'others', label: 'Others' },
+];
+
 /**
  * Manual entry: older or non-spend transactions. Layout from screens/ScreenAdd.dc.html.
  * With `editing`, the same form opens filled in and saves changes to that transaction.
@@ -28,6 +36,9 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
   const [kind, setKind] = useState<Kind>(editing ? (editing.type === 'credit' ? 'credit' : editing.type === 'transfer' ? 'transfer' : 'spend') : 'spend');
   const [amount, setAmount] = useState(editing ? String(editing.amount_paise / 100) : '');
   const [desc, setDesc] = useState(editing?.description ?? '');
+  const [reference, setReference] = useState(editing?.reference ?? '');
+  const [creditCategory, setCreditCategory] = useState<CreditCategory>((editing?.credit_category as CreditCategory | null) ?? 'salary');
+  const [lentLoanId, setLentLoanId] = useState<string | null>(editing?.lent_loan_id ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(editing?.category_id ?? null);
   const [accountId, setAccountId] = useState<string | null>(editing?.account_id ?? null);
   const [toAccountId, setToAccountId] = useState<string | null>(editing?.to_account_id ?? null);
@@ -37,13 +48,19 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
 
   const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
+  const lent = useApi<{ items: Loan[] }>('lent', token);
   const categories = home.data?.categories ?? [];
   const accountList = accounts.data?.items ?? [];
+  const openLoans = (lent.data?.items ?? []).filter(l => l.outstanding_paise > 0);
   const isTransfer = kind === 'transfer' || kind === 'self';
+  const isCredit = kind === 'credit';
   // Transfers to outside the tracked accounts have no destination account; they can only be edited, not created here.
   const external = editing?.external ?? false;
   const from = accountId ?? accountList[0]?.id ?? null;
   const to = toAccountId ?? accountList.find(a => a.id !== from)?.id ?? null;
+  // A credit has one note, the reference. Spend and transfers use the description.
+  const note = isCredit ? reference : desc;
+  const setNote = isCredit ? setReference : setDesc;
 
   async function save() {
     setError(null);
@@ -54,12 +71,22 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
       return setError('Enter an amount first');
     }
     if (!from) return setError('Add an account in Settings first');
-    if (!isTransfer && !categoryId) return setError('Choose a category');
+    if (kind === 'spend' && !categoryId) return setError('Choose a category');
     if (isTransfer && !external && (!to || to === from)) return setError('Choose two different accounts');
+
+    const linkedLoan = openLoans.find(l => l.id === lentLoanId) ?? (editing?.lent_loan_id ? (lent.data?.items ?? []).find(l => l.id === editing.lent_loan_id) : undefined);
+    if (isCredit && creditCategory === 'gone_back') {
+      if (!lentLoanId) return setError('Choose the loan this repays');
+      // The loan's outstanding amount already excludes this credit when editing it, so add it back.
+      const available = (linkedLoan?.outstanding_paise ?? 0) + (editing?.lent_loan_id === lentLoanId ? (editing?.amount_paise ?? 0) : 0);
+      if (paise > available) return setError(`More than the ${formatINR(available)} still owed`);
+    }
 
     const body = isTransfer
       ? { type: 'transfer', amount, date, description: desc.trim() || null, accountId: from, toAccountId: external ? null : to, external }
-      : { type: kind === 'credit' ? 'credit' : 'spend', amount, date, description: desc.trim() || null, categoryId, accountId: from };
+      : isCredit
+        ? { type: 'credit', amount, date, accountId: from, creditCategory, reference: reference.trim() || null, lentLoanId: creditCategory === 'gone_back' ? lentLoanId : null }
+        : { type: 'spend', amount, date, description: desc.trim() || null, categoryId, accountId: from };
 
     setSaving(true);
     try {
@@ -104,11 +131,11 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
 
       <div className="flex ai-c gap-10 mt-12" style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: '11px 13px', background: 'var(--color-surface)' }}>
         <span className="c-mut"><Icon name="pencil-line" size={15} /></span>
-        <Input className="fs-14"  style={{ borderBottom: 'none', padding: 0 }} placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} aria-label="Description" />
+        <Input className="fs-14" style={{ borderBottom: 'none', padding: 0 }} placeholder={isCredit ? 'Reference (optional)' : 'Description (optional)'} value={note} onChange={e => setNote(e.target.value)} maxLength={120} aria-label={isCredit ? 'Reference' : 'Description'} />
       </div>
 
       <div className="flex gap-10 mt-10">
-        <Picker label={isTransfer ? 'From' : 'Account'} icon="wallet" value={accountName(from)} options={accountList} selected={from} onPick={setAccountId} />
+        <Picker label={isTransfer ? 'From' : isCredit ? 'Into account' : 'Account'} icon="wallet" value={accountName(from)} options={accountList} selected={from} onPick={setAccountId} />
         {isTransfer ? (
           external ? (
             <div className="c-sec fs-13" style={{ ...pickerStyle, cursor: 'default' }}>
@@ -125,7 +152,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
         )}
       </div>
 
-      {!isTransfer && (
+      {kind === 'spend' && (
         <>
           <div className="kicker" style={{ margin: '16px 0 7px' }}>Category</div>
           <div className="chiprow">
@@ -133,6 +160,33 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
               <button key={c.id} className={`chip ${categoryId === c.id ? 'chip--on' : ''}`} onClick={() => setCategoryId(c.id)}>{c.name}</button>
             ))}
           </div>
+        </>
+      )}
+
+      {isCredit && (
+        <>
+          <div className="kicker" style={{ margin: '16px 0 7px' }}>Credit type</div>
+          <div className="chiprow">
+            {CREDIT_SECTIONS.map(s => (
+              <button key={s.id} className={`chip ${creditCategory === s.id ? 'chip--on' : ''}`} onClick={() => setCreditCategory(s.id)}>{s.label}</button>
+            ))}
+          </div>
+          {creditCategory === 'gone_back' && (
+            <>
+              <div className="kicker" style={{ margin: '16px 0 7px' }}>Which loan</div>
+              {openLoans.length === 0 ? (
+                <p className="fs-13 c-sec" style={{ margin: 0 }}>No open loans. Record one in Money lent first.</p>
+              ) : (
+                <div className="chiprow">
+                  {openLoans.map(l => (
+                    <button key={l.id} className={`chip ${lentLoanId === l.id ? 'chip--on' : ''}`} onClick={() => setLentLoanId(l.id)}>
+                      {l.person_name} · {formatINR(l.outstanding_paise)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </>
       )}
 
@@ -145,7 +199,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
 
       {error && <p className="c-danger fs-13 mt-10" role="alert">{error}</p>}
 
-      <Button className="mt-12" size="lg" block onClick={save} disabled={saving} >
+      <Button className="mt-12" size="lg" block onClick={save} disabled={saving}>
         <Icon name="check" size={18} /> {saving ? 'Saving…' : saveLabel}
       </Button>
     </div>

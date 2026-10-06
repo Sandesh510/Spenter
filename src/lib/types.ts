@@ -47,6 +47,8 @@ export interface RecentTxn {
 export interface HomeData {
   month: string;
   openingPaise: number;
+  /** False until the user decides this month's starting balance (an amount, or none). */
+  decided: boolean;
   hasOpening: boolean;
   incomePaise: number;
   spendPaise: number;
@@ -68,6 +70,9 @@ export interface TxnRow {
   account_id: string | null;
   to_account_id: string | null;
   external: boolean;
+  credit_category: 'salary' | 'gone_back' | 'others' | null;
+  reference: string | null;
+  lent_loan_id: string | null;
 }
 
 export interface Loan {
@@ -78,6 +83,10 @@ export interface Loan {
   note: string | null;
   settled_at: string | null;
   created_at: string;
+  /** Sum of Gone back credits linked to this loan. */
+  returned_paise: number;
+  /** Amount still owed: the loan less what has come back, or 0 once settled. */
+  outstanding_paise: number;
 }
 
 export interface Profile {

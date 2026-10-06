@@ -109,9 +109,6 @@ export function Settings({
         )}
       </Group>
 
-      <SectionTitle>Starting balance</SectionTitle>
-      <StartingBalance token={token} month={month} onSaved={() => { home.reload(); onToast('Starting balance saved'); }} />
-
       <SectionTitle>Accounts</SectionTitle>
       <Group>
         {(accounts.data?.items ?? []).map(a => (
@@ -214,39 +211,6 @@ function Group({ children }: { children: React.ReactNode }) {
 }
 
 const rowButton = { display: 'flex', alignItems: 'center', gap: 11, width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: 'var(--color-text-primary)', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left' } as const;
-
-function StartingBalance({ token, month, onSaved }: { token: string; month: string; onSaved: () => void }) {
-  const [amount, setAmount] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await api('month-opening', { token, body: { month, amount } });
-      setAmount('');
-      haptic('success');
-      onSaved();
-    } catch (err) {
-      haptic('error');
-      setError(err instanceof Error ? err.message : 'Could not save');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Group>
-      <form className="flex gap-8" onSubmit={save} style={{ padding: 12 }}>
-        <Input numeric inputMode="decimal" placeholder="Amount for this month, e.g. 92400" value={amount} onChange={e => setAmount(e.target.value)} required style={{ fontSize: 15 }} aria-label="Starting balance" />
-        <Button type="submit" disabled={busy} size="sm">{busy ? '…' : 'Save'}</Button>
-      </form>
-      {error && <p className="c-danger fs-13" role="alert" style={{ margin: '0 14px 12px' }}>{error}</p>}
-    </Group>
-  );
-}
 
 function AccountRow({ a, token, onChanged, onError }: { a: Account; token: string; onChanged: () => void; onError: (m: string) => void }) {
   const [editing, setEditing] = useState(false);

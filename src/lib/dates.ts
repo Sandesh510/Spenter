@@ -4,6 +4,13 @@ export function todayIST(now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
+/** Moves a YYYY-MM month by whole months, e.g. shiftMonth('2026-01', -1) is '2025-12'. */
+export function shiftMonth(month: string, delta: number): string {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
 export function currentMonth(now: Date = new Date()): string {
   return todayIST(now).slice(0, 7);
 }
