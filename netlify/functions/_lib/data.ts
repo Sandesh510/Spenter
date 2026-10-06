@@ -5,6 +5,8 @@ import { postDue } from './commitments';
 import { postInsurance } from './insurance';
 import { billsStillDue, safeToSpend } from '../../../src/lib/safeToSpend';
 import { todayIST } from './input';
+import { selectAll } from './paged';
+import { accountBalances, type BalanceLoan, type BalanceTxn } from '../../../src/lib/accountBalance';
 
 /**
  * Shared loaders. Each one is scoped to a user id. The admin client bypasses RLS,
@@ -196,14 +198,103 @@ export async function loadTransactions(admin: SupabaseClient, userId: string, mo
   return { items: data ?? [] };
 }
 
+interface AccountRow {
+  id: string;
+  nickname: string;
+  bank: string | null;
+  kind: string | null;
+  icon: string | null;
+  position: number;
+  opening_balance_paise: number | null;
+  opening_balance_on: string | null;
+}
+
+/**
+ * Accounts with their balance now. A balance is derived from the opening balance plus live entries and
+ * money lent since its date (src/lib/accountBalance.ts); it is null when no opening balance is set.
+ * One read of entries and one of loans covers every account, from the earliest opening date.
+ */
 export async function loadAccounts(admin: SupabaseClient, userId: string) {
   const { data, error } = await admin
     .from('spend_accounts')
-    .select('id,nickname,bank,kind,icon,position')
+    .select('id,nickname,bank,kind,icon,position,opening_balance_paise,opening_balance_on')
     .eq('user_id', userId)
     .order('position', { ascending: true });
   if (error) throw error;
-  return { items: data ?? [] };
+  // bigint columns can come back as strings; money is always a number of paise in the API.
+  const rows = ((data as AccountRow[] | null) ?? []).map(a => ({
+    ...a,
+    opening_balance_paise: a.opening_balance_paise === null ? null : Number(a.opening_balance_paise),
+  }));
+
+  const withOpening = rows.filter(a => a.opening_balance_paise !== null && a.opening_balance_on !== null);
+  let balances = new Map<string, number | null>();
+  if (withOpening.length > 0) {
+    const since = withOpening.map(a => a.opening_balance_on as string).sort()[0];
+    const { txns, loans } = await loadBalanceInputs(admin, userId, withOpening.map(a => a.id), since);
+    balances = accountBalances(
+      rows.map(a => ({ id: a.id, openingPaise: a.opening_balance_paise, openingOn: a.opening_balance_on })),
+      txns,
+      loans,
+    );
+  }
+
+  return {
+    items: rows.map(a => ({
+      ...a,
+      balance_paise: balances.get(a.id) ?? null,
+    })),
+  };
+}
+
+/**
+ * Live entries and loans that touch any of `accountIds`, dated on or after `since` (YYYY-MM-DD),
+ * in the shape accountBalance reads. Scoped to the user; account ids come from the user's own rows.
+ */
+export async function loadBalanceInputs(
+  admin: SupabaseClient,
+  userId: string,
+  accountIds: string[],
+  since: string,
+): Promise<{ txns: BalanceTxn[]; loans: BalanceLoan[] }> {
+  const ids = accountIds.join(',');
+  const [txnRows, loanRows] = await Promise.all([
+    selectAll<{ id: string; type: BalanceTxn['type']; amount_paise: number; txn_date: string; account_id: string | null; to_account_id: string | null }>(
+      (from, to) =>
+        admin
+          .from('spend_transactions')
+          .select('id,type,amount_paise,txn_date,account_id,to_account_id')
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .gte('txn_date', since)
+          .or(`account_id.in.(${ids}),to_account_id.in.(${ids})`)
+          .order('txn_date', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+    ),
+    selectAll<{ id: string; amount_paise: number; lent_on: string; debit_account_id: string | null }>(
+      (from, to) =>
+        admin
+          .from('spend_lent_loans')
+          .select('id,amount_paise,lent_on,debit_account_id')
+          .eq('user_id', userId)
+          .gte('lent_on', since)
+          .in('debit_account_id', accountIds)
+          .order('lent_on', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+    ),
+  ]);
+  return {
+    txns: txnRows.map(r => ({
+      type: r.type,
+      amountPaise: r.amount_paise,
+      txnDate: r.txn_date,
+      accountId: r.account_id,
+      toAccountId: r.to_account_id,
+    })),
+    loans: loanRows.map(l => ({ amountPaise: l.amount_paise, lentOn: l.lent_on, debitAccountId: l.debit_account_id })),
+  };
 }
 
 /**

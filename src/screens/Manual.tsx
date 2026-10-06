@@ -11,6 +11,7 @@ import { useApi } from '../lib/useApi';
 import { refreshAll } from '../lib/cache';
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
+import { isCreditCard } from '../lib/accountTypes';
 import { AddAnotherPrompt } from '../components/ui/AddAnotherPrompt';
 import type { Account, HomeData, Loan, TxnRow } from '../lib/types';
 import type { Route } from '../App';
@@ -65,6 +66,8 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
   const external = editing?.external ?? false;
   const from = accountId ?? pickAccount(accountList, defaultAccountId);
   const to = toAccountId ?? accountList.find(a => a.id !== from)?.id ?? null;
+  // Paying a card bill is a transfer into the card account, so it is never counted as spend.
+  const toIsCard = isCreditCard(accountList.find(a => a.id === to)?.kind);
   // A credit has one note, the reference. Spend and transfers use the description.
   const note = isCredit ? reference : desc;
   const setNote = isCredit ? setReference : setDesc;
@@ -176,6 +179,11 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
           </label>
         )}
       </div>
+      {isTransfer && !external && toIsCard && (
+        <div className="flex ai-c gap-6 mt-6 fs-12 c-sec">
+          <Icon name="credit-card" size={13} /> Card bill payment: a transfer, not spend.
+        </div>
+      )}
 
       {kind === 'spend' && (
         <>

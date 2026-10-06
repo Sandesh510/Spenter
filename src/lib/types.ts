@@ -18,6 +18,12 @@ export interface Account {
   kind: string | null;
   icon: string | null;
   position: number;
+  /** Balance at the start of opening_balance_on. Negative for what a card owes. Null when not set. */
+  opening_balance_paise?: number | null;
+  /** YYYY-MM-DD */
+  opening_balance_on?: string | null;
+  /** Balance now, derived from the opening balance and entries since. Null when no opening balance is set. */
+  balance_paise?: number | null;
 }
 
 export interface HomeBucket {
