@@ -31,7 +31,7 @@ export const handler = authed(['GET', 'POST'], async ({ admin, userId, event }) 
     // The account the money left from. Optional, so loans recorded before accounts were linked still work.
     const debitAccountId = optStr(b, 'accountId', 60);
     if (debitAccountId) {
-      reqId({ debitAccountId }, 'accountId');
+      reqId({ accountId: debitAccountId }, 'accountId');
       await assertOwned(admin, userId, 'spend_accounts', [debitAccountId]);
     }
     const lentOn = optStr(b, 'lentOn', 10);
@@ -60,7 +60,7 @@ export const handler = authed(['GET', 'POST'], async ({ admin, userId, event }) 
     const accountRaw = b.accountId;
     const debitAccountId = typeof accountRaw === 'string' && accountRaw !== '' ? accountRaw : null;
     if (debitAccountId) {
-      reqId({ debitAccountId }, 'accountId');
+      reqId({ accountId: debitAccountId }, 'accountId');
       await assertOwned(admin, userId, 'spend_accounts', [debitAccountId]);
     }
     // What has already come back cannot be more than the new loan amount.
