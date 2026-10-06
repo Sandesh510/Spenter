@@ -11,6 +11,13 @@ export function shiftMonth(month: string, delta: number): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+/** Months from `from` to `to` inclusive, both YYYY-MM: ('2026-01', '2026-03') is 3. Zero or less when to is before from. */
+export function monthSpan(from: string, to: string): number {
+  const [fy, fm] = from.split('-').map(Number);
+  const [ty, tm] = to.split('-').map(Number);
+  return (ty - fy) * 12 + (tm - fm) + 1;
+}
+
 export function currentMonth(now: Date = new Date()): string {
   return todayIST(now).slice(0, 7);
 }
@@ -19,6 +26,12 @@ export function currentMonth(now: Date = new Date()): string {
 export function monthTitle(month: string): string {
   const [y, m] = month.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
+/** "Aug 2026" */
+export function monthShort(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
 
 /** "Today", "Yesterday", or "Fri, 1 Aug" for a YYYY-MM-DD date. */

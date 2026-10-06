@@ -23,6 +23,11 @@ const categories = [
   ['Investment', 'save', 20000, 12000],
 ] as const;
 
+function nextMonth(m: string): string {
+  const [y, mo] = m.split('-').map(Number);
+  return mo === 12 ? `${y + 1}-01` : `${y}-${String(mo + 1).padStart(2, '0')}`;
+}
+
 const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
   bootstrap: () => ({
     user: { id: 'mock-user', email: 'demo@example.com' },
@@ -77,12 +82,26 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
   },
   accounts: () => ({
     items: [
-      { id: 'acc1', nickname: 'Salary', bank: 'HDFC Bank', kind: 'Debit', icon: 'wallet', position: 0 },
-      { id: 'acc2', nickname: 'Rewards', bank: 'ICICI', kind: 'Credit card', icon: 'credit-card', position: 1 },
-      { id: 'acc3', nickname: 'Cash', bank: 'Wallet', kind: 'Cash', icon: 'banknote', position: 2 },
-      { id: 'acc4', nickname: 'Paytm', bank: 'Paytm', kind: 'UPI wallet', icon: 'smartphone', position: 3 },
+      { id: 'acc1', nickname: 'Salary', bank: 'HDFC Bank', kind: 'Debit', icon: 'wallet', position: 0, opening_balance_paise: 8_500_000, opening_balance_on: '2026-10-01', balance_paise: 6_412_550 },
+      { id: 'acc2', nickname: 'Rewards', bank: 'ICICI', kind: 'Credit card', icon: 'credit-card', position: 1, opening_balance_paise: -1_200_000, opening_balance_on: '2026-10-01', balance_paise: -1_864_900 },
+      { id: 'acc3', nickname: 'Cash', bank: 'Wallet', kind: 'Cash', icon: 'banknote', position: 2, opening_balance_paise: null, opening_balance_on: null, balance_paise: null },
+      { id: 'acc4', nickname: 'Paytm', bank: 'Paytm', kind: 'UPI wallet', icon: 'smartphone', position: 3, opening_balance_paise: 50_000, opening_balance_on: '2026-10-05', balance_paise: -12_000 },
     ],
   }),
+  export: q => {
+    const from = q.get('from') ?? '2026-10';
+    const to = q.get('to') ?? from;
+    const items = [];
+    for (let m = from; m <= to; m = nextMonth(m)) {
+      items.push(
+        { date: `${m}-01`, type: 'credit', amountPaise: 6_000_000, external: false, categoryName: null, bucket: null, accountName: 'Salary', toAccountName: null, description: null, reference: 'Salary, Acme', creditCategory: 'salary' },
+        { date: `${m}-03`, type: 'spend', amountPaise: 64_000, external: false, categoryName: 'Food Wants', bucket: 'want', accountName: 'Rewards', toAccountName: null, description: 'Dinner "Biryani House"', reference: null, creditCategory: null },
+        { date: `${m}-10`, type: 'spend', amountPaise: 1_000_000, external: false, categoryName: 'Investment', bucket: 'save', accountName: 'Salary', toAccountName: null, description: '=Index fund SIP', reference: null, creditCategory: null },
+        { date: `${m}-15`, type: 'transfer', amountPaise: 1_200_000, external: false, categoryName: null, bucket: null, accountName: 'Salary', toAccountName: 'Rewards', description: 'Card bill', reference: null, creditCategory: null },
+      );
+    }
+    return { from, to, items };
+  },
   transactions: () => ({ items: [] }),
   commitments: () => ({
     month: '2026-10',

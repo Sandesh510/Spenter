@@ -39,6 +39,7 @@ Apply these to every new or changed screen.
 
 - Money is integer paise everywhere in the database and API. Convert at the edge with `parseRupeesToPaise` and `formatINR`.
 - Totals are derived from transactions, never stored (`src/lib/ledger.ts` is the source of truth).
+- Per-account balances are derived too: opening balance (`spend_accounts.opening_balance_paise` at the start of `opening_balance_on`; negative for card dues) plus live entries and loans since that date (`src/lib/accountBalance.ts`). Never store a running balance.
 - Every Netlify Function scopes queries by the verified `user_id`. The service-role key stays server-side.
 - New tables get RLS with the owner policy, in a numbered migration under `supabase/migrations/`.
 - Limits shared by client and server live in `src/lib/limits.ts` (for example `MAX_ACCOUNTS = 10`).

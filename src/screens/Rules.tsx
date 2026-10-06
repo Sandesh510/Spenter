@@ -1,6 +1,6 @@
 import { Card } from '../components/ui/Card';
 import { Icon } from '../components/Icon';
-import { MAX_ACCOUNTS } from '../lib/limits';
+import { MAX_ACCOUNTS, MAX_EXPORT_MONTHS } from '../lib/limits';
 import type { Route } from '../App';
 
 interface RuleGroup {
@@ -61,6 +61,17 @@ const GROUPS: RuleGroup[] = [
     ],
   },
   {
+    title: 'Account balances',
+    icon: 'landmark',
+    rules: [
+      'Account balance = opening balance + money in − spend − transfers out + transfers in − money lent from it, counting entries on or after the opening date.',
+      'The opening balance is what the account held at the start of its "As on" day, before that day\'s entries. It is optional; without it no balance is shown.',
+      'For a credit card, enter what you owe. Purchases add to it, a bill payment brings it down, and Settings shows it as Owed.',
+      'Match my bank sets the balance to what your bank shows now. It moves the opening date to today, so today\'s entries still count once.',
+      'Balances are worked out from your entries every time, never stored. Editing an old entry changes the balance.',
+    ],
+  },
+  {
     title: 'Commitments',
     icon: 'repeat',
     rules: [
@@ -89,6 +100,7 @@ const GROUPS: RuleGroup[] = [
       'Paste entries reads lines of date, account, amount (and an optional description). Each one is saved only when you tap Save; a possible duplicate is flagged but not blocked.',
       'After saving, you can add another entry for the same date and account.',
       `You can have up to ${MAX_ACCOUNTS} accounts. An account with entries can't be deleted.`,
+      `Export transactions (CSV) in Settings saves up to ${MAX_EXPORT_MONTHS} months of entries. Amounts are positive; the Direction column says In, Out or Transfer.`,
     ],
   },
 ];

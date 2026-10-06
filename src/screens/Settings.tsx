@@ -1,18 +1,20 @@
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Field';
-import { useState, type FormEvent } from 'react';
+import { Input, Select } from '../components/ui/Field';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { getFontSize, getHaptics, setFontSize, setHaptics, type FontSize } from '../lib/prefs';
 import { BUCKET_LABEL } from '../lib/categories';
-import { currentMonth } from '../lib/dates';
-import { formatINR } from '../lib/money';
+import { currentMonth, monthShort, monthSpan, shiftMonth, todayIST } from '../lib/dates';
+import { formatINR, paiseToPlain, parseBalanceToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import type { Account, HomeData, Profile } from '../lib/types';
-import { MAX_ACCOUNTS } from '../lib/limits';
-import { ACCOUNT_KINDS, ACCOUNT_KIND_LABEL, isAccountKind, type AccountKind } from '../lib/accountTypes';
+import { MAX_ACCOUNTS, MAX_EXPORT_MONTHS } from '../lib/limits';
+import { ACCOUNT_KINDS, ACCOUNT_KIND_LABEL, isAccountKind, isCreditCard, normaliseAccountKind, type AccountKind } from '../lib/accountTypes';
+import { cardView, flipCardSign } from '../lib/accountBalance';
+import { exportFileName, transactionsCsv, type ExportRow } from '../lib/csv';
 import { Field } from '../components/ui/Field';
 import { CategoryTile } from '../components/ui/CategoryTile';
 import { CategoryEditor } from './CategoryEditor';
@@ -141,9 +143,14 @@ export function Settings({
       <SectionTitle>Accounts</SectionTitle>
       <Group>
         {(accounts.data?.items ?? []).map(a => (
-          <AccountRow key={a.id} a={a} token={token} onChanged={accounts.reload} onError={setError} />
+          <AccountRow key={a.id} a={a} token={token} onChanged={accounts.reload} onError={setError} onToast={onToast} />
         ))}
         <AddAccount token={token} count={accounts.data?.items.length ?? 0} onAdded={accounts.reload} onError={setError} />
+      </Group>
+
+      <SectionTitle>Data</SectionTitle>
+      <Group>
+        <ExportCsv token={token} onToast={onToast} />
       </Group>
 
       <SectionTitle>Security</SectionTitle>
@@ -250,21 +257,91 @@ function Group({ children }: { children: React.ReactNode }) {
 
 const rowButton = { display: 'flex', alignItems: 'center', gap: 11, width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: 'var(--color-text-primary)', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left' } as const;
 
-function AccountRow({ a, token, onChanged, onError }: { a: Account; token: string; onChanged: () => void; onError: (m: string) => void }) {
+/** The balance on the right of an account row: the amount, or what a card owes. Nothing when no balance is set. */
+function AccountBalance({ a }: { a: Account }) {
+  const balance = a.balance_paise ?? null;
+  if (balance === null) return null;
+  const card = cardView(a.kind, balance);
+  if (card) {
+    return card.outstandingPaise > 0
+      ? <span className="num fs-13 nowrap c-danger">Owed {formatINR(card.outstandingPaise)}</span>
+      : <span className="num fs-13 nowrap c-sec">Nothing owed</span>;
+  }
+  return <span className={`num fs-13 nowrap ${balance < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(balance)}</span>;
+}
+
+/** A stored opening balance as the figure the form shows: cards show what is owed, as a positive number. */
+function openingText(a: Account): string {
+  const p = a.opening_balance_paise;
+  if (p === null || p === undefined) return '';
+  return paiseToPlain(isCreditCard(a.kind) ? -p : p).replace(/\.00$/, '');
+}
+
+function AccountRow({ a, token, onChanged, onError, onToast }: { a: Account; token: string; onChanged: () => void; onError: (m: string) => void; onToast: (m: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(a.nickname);
   const [bank, setBank] = useState(a.bank ?? '');
-  const [kind, setKind] = useState<AccountKind>(isAccountKind(a.kind) ? a.kind : 'bank');
+  // Older accounts may hold free text such as 'Credit card'; read it as its kind so saving keeps it.
+  const [kind, setKind] = useState<AccountKind>(normaliseAccountKind(a.kind) ?? 'bank');
+  const [opening, setOpening] = useState(() => openingText(a));
+  const [openingOn, setOpeningOn] = useState(a.opening_balance_on ?? todayIST());
+  const [actual, setActual] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [matchError, setMatchError] = useState<string | null>(null);
+  // A saved opening balance (or Match my bank) changes the stored values; show them when the form opens again.
+  useEffect(() => {
+    setOpening(openingText(a));
+    setOpeningOn(a.opening_balance_on ?? todayIST());
+  },[a.opening_balance_paise, a.opening_balance_on, a.kind]);
+  const isCard = kind === 'credit_card';
+  const savedIsCard = isCreditCard(a.kind);
+  const kindLabel = isAccountKind(a.kind) ? ACCOUNT_KIND_LABEL[a.kind] : a.kind;
 
   async function rename(e: FormEvent) {
     e.preventDefault();
+    setFormError(null);
+    const openingBalance = flipCardSign(opening, isCard);
+    if (openingBalance !== '') {
+      try {
+        parseBalanceToPaise(openingBalance);
+      } catch {
+        return setFormError('Enter the opening balance in rupees, e.g. 25000 or 25000.50');
+      }
+    }
     try {
-      await api('accounts', { method: 'PATCH', token, body: { id: a.id, nickname: name, bank, kind } });
+      await api('accounts', {
+        method: 'PATCH',
+        token,
+        body: { id: a.id, nickname: name, bank, kind, openingBalance, ...(openingBalance !== '' ? { openingBalanceOn: openingOn } : {}) },
+      });
       haptic('success');
       setEditing(false);
       onChanged();
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not save account');
+      haptic('error');
+      setFormError(err instanceof Error ? err.message : 'Could not save account');
+    }
+  }
+
+  async function matchBank(e: FormEvent) {
+    e.preventDefault();
+    setMatchError(null);
+    const value = flipCardSign(actual, savedIsCard);
+    try {
+      parseBalanceToPaise(value);
+    } catch {
+      return setMatchError(savedIsCard ? 'Enter what you owe on the card now, e.g. 12000' : 'Enter the balance your bank shows, e.g. 25000');
+    }
+    try {
+      await api('accounts', { method: 'PATCH', token, body: { id: a.id, action: 'reconcile', actual: value } });
+      haptic('success');
+      setActual('');
+      setEditing(false);
+      onToast(`${a.nickname} matched`);
+      onChanged();
+    } catch (err) {
+      haptic('error');
+      setMatchError(err instanceof Error ? err.message : 'Could not match the balance');
     }
   }
 
@@ -287,20 +364,21 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
         <span className="flex-none grid c-sec" style={{ width: 34, height: 34, borderRadius: 9, placeItems: 'center', background: 'var(--color-surface-muted)' }}>
           <Icon name={a.icon ?? 'wallet'} size={16} />
         </span>
-        <span className="flex-1">
+        <span className="flex-1 min-0">
           <span className="fs-14" style={{ display: 'block' }}>{a.nickname}</span>
-          {(a.bank || a.kind) && <span className="fs-11 c-mut" style={{ display: 'block' }}>{[a.bank, isAccountKind(a.kind) ? ACCOUNT_KIND_LABEL[a.kind] : a.kind].filter(Boolean).join(' · ')}</span>}
+          {(a.bank || a.kind) && <span className="fs-11 c-mut" style={{ display: 'block' }}>{[a.bank, kindLabel].filter(Boolean).join(' · ')}</span>}
         </span>
+        <AccountBalance a={a} />
         <span className="c-mut"><Icon name="pencil-line" size={15} /></span>
       </button>
       {editing && (
         <>
-          <form className="grid gap-8" onSubmit={rename} style={{ padding: '0 14px 12px' }}>
+          <form className="grid gap-8 row-pane" onSubmit={rename}>
             <Field label="Nickname">
-              <Input value={name} onChange={e => setName(e.target.value)} required maxLength={40} style={{ fontSize: 15 }} />
+              <Input className="fs-15" value={name} onChange={e => setName(e.target.value)} required maxLength={40} />
             </Field>
             <Field label="Bank (optional)">
-              <Input value={bank} onChange={e => setBank(e.target.value)} maxLength={60} style={{ fontSize: 15 }} />
+              <Input className="fs-15" value={bank} onChange={e => setBank(e.target.value)} maxLength={60} />
             </Field>
             <fieldset className="fieldset-reset grid gap-6">
               <legend className="kicker kicker--spaced">What type</legend>
@@ -310,9 +388,36 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
                 ))}
               </div>
             </fieldset>
+            <div className="grid-2 gap-8">
+              <Field
+                label={isCard ? 'Owed (opening)' : 'Opening balance'}
+                hint={isCard ? 'Enter what you owe on the card. Leave empty for no balance.' : 'Leave empty for no balance.'}
+              >
+                <Input className="fs-15" numeric inputMode="decimal" placeholder={isCard ? 'e.g. 12000' : 'e.g. 25000'} value={opening} onChange={e => setOpening(e.target.value)} maxLength={16} />
+              </Field>
+              <Field label="As on" hint="Before that day's entries.">
+                <Input className="fs-15" type="date" value={openingOn} max={todayIST()} onChange={e => setOpeningOn(e.target.value)} disabled={opening.trim() === ''} />
+              </Field>
+            </div>
+            {formError && <p className="c-danger fs-13 m-0" role="alert">{formError}</p>}
             <Button type="submit">Save account</Button>
           </form>
-          <div style={{ padding: '0 14px 12px' }}>
+          <form className="row-pane" onSubmit={matchBank}>
+            <div className="subform">
+            <fieldset className="fieldset-reset grid gap-8">
+              <legend className="kicker kicker--spaced">Match my bank</legend>
+              <Field
+                label={savedIsCard ? 'Owed on the card now' : 'Actual balance now'}
+                hint={savedIsCard ? 'What your card app shows you owe. The balance here becomes this.' : 'What your bank app shows. The balance here becomes this.'}
+                error={matchError}
+              >
+                <Input className="fs-15" numeric inputMode="decimal" placeholder="e.g. 25000" value={actual} onChange={e => setActual(e.target.value)} maxLength={16} required />
+              </Field>
+              <Button type="submit" variant="secondary">Match balance</Button>
+            </fieldset>
+            </div>
+          </form>
+          <div className="row-pane">
             <button className="link c-danger fs-13" onClick={remove} style={{ padding: 0 }}>Delete account</button>
           </div>
         </>
@@ -364,6 +469,73 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
         </div>
       </fieldset>
       <Button type="submit">Add account</Button>
+    </form>
+  );
+}
+
+/** Export transactions (CSV): pick a month range, fetch the entries, and save them as a CSV file. */
+function ExportCsv({ token, onToast }: { token: string; onToast: (m: string) => void }) {
+  const thisMonth = currentMonth();
+  const months = useMemo(
+    () => Array.from({ length: MAX_EXPORT_MONTHS }, (_, i) => shiftMonth(thisMonth, -i)),
+    [thisMonth],
+  );
+  const [from, setFrom] = useState(thisMonth);
+  const [to, setTo] = useState(thisMonth);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const rangeError = monthSpan(from, to) < 1 ? 'The From month must not be after the To month' : null;
+
+  async function download(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (rangeError) return;
+    setBusy(true);
+    try {
+      const data = await api<{ items: ExportRow[] }>(`export?from=${from}&to=${to}`, { token });
+      // The byte-order mark lets spreadsheet apps read the file as UTF-8, so ₹ shows correctly.
+      const blob = new Blob(['﻿', transactionsCsv(data.items)], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = exportFileName(from, to);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      haptic('success');
+      onToast(data.items.length === 1 ? 'Exported 1 entry' : `Exported ${data.items.length} entries`);
+    } catch (err) {
+      haptic('error');
+      setError(err instanceof Error ? err.message : 'Could not export');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="grid gap-8 group-pad" onSubmit={download}>
+      <div className="flex ai-c gap-12">
+        <span className="c-sec"><Icon name="download" size={17} /></span>
+        <span className="flex-1 fs-14">Export transactions (CSV)</span>
+      </div>
+      <div className="grid-2 gap-8">
+        <Field label="From month">
+          <Select value={from} onChange={e => setFrom(e.target.value)}>
+            {months.map(m => <option key={m} value={m}>{monthShort(m)}</option>)}
+          </Select>
+        </Field>
+        <Field label="To month">
+          <Select value={to} onChange={e => setTo(e.target.value)}>
+            {months.map(m => <option key={m} value={m}>{monthShort(m)}</option>)}
+          </Select>
+        </Field>
+      </div>
+      {(rangeError || error) && <p className="c-danger fs-13 m-0" role="alert">{rangeError ?? error}</p>}
+      <p className="fs-12 c-mut m-0">Every entry in those months, with category, budget and account. Opens in any spreadsheet app.</p>
+      <Button type="submit" variant="secondary" disabled={busy || rangeError !== null}>
+        {busy ? 'Preparing…' : 'Download CSV'}
+      </Button>
     </form>
   );
 }
