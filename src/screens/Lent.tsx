@@ -145,7 +145,9 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
       </div>
 
       {adding && (
-        <form onSubmit={record} className="card pop" style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+        <div role="dialog" aria-modal="true" aria-label="Record money lent" style={{ position: 'absolute', inset: 0, zIndex: 30, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div onClick={() => setAdding(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
+          <form onSubmit={record} className="sheet pop" style={{ position: 'relative', background: 'var(--surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', display: 'grid', gap: 10, borderTop: '1px solid var(--line)' }}>
           <div className="kicker">Name</div>
           <div className="chiprow" style={{ margin: 0, padding: 0 }}>
             {previousNames.map(n => (
@@ -157,7 +159,8 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
           <input className="input" placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
           {err && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{err}</p>}
           <button className="btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
-        </form>
+          </form>
+        </div>
       )}
     </div>
   );
