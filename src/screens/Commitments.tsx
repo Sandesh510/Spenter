@@ -10,14 +10,16 @@ import { currentMonth, monthTitle, todayIST } from '../lib/dates';
 import { haptic } from '../lib/haptics';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
-import type { Account, CommitmentItem, CommitmentsData, HomeData } from '../lib/types';
+import type { Account, CommitmentItem, CommitmentsData, HomeData, InsurancePolicy } from '../lib/types';
+import { InsuranceSection } from './Insurance';
 import type { Route } from '../App';
 
-type Tab = 'subscription' | 'investment' | 'loan';
+type Tab = 'subscription' | 'investment' | 'loan' | 'insurance';
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'subscription', label: 'Subscriptions', icon: 'repeat' },
   { id: 'investment', label: 'Investments', icon: 'trending-up' },
   { id: 'loan', label: 'Loans', icon: 'landmark' },
+  { id: 'insurance', label: 'Insurance', icon: 'shield' },
 ];
 
 /**
@@ -30,6 +32,7 @@ export function Commitments({ token, go, onToast }: { token: string; go: (r: Rou
   const { data, error, reload } = useApi<CommitmentsData>('commitments', token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
   const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
+  const insurance = useApi<{ items: InsurancePolicy[] }>('insurance', token);
 
   const items = (data?.items ?? []).filter(i => i.kind === tab);
   const tabLabel = TABS.find(t => t.id === tab)?.label ?? '';
@@ -93,6 +96,17 @@ export function Commitments({ token, go, onToast }: { token: string; go: (r: Rou
         ))}
       </div>
 
+      {tab === 'insurance' ? (
+        <InsuranceSection
+          token={token}
+          policies={insurance.data?.items ?? []}
+          accounts={accounts.data?.items ?? []}
+          categories={home.data?.categories ?? []}
+          onChanged={insurance.reload}
+          onToast={onToast}
+        />
+      ) : (
+        <>
       <h2 className="kicker mt-16 kicker--spaced">{tabLabel}</h2>
 
       {items.length === 0 && !adding && <p className="fs-13 c-sec">Nothing added yet.</p>}
@@ -124,6 +138,8 @@ export function Commitments({ token, go, onToast }: { token: string; go: (r: Rou
         <p className="fs-12 c-mut mt-12">
           Lump-sum investments are not repeated here. Add them as a Spend under the Investment category.
         </p>
+      )}
+        </>
       )}
     </div>
   );

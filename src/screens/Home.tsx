@@ -9,7 +9,8 @@ import { formatINR } from '../lib/money';
 import { BUCKET_LABEL } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
-import type { Bucket, CommitmentsData, HomeBucket, HomeData, AskItem, Loan } from '../lib/types';
+import type { Bucket, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
+import { InsuranceReminders } from './Insurance';
 import type { Route } from '../App';
 
 /**
@@ -21,6 +22,7 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
   const [month, setMonth] = useState(today);
   const isCurrent = month === today;
   const { data, error, reload } = useApi<HomeData>(`home?month=${month}`, token);
+  const insurance = useApi<{ items: InsurancePolicy[] }>('insurance', token);
 
   if (error) return <div className="scroll c-danger" role="alert">{error}</div>;
   if (!data) return <div className="scroll c-sec">Loading…</div>;
@@ -80,6 +82,8 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
       </Card>
 
       <CommitmentsCard token={token} onOpen={() => go('commitments')} />
+
+      <InsuranceReminders policies={insurance.data?.items ?? []} onOpen={() => go('commitments')} />
 
       <div className="flex ai-c jc-sb" style={{ margin: '24px 2px 14px' }}>
         <span className="kicker">Budgets</span>

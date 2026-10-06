@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { monthTotals, type Bucket, type Txn } from '../../../src/lib/ledger';
 import { monthRange } from './month';
 import { postDue } from './commitments';
+import { postInsurance } from './insurance';
 import { todayIST } from './input';
 
 /**
@@ -20,6 +21,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   const { start, end, firstDay } = monthRange(month);
   // Due commitments are posted before reading, so Home always shows this month's SIPs, EMIs and subscriptions.
   await postDue(admin, userId, todayIST());
+  await postInsurance(admin, userId, todayIST());
 
   const [catRes, openRes, budgetRes, txnRes, askRes] = await Promise.all([
     admin.from('spend_categories').select('id,name,bucket,icon,sort_order').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),

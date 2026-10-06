@@ -145,3 +145,19 @@ export interface Profile {
   theme: 'dark' | 'light';
   lockEnabled: boolean;
 }
+
+export interface InsurancePolicy {
+  id: string;
+  name: string;
+  insurer: string | null;
+  policy_number: string | null;
+  policy_type: string;
+  premium_paise: number;
+  frequency: string;
+  next_due_on: string;
+  sum_assured_paise: number | null;
+  account_id: string;
+  category_id: string;
+  auto_debit: boolean;
+  active: boolean;
+}
