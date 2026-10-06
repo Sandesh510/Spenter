@@ -283,3 +283,21 @@ body {
 [data-font=low] .nav__slot span.label {
   font-size: 9px;
 }
+
+/* Full-height entry screens: the keypad takes the free space so the action button sits at the bottom. */
+.scroll--stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.keypad--fill {
+  flex: 1;
+  grid-auto-rows: 1fr;
+  min-height: 240px;
+  margin-top: 8px;
+}
+
+.keypad--fill button {
+  height: auto;
+  min-height: 48px;
+}

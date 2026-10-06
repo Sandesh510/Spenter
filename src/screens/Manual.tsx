@@ -71,7 +71,7 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
   const saveLabel = kind === 'spend' ? 'Save spend' : kind === 'credit' ? 'Save credit' : kind === 'self' ? 'Save self transfer' : 'Save transfer';
 
   return (
-    <div className="scroll" style={{ paddingBottom: 24 }}>
+    <div className="scroll scroll--stack" style={{ paddingBottom: 24 }}>
       <div className="topbar" style={{ padding: '8px 0 4px' }}>
         <button className="iconbtn" onClick={() => go('quickadd')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
         <span className="topbar__title">Add transaction</span>
@@ -120,7 +120,7 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
         <span className="heading" style={{ fontSize: 42, lineHeight: 1, fontWeight: 600 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
       </div>
 
-      <Keypad onKey={k => setAmount(a => applyKey(a, k))} />
+      <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
 
       {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, marginTop: 10 }}>{error}</p>}
 

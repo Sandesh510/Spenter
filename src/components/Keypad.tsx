@@ -13,9 +13,9 @@ export function applyKey(current: string, key: string): string {
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', '⌫'];
 
-export function Keypad({ onKey }: { onKey: (key: string) => void }) {
+export function Keypad({ onKey, fill = false }: { onKey: (key: string) => void; fill?: boolean }) {
   return (
-    <div className="keypad" role="group" aria-label="Keypad">
+    <div className={fill ? "keypad keypad--fill" : "keypad"} role="group" aria-label="Keypad">
       {KEYS.map(k => (
         <button key={k} className={k === '⌫' || k === '00' ? 'muted' : ''} onClick={() => { haptic('tap'); onKey(k); }} aria-label={k === '⌫' ? 'Delete' : k}>
           {k}

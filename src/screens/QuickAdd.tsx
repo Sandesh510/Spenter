@@ -79,7 +79,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
   ];
 
   return (
-    <div className="scroll" style={{ paddingBottom: 24 }}>
+    <div className={step === 'amount' ? 'scroll scroll--stack' : 'scroll'} style={{ paddingBottom: 24 }}>
       <div className="topbar" style={{ padding: '8px 0 4px' }}>
         <button className="iconbtn" onClick={back} aria-label={step === 'amount' ? 'Close' : 'Back'}>
           <Icon name={step === 'amount' ? 'x' : 'chevron-left'} size={18} />
@@ -102,7 +102,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--muted)', margin: '4px 0 12px' }}>
             {amountPaise > 0 ? 'Pause a second — we’ll move on automatically.' : 'Type the amount'}
           </p>
-          <Keypad onKey={k => setAmount(a => applyKey(a, k))} />
+          <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
           {amountPaise > 0 && (
             <button className="btn" onClick={() => setStep('category')} style={{ width: '100%', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               Continue <Icon name="arrow-right" size={16} />
