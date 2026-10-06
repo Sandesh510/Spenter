@@ -44,6 +44,20 @@ export interface RecentTxn {
   categoryId: string | null;
 }
 
+export interface MoneyIn {
+  totalPaise: number;
+  salaryPaise: number;
+  goneBackPaise: number;
+  othersPaise: number;
+}
+
+export interface MoneyOut {
+  totalPaise: number;
+  spendPaise: number;
+  savingsPaise: number;
+  outsidePaise: number;
+}
+
 export interface HomeData {
   month: string;
   openingPaise: number;
@@ -54,6 +68,8 @@ export interface HomeData {
   spendPaise: number;
   savingsPaise: number;
   spendableBalancePaise: number;
+  moneyIn: MoneyIn;
+  moneyOut: MoneyOut;
   categories: Category[];
   buckets: HomeBucket[];
   recent: RecentTxn[];

@@ -4,7 +4,7 @@ import { iconFor } from '../lib/categories';
 import { currentMonth, monthTitle } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
-import type { Bucket, Category, HomeData } from '../lib/types';
+import type { Bucket, Category, HomeData, MoneyIn, MoneyOut } from '../lib/types';
 
 const TARGET: Record<Bucket, number> = { need: 50, want: 30, save: 20 };
 const LABEL: Record<Bucket, string> = { need: 'Needs', want: 'Wants', save: 'Savings' };
@@ -41,6 +41,8 @@ export function Trends({ token }: { token: string }) {
         <h1 className="heading fs-24">{monthTitle(month).split(' ')[0]}</h1>
         <span className="fs-12 c-sec">This month</span>
       </div>
+
+      <MoneyFlow moneyIn={data.moneyIn} moneyOut={data.moneyOut} />
 
       <Card className="flex ai-c gap-18" as="section" style={{ padding: 18 }}>
         <div className="rel flex-none" style={{ width: 120, height: 120 }}>
@@ -148,4 +150,47 @@ function buildPatterns(categories: Category[], buckets: HomeData['buckets']) {
     out.push({ icon: 'circle-check', colour: 'var(--color-success)', text: `Needs are at ${Math.round((needs.spentPaise / needs.plannedPaise) * 100)}% of plan. On track.` });
   }
   return out;
+}
+
+/** Money in and out for the month. Money in is credits by kind; money out is spend, savings and transfers outside. */
+function MoneyFlow({ moneyIn, moneyOut }: { moneyIn: MoneyIn; moneyOut: MoneyOut }) {
+  const net = moneyIn.totalPaise - moneyOut.totalPaise;
+  return (
+    <Card as="section" aria-labelledby="money-flow" className="mt-16">
+      <h2 id="money-flow" className="kicker kicker--spaced m-0">Money in and out</h2>
+      <div className="grid-2 gap-16 mt-8">
+        <div>
+          <div className="fs-12 c-sec">Money in</div>
+          <div className="num fs-18 c-success">{formatINR(moneyIn.totalPaise)}</div>
+          <dl className="grid gap-4 mt-8 fs-12 c-sec m-0">
+            <FlowRow label="Salary" paise={moneyIn.salaryPaise} />
+            <FlowRow label="Got back" paise={moneyIn.goneBackPaise} />
+            <FlowRow label="Others" paise={moneyIn.othersPaise} />
+          </dl>
+        </div>
+        <div>
+          <div className="fs-12 c-sec">Money out</div>
+          <div className="num fs-18 c-text">{formatINR(moneyOut.totalPaise)}</div>
+          <dl className="grid gap-4 mt-8 fs-12 c-sec m-0">
+            <FlowRow label="Spend" paise={moneyOut.spendPaise} />
+            <FlowRow label="Savings" paise={moneyOut.savingsPaise} />
+            <FlowRow label="Outside transfers" paise={moneyOut.outsidePaise} />
+          </dl>
+        </div>
+      </div>
+      <div className="flex jc-sb ai-c mt-12 fs-13">
+        <span className="c-sec">Net this month</span>
+        <span className={`num ${net >= 0 ? 'c-success' : 'c-danger'}`}>{net >= 0 ? '+' : '−'}{formatINR(Math.abs(net))}</span>
+      </div>
+    </Card>
+  );
+}
+
+function FlowRow({ label, paise }: { label: string; paise: number }) {
+  return (
+    <div className="flex jc-sb">
+      <dt>{label}</dt>
+      <dd className="num m-0">{formatINR(paise)}</dd>
+    </div>
+  );
 }

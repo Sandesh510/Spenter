@@ -243,3 +243,12 @@
 .topbar__title {
   margin: 0;
 }
+
+/* Two equal columns, for side-by-side figures */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.grid-2 > * {
+  min-width: 0;
+}

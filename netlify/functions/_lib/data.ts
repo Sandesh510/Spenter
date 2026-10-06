@@ -63,6 +63,26 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
 
   const totals = monthTotals({ month, openingPaise, txns });
 
+  // Money in and out for the month. The money-in total is the balance's income; money out is what
+  // leaves the balance: spend, savings and transfers to outside accounts.
+  const moneyIn = { totalPaise: totals.incomePaise, salaryPaise: 0, goneBackPaise: 0, othersPaise: 0 };
+  let outsidePaise = 0;
+  for (const r of rows) {
+    if (r.type === 'credit') {
+      if (r.credit_category === 'salary') moneyIn.salaryPaise += r.amount_paise;
+      else if (r.credit_category === 'gone_back') moneyIn.goneBackPaise += r.amount_paise;
+      else moneyIn.othersPaise += r.amount_paise;
+    } else if (r.type === 'transfer' && r.external) {
+      outsidePaise += r.amount_paise;
+    }
+  }
+  const moneyOut = {
+    totalPaise: totals.spendPaise + totals.savingsPaise + outsidePaise,
+    spendPaise: totals.spendPaise,
+    savingsPaise: totals.savingsPaise,
+    outsidePaise,
+  };
+
   const planByCategory = new Map<string, number>();
   for (const b of budgetRes.data ?? []) planByCategory.set(b.category_id, b.planned_paise);
 
@@ -94,6 +114,8 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     spendPaise: totals.spendPaise,
     savingsPaise: totals.savingsPaise,
     spendableBalancePaise: totals.spendableBalancePaise,
+    moneyIn,
+    moneyOut,
     categories: categoryRows,
     buckets,
     recent: rows.slice(0, 10).map(r => ({
