@@ -1,6 +1,6 @@
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Field';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { Icon } from './components/Icon';
 import { IDLE_LOCK_MS, isStillActive, touchActive, getLastActive } from './lib/prefs';
@@ -19,6 +19,17 @@ import { Settings } from './screens/Settings';
 import { Trends } from './screens/Trends';
 
 export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments';
+
+const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments'];
+function isRoute(v: unknown): v is Route {
+  return typeof v === 'string' && ROUTE_NAMES.includes(v);
+}
+
+/** The screen to show on load: the one this history entry was on, so a refresh keeps the current screen. */
+function initialRoute(): Route {
+  const r: unknown = window.history.state?.route;
+  return isRoute(r) ? r : 'home';
+}
 
 
 const TOKEN_KEY = 'spendcheck.accessToken';
@@ -46,13 +57,29 @@ export function App() {
   const [token, setToken] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [unlocked, setUnlocked] = useState(false);
-  const [route, setRoute] = useState<Route>('home');
+  const [route, setRoute] = useState<Route>(initialRoute);
+  // Mirrors `route` for event handlers, which would otherwise see a stale value.
+  const routeRef = useRef<Route>(route);
   const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
   // Startup: paint the last snapshot at once, then refresh everything in one request.
   // Only a rejected session (401) signs the user out; a network failure keeps the cached data.
+  // Browser and Android back: move to the screen that history entry was on, without reloading.
+  useEffect(() => {
+    if (!window.history.state?.route) window.history.replaceState({ route: routeRef.current }, '');
+    const onPop = (e: PopStateEvent) => {
+      const r: unknown = e.state?.route;
+      const next: Route = isRoute(r) ? r : 'home';
+      if (next !== 'manual') setEditTxn(null);
+      routeRef.current = next;
+      setRoute(next);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   useEffect(() => {
     const stored = readToken();
     if (!stored) return setChecking(false);
@@ -135,6 +162,7 @@ export function App() {
     writeToken(t);
     setToken(t);
     setUser(u);
+    routeRef.current = 'home';
     setRoute('home');
     refreshAll(t)
       .then(boot => applyBoot(t, boot))
@@ -163,13 +191,17 @@ export function App() {
 
   const tab: Tab | null = NAV_TABS.includes(route as Tab) ? (route as Tab) : null;
   // The edit target only lives while the edit form is open.
+  // Each screen is a history entry, so the browser and Android back buttons move between screens
+  // inside the app instead of leaving the page.
   const go = (r: Route) => {
     if (r !== 'manual') setEditTxn(null);
+    if (r !== routeRef.current) window.history.pushState({ route: r }, '');
+    routeRef.current = r;
     setRoute(r);
   };
   const edit = (t: TxnRow) => {
     setEditTxn(t);
-    setRoute('manual');
+    go('manual');
   };
   const showToast = (m: string) => setToast(m);
 
