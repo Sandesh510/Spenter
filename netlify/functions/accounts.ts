@@ -8,7 +8,7 @@ import { isAccountKind } from '../../src/lib/accountTypes';
 /**
  * GET   /accounts                       → the user's accounts (max 10)
  * POST  /accounts  { nickname, bank?, kind: bank | savings | credit_card | wallet }
- * PATCH  /accounts  { id, nickname }     → rename
+ * PATCH  /accounts  { id, nickname, bank?, kind? } → edit; bank '' clears it
  * DELETE /accounts?id=…                 → remove (refused while transactions still use it)
  */
 export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin, userId, event }) => {
@@ -72,9 +72,16 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
   // PATCH: rename
   const id = reqId(b, 'id');
   const nickname = reqStr(b, 'nickname', 40);
+  const patch: Record<string, unknown> = { nickname };
+  if ('bank' in b) patch.bank = optStr(b, 'bank', 60);
+  if ('kind' in b) {
+    const kind = optStr(b, 'kind', 40) ?? 'bank';
+    if (!isAccountKind(kind)) throw new HttpError(400, 'Choose an account type');
+    patch.kind = kind;
+  }
   const { error, count } = await admin
     .from('spend_accounts')
-    .update({ nickname }, { count: 'exact' })
+    .update(patch, { count: 'exact' })
     .eq('id', id)
     .eq('user_id', userId);
   if (error) {
