@@ -180,7 +180,8 @@ body {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  margin: 0 -18px;
+  margin-left: -18px;
+  margin-right: -18px;
   padding: 0 18px 4px;
   scrollbar-width: none;
 }
