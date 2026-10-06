@@ -24,6 +24,17 @@ const categories = [
 ] as const;
 
 const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
+  bootstrap: () => ({
+    user: { id: 'mock-user', email: 'demo@example.com' },
+    month: '2026-10',
+    data: {
+      profile: { theme: 'dark', lockEnabled: false },
+      accounts: fixtures.accounts(new URLSearchParams()),
+      'home?month=2026-10': fixtures.home(new URLSearchParams()),
+      'transactions?month=2026-10': { items: [] },
+      lent: { items: [] },
+    },
+  }),
   me: () => ({ id: 'mock-user', email: 'demo@example.com' }),
   profile: () => ({ theme: 'dark', lockEnabled: false }),
   home: () => {
