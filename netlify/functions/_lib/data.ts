@@ -23,7 +23,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   await postDue(admin, userId, todayIST());
   await postInsurance(admin, userId, todayIST());
 
-  const [catRes, openRes, budgetRes, txnRes, askRes] = await Promise.all([
+  const [catRes, openRes, budgetRes, txnRes, askRes, lentRes] = await Promise.all([
     admin.from('spend_categories').select('id,name,bucket,icon,sort_order').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
     admin.from('spend_budgets').select('category_id,planned_paise').eq('user_id', userId).eq('month', firstDay),
@@ -42,8 +42,10 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(4),
+    admin.from('spend_lent_loans').select('amount_paise').eq('user_id', userId).gte('lent_on', start).lt('lent_on', end),
   ]);
-  for (const r of [catRes, openRes, budgetRes, txnRes, askRes]) if (r.error) throw r.error;
+  for (const r of [catRes, openRes, budgetRes, txnRes, askRes, lentRes]) if (r.error) throw r.error;
+  const lentOutPaise = (lentRes.data ?? []).reduce((s, l) => s + l.amount_paise, 0);
 
   const categories = (catRes.data as CategoryRow[]) ?? [];
   const bucketOf = new Map(categories.map(c => [c.id, c.bucket]));
@@ -60,29 +62,39 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     fromAccountId: r.account_id ?? undefined,
     toAccountId: r.to_account_id ?? undefined,
     external: r.external,
+    creditKind: r.credit_category === 'gone_back' ? 'returned' : r.credit_category === 'borrowed' ? 'borrowed' : 'income',
     deletedAt: r.deleted_at,
   }));
 
-  const totals = monthTotals({ month, openingPaise, txns });
+  const totals = monthTotals({ month, openingPaise, txns, lentOutPaise });
 
-  // Money in and out for the month. The money-in total is the balance's income; money out is what
-  // leaves the balance: spend, savings and transfers to outside accounts.
-  const moneyIn = { totalPaise: totals.incomePaise, salaryPaise: 0, goneBackPaise: 0, othersPaise: 0 };
+  // Money in and out for the month: everything that moved the balance. Income is only salary and others;
+  // got back and borrowed money are shown apart so they never look like earnings.
+  const moneyIn = {
+    totalPaise: totals.incomePaise + totals.returnedPaise + totals.borrowedPaise,
+    incomePaise: totals.incomePaise,
+    salaryPaise: 0,
+    goneBackPaise: 0,
+    borrowedPaise: 0,
+    othersPaise: 0,
+  };
   let outsidePaise = 0;
   for (const r of rows) {
     if (r.type === 'credit') {
       if (r.credit_category === 'salary') moneyIn.salaryPaise += r.amount_paise;
       else if (r.credit_category === 'gone_back') moneyIn.goneBackPaise += r.amount_paise;
+      else if (r.credit_category === 'borrowed') moneyIn.borrowedPaise += r.amount_paise;
       else moneyIn.othersPaise += r.amount_paise;
     } else if (r.type === 'transfer' && r.external) {
       outsidePaise += r.amount_paise;
     }
   }
   const moneyOut = {
-    totalPaise: totals.spendPaise + totals.savingsPaise + outsidePaise,
+    totalPaise: totals.spendPaise + totals.savingsPaise + outsidePaise + lentOutPaise,
     spendPaise: totals.spendPaise,
     savingsPaise: totals.savingsPaise,
     outsidePaise,
+    lentPaise: lentOutPaise,
   };
 
   const planByCategory = new Map<string, number>();

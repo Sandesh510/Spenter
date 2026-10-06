@@ -10,7 +10,7 @@ import { HttpError, json } from './_lib/response';
  * POST /lent { action:'update', id, name, amount, note?, lentOn, accountId? }   → edit a loan; '' clears the account
  * POST /lent { action:'settle', id }            → mark one loan returned
  * POST /lent { action:'settle_person', name }   → mark all open loans with this person returned
- * Lent money never changes the spendable balance (README: Money Lent).
+ * Lending reduces the spendable balance in the month it was lent; Got back credits return it. Neither is income or spend.
  */
 export const handler = authed(['GET', 'POST'], async ({ admin, userId, event }) => {
   if (event.httpMethod === 'GET') {

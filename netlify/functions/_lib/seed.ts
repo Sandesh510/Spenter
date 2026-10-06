@@ -19,6 +19,14 @@ export const DEFAULT_CATEGORIES = [
   { name: 'Clothes', bucket: 'want', icon: 'shirt' },
   { name: 'Food Wants', bucket: 'want', icon: 'utensils' },
   { name: 'Investment', bucket: 'save', icon: 'trending-up' },
+  { name: 'Insurance', bucket: 'need', icon: 'shield' },
+  { name: 'Rent', bucket: 'need', icon: 'house' },
+  { name: 'Fuel', bucket: 'need', icon: 'fuel' },
+  { name: 'Bills', bucket: 'need', icon: 'receipt' },
+  { name: 'Education', bucket: 'need', icon: 'graduation-cap' },
+  { name: 'Shopping', bucket: 'want', icon: 'shopping-cart' },
+  { name: 'Entertainment', bucket: 'want', icon: 'film' },
+  { name: 'Gifts', bucket: 'want', icon: 'gift' },
 ] as const;
 
 /** Starter accounts from the design spec. Users rename or replace them in Settings. */

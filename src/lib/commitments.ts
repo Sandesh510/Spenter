@@ -14,18 +14,19 @@ export function dueDate(month: string, day: number): string {
 
 /**
  * Months that should post, oldest first: every month from the start up to today's, where the due
- * date falls on or after the start date and no later than today. Stops at maxMonths to bound work.
+ * date falls on or after the start date and no later than today. When there are more than maxMonths,
+ * only the most recent maxMonths are returned, so a long-running commitment never stops posting.
  */
 export function dueMonths({ startsOn, day, today, maxMonths = 24 }: { startsOn: string; day: number; today: string; maxMonths?: number }): string[] {
   const months: string[] = [];
   const last = today.slice(0, 7);
   let month = startsOn.slice(0, 7);
-  while (month <= last && months.length < maxMonths) {
+  while (month <= last) {
     const due = dueDate(month, day);
     if (due >= startsOn && due <= today) months.push(month);
     month = shiftMonth(month, 1);
   }
-  return months;
+  return months.slice(-maxMonths);
 }
 
 /** The next due date on or after today, for showing "next on …". */

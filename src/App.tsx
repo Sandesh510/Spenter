@@ -11,6 +11,7 @@ import { Ask } from './screens/Ask';
 import { Home } from './screens/Home';
 import { Lent } from './screens/Lent';
 import { Commitments } from './screens/Commitments';
+import { Rules } from './screens/Rules';
 import { Lock } from './screens/Lock';
 import { Log } from './screens/Log';
 import { Manual } from './screens/Manual';
@@ -18,9 +19,9 @@ import { QuickAdd } from './screens/QuickAdd';
 import { Settings } from './screens/Settings';
 import { Trends } from './screens/Trends';
 
-export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments';
+export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules';
 
-const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments'];
+const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules'];
 function isRoute(v: unknown): v is Route {
   return typeof v === 'string' && ROUTE_NAMES.includes(v);
 }
@@ -58,6 +59,7 @@ export function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [unlocked, setUnlocked] = useState(false);
   const [route, setRoute] = useState<Route>(initialRoute);
+  const [logFilter, setLogFilter] = useState<{ categoryId: string; month: string } | null>(null);
   // Mirrors `route` for event handlers, which would otherwise see a stale value.
   const routeRef = useRef<Route>(route);
   const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
@@ -195,6 +197,7 @@ export function App() {
   // inside the app instead of leaving the page.
   const go = (r: Route) => {
     if (r !== 'manual') setEditTxn(null);
+    setLogFilter(null);
     if (r !== routeRef.current) window.history.pushState({ route: r }, '');
     routeRef.current = r;
     setRoute(r);
@@ -204,20 +207,28 @@ export function App() {
     go('manual');
   };
   const showToast = (m: string) => setToast(m);
+  /** Opens the Log already filtered to one category and month (from Home's category list). */
+  const openCategory = (categoryId: string, month: string) => {
+    go('log');
+    setLogFilter({ categoryId, month });
+  };
 
   return (
     <Frame>
-      {route === 'home' && <Home token={token} go={go} />}
-      {route === 'log' && <Log token={token} go={go} onEdit={edit} />}
+      {route === 'home' && <Home token={token} go={go} onOpenCategory={openCategory} />}
+      {route === 'log' && (
+        <Log key={logFilter ? `${logFilter.categoryId}:${logFilter.month}` : 'all'} token={token} go={go} onEdit={edit} initialCategoryId={logFilter?.categoryId} initialMonth={logFilter?.month} />
+      )}
       {route === 'ask' && <Ask token={token} go={go} onToast={showToast} />}
       {route === 'trends' && <Trends token={token} />}
       {route === 'settings' && profile && (
-        <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => { setUnlocked(false); }} email={user.email} />
+        <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => { setUnlocked(false); }} email={user.email} onOpenRules={() => go('rules')} />
       )}
       {route === 'quickadd' && <QuickAdd token={token} go={go} onToast={showToast} />}
       {route === 'manual' && <Manual token={token} go={go} onToast={showToast} editing={editTxn} />}
       {route === 'lent' && <Lent token={token} go={go} onToast={showToast} />}
       {route === 'commitments' && <Commitments token={token} go={go} onToast={showToast} />}
+      {route === 'rules' && <Rules go={go} />}
 
       {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}
       {toast && <div className="toast" role="status">{toast}</div>}

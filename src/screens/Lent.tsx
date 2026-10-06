@@ -27,7 +27,7 @@ interface LoanForm {
 }
 
 /**
- * Money lent, per the README. Lent money is not part of budgets or the Log and does not change the balance.
+ * Money lent. Lending takes the money out of the balance (it is not spend or a budget); Got back puts it back. Neither is income.
  */
 export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
   const { data, error, reload } = useApi<{ items: Loan[] }>('lent', token);

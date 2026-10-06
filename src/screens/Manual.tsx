@@ -22,11 +22,12 @@ const KINDS: { id: Kind; label: string; icon: string }[] = [
 ];
 
 /** The only credit categories. A credit is always one of these, never a spend category. */
-type CreditCategory = 'salary' | 'gone_back' | 'others';
+type CreditCategory = 'salary' | 'gone_back' | 'others' | 'borrowed';
 const CREDIT_SECTIONS: { id: CreditCategory; label: string }[] = [
   { id: 'salary', label: 'Salary' },
   { id: 'gone_back', label: 'Got back' },
   { id: 'others', label: 'Others' },
+  { id: 'borrowed', label: 'Borrowed' },
 ];
 
 /**

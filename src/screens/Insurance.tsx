@@ -119,7 +119,8 @@ function AddPolicy({ token, accounts, categories, onCancel, onSaved }: {
   onCancel: () => void;
   onSaved: (name: string) => void;
 }) {
-  const insuranceCategory = categories.find(c => c.name === 'Insurance') ?? categories[0];
+  // Default to the Insurance category. Without one, the user must choose, so premiums never land in an unrelated category.
+  const insuranceCategory = categories.find(c => c.name.toLowerCase() === 'insurance');
   const [name, setName] = useState('');
   const [insurer, setInsurer] = useState('');
   const [policyNumber, setPolicyNumber] = useState('');

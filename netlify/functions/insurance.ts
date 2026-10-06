@@ -1,5 +1,5 @@
 import { parseRupeesToPaise } from '../../src/lib/money';
-import { POLICY_TYPES, FREQUENCIES, advanceDue, type Frequency } from '../../src/lib/insurance';
+import { POLICY_TYPES, FREQUENCIES, advanceDue, nextDueFrom, type Frequency } from '../../src/lib/insurance';
 import { authed } from './_lib/handler';
 import { assertOwned, optStr, readJson, reqId, reqStr, todayIST } from './_lib/input';
 import { postInsurance, POLICY_COLUMNS, type PolicyRow } from './_lib/insurance';
@@ -96,13 +96,20 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     }
 
     if (typeof b.active !== 'boolean') throw new HttpError(400, 'Nothing to update');
-    const { error, count } = await admin
+    const { data: current, error: readErr } = await admin
       .from('spend_insurance_policies')
-      .update({ active: b.active, updated_at: new Date().toISOString() }, { count: 'exact' })
+      .select(POLICY_COLUMNS)
       .eq('id', id)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (readErr) throw readErr;
+    if (!current) throw new HttpError(404, 'Policy not found');
+    const p = current as PolicyRow;
+    const patch: Record<string, unknown> = { active: b.active, updated_at: new Date().toISOString() };
+    // Resuming moves the due date to the next one from today, so premiums due while paused are not posted.
+    if (b.active && !p.active) patch.next_due_on = nextDueFrom(p.next_due_on, p.frequency, today);
+    const { error } = await admin.from('spend_insurance_policies').update(patch).eq('id', id).eq('user_id', userId);
     if (error) throw error;
-    if (!count) throw new HttpError(404, 'Policy not found');
     return json(200, { ok: true });
   }
 

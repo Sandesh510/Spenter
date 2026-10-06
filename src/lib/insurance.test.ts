@@ -34,3 +34,12 @@ describe('insurance dates', () => {
     expect(inReminderWindow('2026-10-01', '2026-10-07')).toBe(true);
   });
 });
+
+describe('resuming a paused policy', () => {
+  it('skips premiums that fell due while paused', async () => {
+    const { nextDueFrom } = await import('./insurance');
+    expect(nextDueFrom('2026-01-10', 'monthly', '2026-04-05')).toBe('2026-04-10');
+    expect(nextDueFrom('2025-03-01', 'yearly', '2026-10-07')).toBe('2027-03-01');
+    expect(nextDueFrom('2026-11-01', 'quarterly', '2026-10-07')).toBe('2026-11-01');
+  });
+});

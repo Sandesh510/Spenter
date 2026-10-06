@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { dueDate, dueMonths, emiSplit } from '../../../src/lib/commitments';
+import { shiftMonth } from '../../../src/lib/dates';
 
 export interface CommitmentRow {
   id: string;
@@ -15,10 +16,12 @@ export interface CommitmentRow {
   outstanding_paise: number | null;
   rate_bps: number | null;
   tenure_remaining: number | null;
+  /** First day of the last month posted (or found already posted). Null before the first posting. */
+  last_posted_month: string | null;
 }
 
 export const COMMITMENT_COLUMNS =
-  'id,kind,name,amount_paise,day_of_month,category_id,account_id,active,starts_on,loan_is_new,outstanding_paise,rate_bps,tenure_remaining';
+  'id,kind,name,amount_paise,day_of_month,category_id,account_id,active,starts_on,loan_is_new,outstanding_paise,rate_bps,tenure_remaining,last_posted_month';
 
 /**
  * Posts every due month for the user's active commitments, oldest first. Runs on each Home load.
@@ -43,8 +46,14 @@ async function postCommitment(admin: SupabaseClient, userId: string, c: Commitme
   let outstanding = c.outstanding_paise ?? 0;
   let tenure = c.tenure_remaining ?? 0;
 
-  for (const month of dueMonths({ startsOn: c.starts_on, day: c.day_of_month, today })) {
+  // Only months after the last one posted. The unique key still guards against a second posting.
+  const afterLast = c.last_posted_month ? `${shiftMonth(c.last_posted_month.slice(0, 7), 1)}-01` : null;
+  const from = afterLast && afterLast > c.starts_on ? afterLast : c.starts_on;
+  let lastMonth: string | null = null;
+
+  for (const month of dueMonths({ startsOn: from, day: c.day_of_month, today })) {
     if (isLoan && (outstanding <= 0 || tenure <= 0)) break;
+    lastMonth = month;
 
     const { data, error } = await admin
       .from('spend_transactions')
@@ -82,5 +91,14 @@ async function postCommitment(admin: SupabaseClient, userId: string, c: Commitme
         .eq('user_id', userId);
       if (updErr) throw updErr;
     }
+  }
+
+  if (lastMonth) {
+    const { error: markErr } = await admin
+      .from('spend_commitments')
+      .update({ last_posted_month: `${lastMonth}-01` })
+      .eq('id', c.id)
+      .eq('user_id', userId);
+    if (markErr) throw markErr;
   }
 }

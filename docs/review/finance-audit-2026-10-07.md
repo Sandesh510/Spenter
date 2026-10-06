@@ -4,7 +4,7 @@ Reviewed: ledger (`src/lib/ledger.ts`), commitments and insurance posting (`netl
 
 The basics are right: money is stored as integer paise, totals are worked out from transactions rather than stored, every query is scoped to the signed-in user, tables have RLS, and recurring postings can't run twice for the same month. The problems are in the money rules, which can show a wrong balance, and in two posting bugs that will appear over time.
 
-## P0: wrong numbers or wrong postings
+## P0: wrong numbers or wrong postings (all fixed: migration 0008 and the code changes that ship with it)
 
 | # | Finding | What goes wrong | Change required |
 |---|---|---|---|

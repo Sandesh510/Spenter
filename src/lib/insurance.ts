@@ -35,6 +35,13 @@ export function advanceDue(iso: string, frequency: Frequency): string {
   return addMonthsIso(iso, FREQUENCY_MONTHS[frequency]);
 }
 
+/** The first due date on or after today, stepping from a past due date by the frequency. */
+export function nextDueFrom(iso: string, frequency: Frequency, today: string): string {
+  let due = iso;
+  for (let i = 0; due < today && i < 600; i++) due = advanceDue(due, frequency);
+  return due;
+}
+
 /** Whole days from today to the due date: negative when overdue. */
 export function daysUntil(iso: string, today: string): number {
   const [y1, m1, d1] = parts(iso);

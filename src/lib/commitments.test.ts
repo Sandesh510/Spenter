@@ -68,3 +68,11 @@ describe('rateToBps', () => {
     expect(() => rateToBps('abc')).toThrow();
   });
 });
+
+describe('long-running commitments', () => {
+  it('keeps posting after 24 months, returning the most recent months', () => {
+    const months = dueMonths({ startsOn: '2026-01-05', day: 5, today: '2028-06-10' });
+    expect(months).toHaveLength(24);
+    expect(months[months.length - 1]).toBe('2028-06');
+  });
+});

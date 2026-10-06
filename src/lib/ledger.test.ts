@@ -82,3 +82,47 @@ describe('monthTotals', () => {
     expect(t.spendableBalancePaise).toBe(-4000);
   });
 });
+
+describe('lending, got back and borrowed money', () => {
+  const base = { month: '2026-10', openingPaise: 100_000_00 };
+
+  it('lending reduces the balance and is not spend', () => {
+    const t = monthTotals({ ...base, txns: [], lentOutPaise: 10_000_00 });
+    expect(t.spendableBalancePaise).toBe(90_000_00);
+    expect(t.spendPaise).toBe(0);
+    expect(t.lentOutPaise).toBe(10_000_00);
+  });
+
+  it('got back returns money to the balance but is not income', () => {
+    const t = monthTotals({
+      ...base,
+      lentOutPaise: 10_000_00,
+      txns: [{ id: 'g', type: 'credit', amountPaise: 10_000_00, txnDate: '2026-10-20', creditKind: 'returned' }],
+    });
+    expect(t.spendableBalancePaise).toBe(100_000_00);
+    expect(t.incomePaise).toBe(0);
+    expect(t.returnedPaise).toBe(10_000_00);
+  });
+
+  it('a loan received adds to the balance but is not income', () => {
+    const t = monthTotals({
+      ...base,
+      txns: [{ id: 'b', type: 'credit', amountPaise: 200_000_00, txnDate: '2026-10-02', creditKind: 'borrowed' }],
+    });
+    expect(t.spendableBalancePaise).toBe(300_000_00);
+    expect(t.incomePaise).toBe(0);
+    expect(t.borrowedPaise).toBe(200_000_00);
+  });
+
+  it('salary and other credits stay income', () => {
+    const t = monthTotals({
+      ...base,
+      txns: [
+        { id: 's', type: 'credit', amountPaise: 50_000_00, txnDate: '2026-10-01', creditKind: 'income' },
+        { id: 'o', type: 'credit', amountPaise: 1_000_00, txnDate: '2026-10-03' },
+      ],
+    });
+    expect(t.incomePaise).toBe(51_000_00);
+    expect(t.spendableBalancePaise).toBe(151_000_00);
+  });
+});

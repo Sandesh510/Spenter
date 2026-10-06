@@ -109,13 +109,22 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
   if (event.httpMethod === 'PATCH') {
     const id = reqId(b, 'id');
     if (typeof b.active !== 'boolean') throw new HttpError(400, 'active must be true or false');
+    // Resuming starts again from today, so the paused months are skipped, not posted all at once.
+    const patch = b.active
+      ? { active: true, starts_on: todayIST(), updated_at: new Date().toISOString() }
+      : { active: false, updated_at: new Date().toISOString() };
     const { error, count } = await admin
       .from('spend_commitments')
-      .update({ active: b.active, updated_at: new Date().toISOString() }, { count: 'exact' })
+      .update(patch, { count: 'exact' })
       .eq('id', id)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('active', !b.active);
     if (error) throw error;
-    if (!count) throw new HttpError(404, 'Commitment not found');
+    if (!count) {
+      const { data: exists, error: findErr } = await admin.from('spend_commitments').select('id').eq('id', id).eq('user_id', userId).maybeSingle();
+      if (findErr) throw findErr;
+      if (!exists) throw new HttpError(404, 'Commitment not found');
+    }
     return json(200, { ok: true });
   }
 
@@ -196,7 +205,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
       amount_paise: outstandingPaise,
       txn_date: startsOn,
       account_id: accountId,
-      credit_category: 'others',
+      credit_category: 'borrowed',
       reference: `Loan received: ${name}`,
     });
     if (creditErr) throw creditErr;

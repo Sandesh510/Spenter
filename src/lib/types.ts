@@ -45,9 +45,13 @@ export interface RecentTxn {
 }
 
 export interface MoneyIn {
+  /** Everything that came in: income + got back + borrowed. */
   totalPaise: number;
+  /** Earned money only: salary and others. */
+  incomePaise: number;
   salaryPaise: number;
   goneBackPaise: number;
+  borrowedPaise: number;
   othersPaise: number;
 }
 
@@ -56,6 +60,8 @@ export interface MoneyOut {
   spendPaise: number;
   savingsPaise: number;
   outsidePaise: number;
+  /** Money lent to people this month. */
+  lentPaise: number;
 }
 
 export interface HomeData {

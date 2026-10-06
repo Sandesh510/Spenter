@@ -164,8 +164,9 @@ function MoneyFlow({ moneyIn, moneyOut }: { moneyIn: MoneyIn; moneyOut: MoneyOut
           <div className="num fs-18 c-success">{formatINR(moneyIn.totalPaise)}</div>
           <dl className="grid gap-4 mt-8 fs-12 c-sec m-0">
             <FlowRow label="Salary" paise={moneyIn.salaryPaise} />
-            <FlowRow label="Got back" paise={moneyIn.goneBackPaise} />
             <FlowRow label="Others" paise={moneyIn.othersPaise} />
+            <FlowRow label="Got back" paise={moneyIn.goneBackPaise} />
+            <FlowRow label="Borrowed" paise={moneyIn.borrowedPaise} />
           </dl>
         </div>
         <div>
@@ -175,9 +176,11 @@ function MoneyFlow({ moneyIn, moneyOut }: { moneyIn: MoneyIn; moneyOut: MoneyOut
             <FlowRow label="Spend" paise={moneyOut.spendPaise} />
             <FlowRow label="Savings" paise={moneyOut.savingsPaise} />
             <FlowRow label="Outside transfers" paise={moneyOut.outsidePaise} />
+            <FlowRow label="Lent" paise={moneyOut.lentPaise} />
           </dl>
         </div>
       </div>
+      <p className="fs-12 c-mut mt-8 m-0">Income this month: <span className="num c-text">{formatINR(moneyIn.incomePaise)}</span>. Got back and borrowed money are not income.</p>
       <div className="flex jc-sb ai-c mt-12 fs-13">
         <span className="c-sec">Net this month</span>
         <span className={`num ${net >= 0 ? 'c-success' : 'c-danger'}`}>{net >= 0 ? '+' : '−'}{formatINR(Math.abs(net))}</span>

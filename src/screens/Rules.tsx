@@ -1,0 +1,119 @@
+import { Card } from '../components/ui/Card';
+import { Icon } from '../components/Icon';
+import { MAX_ACCOUNTS } from '../lib/limits';
+import type { Route } from '../App';
+
+interface RuleGroup {
+  title: string;
+  icon: string;
+  rules: string[];
+}
+
+/** How SpendCheck counts money. Keep in step with src/lib/ledger.ts and the posting rules on the server. */
+const GROUPS: RuleGroup[] = [
+  {
+    title: 'Balance left to spend',
+    icon: 'indian-rupee',
+    rules: [
+      'Balance = starting balance + money in − spend − savings − transfers outside your accounts − money lent.',
+      'Totals are always worked out from your entries. Edit or delete an entry and every total updates.',
+      'Each month starts fresh. Set a starting balance once a month, or choose "none". Nothing carries over by itself.',
+    ],
+  },
+  {
+    title: 'Money in',
+    icon: 'arrow-down-left',
+    rules: [
+      'Salary and Others are income.',
+      'Got back is money you lent coming back. It returns to your balance but is not income.',
+      'Borrowed is a loan you received. It adds to your balance but is not income. You repay it through EMIs.',
+    ],
+  },
+  {
+    title: 'Money lent',
+    icon: 'banknote',
+    rules: [
+      'Lending takes the money out of your balance in the month you lend it. It is not spend and does not touch any budget.',
+      'Record repayments as Got back, linked to the loan. The amount still owed is the loan less what has come back.',
+      "A loan's amount can't be set below what has already come back.",
+    ],
+  },
+  {
+    title: 'Spend, savings and budgets',
+    icon: 'receipt-text',
+    rules: [
+      'Every spend needs a category. Its bucket (Needs, Wants or Savings) decides which budget it counts against.',
+      'Savings (such as SIPs) leave your balance but count towards your savings goal, not your spending.',
+      'Budgets are set per month and category. A bar is marked tight above 90% of plan and turns red when over.',
+      'Deleting a category that has entries asks you to move them to another category first.',
+    ],
+  },
+  {
+    title: 'Transfers and credit cards',
+    icon: 'arrow-left-right',
+    rules: [
+      'A transfer between your own accounts does not change your balance.',
+      'A transfer to someone outside your accounts counts as money out.',
+      'Card purchases count as spend on the day you buy, against their category.',
+      'Paying the card bill is a transfer from your bank account to the card account, never a spend. Recording it as spend counts the money twice.',
+    ],
+  },
+  {
+    title: 'Commitments',
+    icon: 'repeat',
+    rules: [
+      'Subscriptions, SIPs and EMIs post automatically on their day, once a month, when you open the app.',
+      'A month is never posted twice, even if the app is open on two devices.',
+      'Pausing stops posting. Resuming starts again from the next due date. Paused months are skipped, not added later.',
+      'An existing loan only tracks EMIs. A new loan also records the amount received as Borrowed.',
+    ],
+  },
+  {
+    title: 'Insurance',
+    icon: 'shield',
+    rules: [
+      'Premiums due within 7 days, and overdue ones, show on Home.',
+      'Auto-debit policies post the premium on the due date. "Remind me" policies need Mark paid.',
+      'A premium is recorded once per due date. A manual payment and an auto-debit can never both count.',
+      'Premiums go to the Insurance category unless you choose another one.',
+    ],
+  },
+  {
+    title: 'Entries and accounts',
+    icon: 'wallet',
+    rules: [
+      'Amounts are rupees with up to 2 decimals and must be more than zero.',
+      'Quick Add always uses today. Use Manual entry for back-dated entries.',
+      'After saving, you can add another entry for the same date and account.',
+      `You can have up to ${MAX_ACCOUNTS} accounts. An account with entries can't be deleted.`,
+    ],
+  },
+];
+
+export function Rules({ go }: { go: (r: Route) => void }) {
+  return (
+    <div className="scroll">
+      <div className="topbar topbar--inset">
+        <button className="iconbtn" onClick={() => go('settings')} aria-label="Back to Settings"><Icon name="chevron-left" size={18} /></button>
+        <h1 className="topbar__title">Rules to remember</h1>
+        <span className="topbar__spacer" aria-hidden="true" />
+      </div>
+      <p className="fs-13 c-sec mt-8">How SpendCheck counts your money.</p>
+      <ul className="grid gap-10 list-reset mt-12">
+        {GROUPS.map(g => (
+          <li key={g.title}>
+            <Card as="section" variant="compact" aria-label={g.title}>
+              <h2 className="fs-15 m-0 flex ai-c gap-8 fw-600">
+                <span className="c-accent"><Icon name={g.icon} size={16} /></span>
+                {g.title}
+              </h2>
+              <ul className="rules-list mt-8 fs-13 c-sec">
+                {g.rules.map(r => <li key={r}>{r}</li>)}
+              </ul>
+            </Card>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

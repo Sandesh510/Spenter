@@ -6,7 +6,7 @@ import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
 
 const TYPES = ['spend', 'credit', 'transfer'] as const;
-const CREDIT_CATEGORIES = ['salary', 'gone_back', 'others'] as const;
+const CREDIT_CATEGORIES = ['salary', 'gone_back', 'others', 'borrowed'] as const;
 type TxnType = (typeof TYPES)[number];
 
 /**
@@ -92,7 +92,7 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
   const categoryId = type === 'credit' ? null : optStr(b, 'categoryId', 60);
   const creditCategory = type === 'credit' ? reqStr(b, 'creditCategory', 20) : null;
   if (creditCategory && !(CREDIT_CATEGORIES as readonly string[]).includes(creditCategory)) {
-    throw new HttpError(400, 'creditCategory must be salary, gone_back or others');
+    throw new HttpError(400, 'creditCategory must be salary, gone_back, others or borrowed');
   }
   const reference = type === 'credit' ? optStr(b, 'reference', 120) : null;
   const lentLoanId = creditCategory === 'gone_back' ? optStr(b, 'lentLoanId', 60) : null;

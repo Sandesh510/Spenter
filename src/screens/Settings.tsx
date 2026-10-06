@@ -33,6 +33,7 @@ export function Settings({
   onSignOut,
   onLockNow,
   email,
+  onOpenRules,
 }: {
   token: string;
   onToast: (m: string) => void;
@@ -41,6 +42,7 @@ export function Settings({
   onSignOut: () => void;
   onLockNow: () => void;
   email: string | undefined;
+  onOpenRules: () => void;
 }) {
   const month = currentMonth();
   const home = useApi<HomeData>(`home?month=${month}`, token);
@@ -167,6 +169,15 @@ export function Settings({
           <span className="flex-1 fs-14 ovh ellipsis">{email ?? 'Signed in'}</span>
           <button className="link" onClick={onSignOut} style={{ padding: 0 }}>Sign out</button>
         </div>
+      </Group>
+
+      <SectionTitle>Help</SectionTitle>
+      <Group>
+        <button onClick={onOpenRules} style={rowButton}>
+          <span className="c-sec"><Icon name="info" size={17} /></span>
+          <span className="flex-1 fs-14">Rules to remember</span>
+          <span className="c-mut"><Icon name="chevron-right" size={15} /></span>
+        </button>
       </Group>
 
       <SectionTitle>Appearance</SectionTitle>

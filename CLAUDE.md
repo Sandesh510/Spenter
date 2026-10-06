@@ -42,6 +42,10 @@ Apply these to every new or changed screen.
 - Every Netlify Function scopes queries by the verified `user_id`. The service-role key stays server-side.
 - New tables get RLS with the owner policy, in a numbered migration under `supabase/migrations/`.
 - Limits shared by client and server live in `src/lib/limits.ts` (for example `MAX_ACCOUNTS = 10`).
+- Balance = opening + income + got back + borrowed − spend − savings − outside transfers − money lent. Only Salary and Others are income; `gone_back` and `borrowed` credits never count as income.
+- Recurring postings (commitments, insurance auto-debit) are idempotent through unique keys: `(commitment_id, commitment_month)` and `(policy_id, policy_due_on)`. Resuming moves the start or due date forward, so paused periods are never backfilled.
+- Commitments post only months after `last_posted_month`; never cap posting by a count from the start date.
+- The user-facing version of these rules is `src/screens/Rules.tsx` (Settings → Rules to remember). Update it whenever a money rule changes.
 
 ## Commands
 

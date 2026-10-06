@@ -4,16 +4,23 @@ import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { BUCKET_TINT, categoryIcon } from '../lib/categories';
-import { currentMonth, dayLabel } from '../lib/dates';
+import { currentMonth, dayLabel, monthTitle } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import type { Account, Bucket, Category, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 /** Transactions, per screens/ScreenLog.dc.html. Filter chips narrow the list client-side. */
-export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => void; onEdit: (t: TxnRow) => void }) {
-  const [month, setMonth] = useState(currentMonth());
-  const [categoryId, setCategoryId] = useState('');
+export function Log({ token, go, onEdit, initialCategoryId, initialMonth }: {
+  token: string;
+  go: (r: Route) => void;
+  onEdit: (t: TxnRow) => void;
+  /** Set when opened from a Home category: the Log starts filtered to it. */
+  initialCategoryId?: string;
+  initialMonth?: string;
+}) {
+  const [month, setMonth] = useState(initialMonth ?? currentMonth());
+  const [categoryId, setCategoryId] = useState(initialCategoryId ?? '');
   const [accountId, setAccountId] = useState('');
   const [selected, setSelected] = useState<TxnRow | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +65,9 @@ export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => vo
     }
   }
 
-  const monthOptions = recentMonths(6);
+  const recent = recentMonths(6);
+  // A month opened from Home can be older than the last six; keep it selectable.
+  const monthOptions = recent.some(m => m.value === month) ? recent : [...recent, { value: month, label: monthTitle(month) }];
 
   return (
     <div className="scroll" style={{ paddingBottom: 92 }}>
@@ -170,9 +179,11 @@ function FilterSelect({
   allowAll?: boolean;
 }) {
   const active = value !== '' && allowAll;
+  // An active filter shows what it is set to, e.g. "Food Wants" instead of "Category".
+  const shown = active ? options.find(o => o.value === value)?.label ?? label : label;
   return (
     <label className={`chip ${active ? 'chip--on' : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, position: 'relative' }}>
-      {label} <Icon name="chevron-down" size={13} />
+      {shown} <Icon name="chevron-down" size={13} />
       <select
         aria-label={label}
         value={value}

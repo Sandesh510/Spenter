@@ -6,10 +6,12 @@ import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { formatINR } from '../lib/money';
-import { BUCKET_LABEL } from '../lib/categories';
+import { BUCKET_LABEL, categoryIcon } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
-import type { Bucket, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
+import type { Bucket, Category, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
+import { CategoryTile } from '../components/ui/CategoryTile';
+import { Badge } from '../components/ui/Badge';
 import { InsuranceReminders } from './Insurance';
 import type { Route } from '../App';
 
@@ -17,7 +19,7 @@ import type { Route } from '../App';
  * Home, per screens/ScreenHome.dc.html. Bucket colour rules come from the README.
  * The month can be stepped back to earlier months; the current month cannot be passed.
  */
-export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
+export function Home({ token, go, onOpenCategory }: { token: string; go: (r: Route) => void; onOpenCategory: (categoryId: string, month: string) => void }) {
   const today = currentMonth();
   const [month, setMonth] = useState(today);
   const isCurrent = month === today;
@@ -94,6 +96,8 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
           <BudgetBar key={b.bucket} b={b} />
         ))}
       </div>
+
+      <CategorySpend categories={data.categories} onOpen={id => onOpenCategory(id, month)} />
 
       <div className="flex ai-c jc-sb" style={{ margin: '26px 2px 12px' }}>
         <span className="kicker">Recent asks</span>
@@ -242,4 +246,48 @@ function LentTotal({ token }: { token: string }) {
   const { data } = useApi<{ items: Loan[] }>('lent', token);
   const total = (data?.items ?? []).reduce((s, l) => s + l.outstanding_paise, 0);
   return <span>{formatINR(total)}</span>;
+}
+
+/**
+ * This month's categories with spending or a plan. Over-budget categories come first and are marked.
+ * Tapping one opens the Log filtered to that category and month.
+ */
+function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen: (categoryId: string) => void }) {
+  // Savings above plan means the goal is met, so only Needs and Wants can be over budget.
+  const over = (c: Category) => c.bucket !== 'save' && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise > c.plannedPaise;
+  const shown = categories
+    .filter(c => c.spentPaise > 0 || over(c))
+    .sort((a, b) => Number(over(b)) - Number(over(a)) || b.spentPaise - a.spentPaise);
+  if (shown.length === 0) return null;
+  const overCount = shown.filter(over).length;
+
+  return (
+    <section aria-labelledby="home-categories">
+      <div className="flex ai-c jc-sb" style={{ margin: '26px 2px 12px' }}>
+        <h2 id="home-categories" className="kicker m-0">Categories</h2>
+        {overCount > 0 && <span className="kicker c-danger">{overCount} over budget</span>}
+      </div>
+      <Card variant="group">
+        <ul className="list-reset">
+          {shown.map(c => (
+            <li key={c.id}>
+              <button className="list-row" onClick={() => onOpen(c.id)} aria-label={`${c.name}: show transactions`}>
+                <CategoryTile icon={categoryIcon(c)} bucket={c.bucket} />
+                <span className="flex-1 min-0">
+                  <span className="fs-14 nowrap ovh ellipsis" style={{ display: 'block' }}>{c.name}</span>
+                  <span className="num fs-12 c-sec">
+                    {formatINR(c.spentPaise)}{c.plannedPaise ? ` of ${formatINR(c.plannedPaise)}` : ' · no plan'}
+                  </span>
+                </span>
+                {over(c) && c.plannedPaise !== null && <span className="c-danger fs-12 num">{formatINR(c.spentPaise - c.plannedPaise)} over</span>}
+                {c.bucket === 'save' && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise >= c.plannedPaise && <Badge tone="success">goal met</Badge>}
+                {c.bucket !== 'save' && !over(c) && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise / c.plannedPaise > 0.9 && <Badge tone="neutral">tight</Badge>}
+                <span className="c-mut"><Icon name="chevron-right" size={15} /></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </section>
+  );
 }

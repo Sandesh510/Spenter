@@ -10,7 +10,7 @@ const BUCKETS = ['need', 'want', 'save'];
  * PATCH  /categories { id, name, bucket, icon }            → edit a category
  * PATCH  /categories { id, move: 'up' | 'down' }           → swap order with the neighbour
  * DELETE /categories?id=…[&reassignTo=…]                   → delete; 409 while entries use it
- * Deleting with reassignTo moves transactions, commitments and asks to that category first.
+ * Deleting with reassignTo moves transactions, commitments, insurance policies and asks to that category first.
  */
 export const handler = authed(['POST', 'PATCH', 'DELETE'], async ({ admin, userId, event }) => {
   if (event.httpMethod === 'DELETE') {
@@ -30,7 +30,13 @@ export const handler = authed(['POST', 'PATCH', 'DELETE'], async ({ admin, userI
       .eq('user_id', userId)
       .eq('category_id', id);
     if (commitErr) throw commitErr;
-    const inUse = (txnCount ?? 0) + (commitCount ?? 0);
+    const { count: policyCount, error: policyErr } = await admin
+      .from('spend_insurance_policies')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('category_id', id);
+    if (policyErr) throw policyErr;
+    const inUse = (txnCount ?? 0) + (commitCount ?? 0) + (policyCount ?? 0);
 
     if (inUse > 0) {
       if (!reassignTo) {
@@ -38,7 +44,7 @@ export const handler = authed(['POST', 'PATCH', 'DELETE'], async ({ admin, userI
       }
       if (reassignTo === id) throw new HttpError(400, 'Choose a different category');
       await assertOwned(admin, userId, 'spend_categories', [reassignTo]);
-      for (const table of ['spend_transactions', 'spend_commitments', 'spend_asks'] as const) {
+      for (const table of ['spend_transactions', 'spend_commitments', 'spend_insurance_policies', 'spend_asks'] as const) {
         const { error } = await admin.from(table).update({ category_id: reassignTo }).eq('user_id', userId).eq('category_id', id);
         if (error) throw error;
       }
