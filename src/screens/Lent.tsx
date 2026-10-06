@@ -23,7 +23,9 @@ interface Person {
  */
 export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
   const { data, error, reload } = useApi<{ items: Loan[] }>('lent', token);
-  const accounts = useApi<{ items: { id: string }[] }>('accounts', token);
+  const accounts = useApi<{ items: { id: string; nickname: string }[] }>('accounts', token);
+  const [fromAccountId, setFromAccountId] = useState<string | null>(null);
+  const accountName = (id: string | null) => accounts.data?.items.find(a => a.id === id)?.nickname ?? '';
   const [open, setOpen] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
@@ -70,7 +72,8 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
 
   /** Records each loan's outstanding amount as a Got back credit into the first account. */
   async function gotBack(list: Loan[], done: string) {
-    const accountId = accounts.data?.items[0]?.id;
+    // A Got back goes into the account the loan was lent from; otherwise the first account.
+    const accountId = list[0]?.debit_account_id ?? accounts.data?.items[0]?.id;
     if (!accountId) return setErr('Add an account in Settings first');
     setErr(null);
     setBusy(true);
@@ -94,7 +97,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
 
   async function record(e: FormEvent) {
     e.preventDefault();
-    await run({ action: 'add', name: name.trim(), amount, note: note.trim() || undefined }, `Lent ${formatINR(Math.round(Number(amount) * 100))} to ${name.trim()}`);
+    await run({ action: 'add', name: name.trim(), amount, note: note.trim() || undefined, accountId: fromAccountId ?? undefined }, `Lent ${formatINR(Math.round(Number(amount) * 100))} to ${name.trim()}`);
     setAdding(false);
     setName('');
     setAmount('');
@@ -137,7 +140,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
                   <div className="flex ai-c gap-10" key={l.id} >
                     <div className="flex-1 min-0">
                       <div className="num fs-14">{formatINR(l.outstanding_paise)} <span className="c-mut">of {formatINR(l.amount_paise)}</span></div>
-                      <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}</div>
+                      <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}{l.debit_account_id ? ` · from ${accountName(l.debit_account_id)}` : ''}</div>
                     </div>
                     <button className="link" disabled={busy} onClick={() => gotBack([l], `${p.name} got back ${formatINR(l.outstanding_paise)}`)}>Got back</button>
                   </div>
@@ -189,6 +192,12 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
           <Input  placeholder="Person" value={name} onChange={e => setName(e.target.value)} required maxLength={60} />
           <Input numeric inputMode="decimal" placeholder="Amount, e.g. 1500" value={amount} onChange={e => setAmount(e.target.value)} required />
           <Input  placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
+          <div className="kicker">Paid from (debit account)</div>
+          <div className="chiprow">
+            {(accounts.data?.items ?? []).map(a => (
+              <button type="button" key={a.id} aria-pressed={(fromAccountId ?? accounts.data?.items[0]?.id) === a.id} className={`chip ${(fromAccountId ?? accounts.data?.items[0]?.id) === a.id ? 'chip--on' : ''}`} onClick={() => setFromAccountId(a.id)}>{a.nickname}</button>
+            ))}
+          </div>
           {err && <p className="c-danger fs-13" role="alert" style={{ margin: 0 }}>{err}</p>}
           <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
           </form>

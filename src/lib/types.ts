@@ -99,6 +99,8 @@ export interface Loan {
   note: string | null;
   settled_at: string | null;
   created_at: string;
+  /** The account the money left from when it was lent. */
+  debit_account_id: string | null;
   /** Sum of Got back credits linked to this loan. */
   returned_paise: number;
   /** Amount still owed: the loan less what has come back, or 0 once settled. */

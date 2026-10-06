@@ -180,7 +180,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
               ) : (
                 <div className="chiprow">
                   {openLoans.map(l => (
-                    <button key={l.id} aria-pressed={lentLoanId === l.id} className={`chip ${lentLoanId === l.id ? 'chip--on' : ''}`} onClick={() => { setLentLoanId(l.id); if (!reference.trim()) setReference(l.person_name); }}>
+                    <button key={l.id} aria-pressed={lentLoanId === l.id} className={`chip ${lentLoanId === l.id ? 'chip--on' : ''}`} onClick={() => { setLentLoanId(l.id); if (!reference.trim()) setReference(l.person_name); if (l.debit_account_id) setAccountId(l.debit_account_id); }}>
                       {l.person_name} · {formatINR(l.outstanding_paise)}
                     </button>
                   ))}

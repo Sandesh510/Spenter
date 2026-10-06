@@ -1,6 +1,6 @@
 import { parseRupeesToPaise } from '../../src/lib/money';
 import { authed } from './_lib/handler';
-import { optStr, readJson, reqStr } from './_lib/input';
+import { assertOwned, optStr, readJson, reqId, reqStr } from './_lib/input';
 import { loadLent } from './_lib/data';
 import { HttpError, json } from './_lib/response';
 
@@ -27,9 +27,15 @@ export const handler = authed(['GET', 'POST'], async ({ admin, userId, event }) 
     } catch (err) {
       throw new HttpError(400, err instanceof Error ? err.message : 'Invalid amount');
     }
+    // The account the money left from. Optional, so loans recorded before accounts were linked still work.
+    const debitAccountId = optStr(b, 'accountId', 60);
+    if (debitAccountId) {
+      reqId({ debitAccountId }, 'accountId');
+      await assertOwned(admin, userId, 'spend_accounts', [debitAccountId]);
+    }
     const { data, error } = await admin
       .from('spend_lent_loans')
-      .insert({ user_id: userId, person_name: name, amount_paise: amountPaise, note: optStr(b, 'note', 120) })
+      .insert({ user_id: userId, person_name: name, amount_paise: amountPaise, note: optStr(b, 'note', 120), debit_account_id: debitAccountId })
       .select('id')
       .single();
     if (error) throw error;

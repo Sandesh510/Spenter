@@ -170,7 +170,7 @@ export async function loadLent(admin: SupabaseClient, userId: string) {
   const [loanRes, backRes] = await Promise.all([
     admin
       .from('spend_lent_loans')
-      .select('id,person_name,amount_paise,lent_on,note,settled_at,created_at')
+      .select('id,person_name,amount_paise,lent_on,note,settled_at,created_at,debit_account_id')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
     admin
