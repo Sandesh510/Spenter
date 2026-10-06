@@ -1,3 +1,6 @@
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Field';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
@@ -82,17 +85,17 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
 
       {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
 
-      <section className="card" style={{ marginTop: 8 }}>
+      <Card as="section" style={{ marginTop: 8 }}>
         <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Yet to get back</div>
         <div className="heading num" style={{ fontSize: 42, lineHeight: 1.05, marginTop: 4 }}>{formatINR(totalOwed)}</div>
         <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 4 }}>{outstanding.length} {outstanding.length === 1 ? 'person owes' : 'people owe'} you</div>
-      </section>
+      </Card>
 
       <div className="kicker" style={{ margin: '22px 2px 10px' }}>Outstanding</div>
       {outstanding.length === 0 && <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nothing outstanding.</p>}
       <div style={{ display: 'grid', gap: 10 }}>
         {outstanding.map(p => (
-          <div key={p.name} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <Card key={p.name} variant="flush">
             <button onClick={() => setOpen(open === p.name ? null : p.name)} style={rowBtn}>
               <span style={avatar}>{p.name.slice(0, 1).toUpperCase()}</span>
               <span style={{ flex: 1 }}>
@@ -119,14 +122,14 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
       {settled.length > 0 && (
         <>
           <div className="kicker" style={{ margin: '22px 2px 10px' }}>Settled</div>
-          <div className="card" style={{ padding: 0 }}>
+          <Card variant="flush">
             {settled.map(p => (
               <div key={p.name} className="row" style={{ padding: '12px 14px', margin: 0 }}>
                 <span style={{ ...avatar, opacity: 0.6 }}>{p.name.slice(0, 1).toUpperCase()}</span>
@@ -137,14 +140,14 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
                 <span style={{ color: 'var(--color-success)' }}><Icon name="check" size={16} /></span>
               </div>
             ))}
-          </div>
+          </Card>
         </>
       )}
 
       <div style={{ position: 'sticky', bottom: 16, marginTop: 20 }}>
-        <button className="btn" onClick={() => setAdding(a => !a)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>
+        <Button block size="lg" onClick={() => setAdding(a => !a)}>
           <Icon name="plus" size={17} /> Record money lent
-        </button>
+        </Button>
       </div>
 
       {adding && (
@@ -157,11 +160,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
               <button type="button" key={n} className={`chip ${name === n ? 'chip--on' : ''}`} onClick={() => setName(n)}>{n}</button>
             ))}
           </div>
-          <input className="input" placeholder="Person" value={name} onChange={e => setName(e.target.value)} required maxLength={60} />
-          <input className="input num" inputMode="decimal" placeholder="Amount, e.g. 1500" value={amount} onChange={e => setAmount(e.target.value)} required />
-          <input className="input" placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
+          <Input  placeholder="Person" value={name} onChange={e => setName(e.target.value)} required maxLength={60} />
+          <Input numeric inputMode="decimal" placeholder="Amount, e.g. 1500" value={amount} onChange={e => setAmount(e.target.value)} required />
+          <Input  placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
           {err && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>{err}</p>}
-          <button className="btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+          <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
           </form>
         </div>
       )}

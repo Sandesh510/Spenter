@@ -1,3 +1,5 @@
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Field';
 import { useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
@@ -6,7 +8,8 @@ import { haptic } from '../lib/haptics';
 import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
-import type { Account, HomeData } from '../lib/types';
+import { refreshAll } from '../lib/cache';
+import type { Account, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 type Kind = 'spend' | 'transfer' | 'self' | 'credit';
@@ -17,15 +20,18 @@ const KINDS: { id: Kind; label: string; icon: string }[] = [
   { id: 'credit', label: 'Credit / money in', icon: 'arrow-down-left' },
 ];
 
-/** Manual entry: older or non-spend transactions. Layout from screens/ScreenAdd.dc.html. */
-export function Manual({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
-  const [kind, setKind] = useState<Kind>('spend');
-  const [amount, setAmount] = useState('');
-  const [desc, setDesc] = useState('');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [accountId, setAccountId] = useState<string | null>(null);
-  const [toAccountId, setToAccountId] = useState<string | null>(null);
-  const [date, setDate] = useState(todayIST());
+/**
+ * Manual entry: older or non-spend transactions. Layout from screens/ScreenAdd.dc.html.
+ * With `editing`, the same form opens filled in and saves changes to that transaction.
+ */
+export function Manual({ token, go, onToast, editing }: { token: string; go: (r: Route) => void; onToast: (m: string) => void; editing: TxnRow | null }) {
+  const [kind, setKind] = useState<Kind>(editing ? (editing.type === 'credit' ? 'credit' : editing.type === 'transfer' ? 'transfer' : 'spend') : 'spend');
+  const [amount, setAmount] = useState(editing ? String(editing.amount_paise / 100) : '');
+  const [desc, setDesc] = useState(editing?.description ?? '');
+  const [categoryId, setCategoryId] = useState<string | null>(editing?.category_id ?? null);
+  const [accountId, setAccountId] = useState<string | null>(editing?.account_id ?? null);
+  const [toAccountId, setToAccountId] = useState<string | null>(editing?.to_account_id ?? null);
+  const [date, setDate] = useState(editing?.txn_date ?? todayIST());
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -34,6 +40,8 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
   const categories = home.data?.categories ?? [];
   const accountList = accounts.data?.items ?? [];
   const isTransfer = kind === 'transfer' || kind === 'self';
+  // Transfers to outside the tracked accounts have no destination account; they can only be edited, not created here.
+  const external = editing?.external ?? false;
   const from = accountId ?? accountList[0]?.id ?? null;
   const to = toAccountId ?? accountList.find(a => a.id !== from)?.id ?? null;
 
@@ -47,17 +55,22 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
     }
     if (!from) return setError('Add an account in Settings first');
     if (!isTransfer && !categoryId) return setError('Choose a category');
-    if (isTransfer && (!to || to === from)) return setError('Choose two different accounts');
+    if (isTransfer && !external && (!to || to === from)) return setError('Choose two different accounts');
 
     const body = isTransfer
-      ? { type: 'transfer', amount, date, description: desc.trim() || null, accountId: from, toAccountId: to }
+      ? { type: 'transfer', amount, date, description: desc.trim() || null, accountId: from, toAccountId: external ? null : to, external }
       : { type: kind === 'credit' ? 'credit' : 'spend', amount, date, description: desc.trim() || null, categoryId, accountId: from };
 
     setSaving(true);
     try {
-      await api('transactions', { token, body });
+      if (editing) {
+        await api('transactions', { method: 'PATCH', token, body: { id: editing.id, ...body } });
+        await refreshAll(token).catch(() => {});
+      } else {
+        await api('transactions', { token, body });
+      }
       haptic('success');
-      onToast(`Saved ${formatINR(paise)}`);
+      onToast(editing ? 'Transaction updated' : `Saved ${formatINR(paise)}`);
       go('log');
     } catch (err) {
       haptic('error');
@@ -68,13 +81,15 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
   }
 
   const accountName = (id: string | null) => accountList.find(a => a.id === id)?.nickname ?? 'Choose';
-  const saveLabel = kind === 'spend' ? 'Save spend' : kind === 'credit' ? 'Save credit' : kind === 'self' ? 'Save self transfer' : 'Save transfer';
+  const saveLabel = editing
+    ? 'Save changes'
+    : kind === 'spend' ? 'Save spend' : kind === 'credit' ? 'Save credit' : kind === 'self' ? 'Save self transfer' : 'Save transfer';
 
   return (
     <div className="scroll scroll--stack" style={{ paddingBottom: 24 }}>
       <div className="topbar" style={{ padding: '8px 0 4px' }}>
-        <button className="iconbtn" onClick={() => go('quickadd')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
-        <span className="topbar__title">Add transaction</span>
+        <button className="iconbtn" onClick={() => go(editing ? 'log' : 'quickadd')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
+        <span className="topbar__title">{editing ? 'Edit transaction' : 'Add transaction'}</span>
         <span style={{ width: 36 }} />
       </div>
 
@@ -89,13 +104,19 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--color-border)', borderRadius: 12, padding: '11px 13px', background: 'var(--color-surface)', marginTop: 12 }}>
         <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
-        <input className="input" style={{ fontSize: 14, borderBottom: 'none', padding: 0 }} placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} aria-label="Description" />
+        <Input  style={{ fontSize: 14, borderBottom: 'none', padding: 0 }} placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} aria-label="Description" />
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
         <Picker label={isTransfer ? 'From' : 'Account'} icon="wallet" value={accountName(from)} options={accountList} selected={from} onPick={setAccountId} />
         {isTransfer ? (
-          <Picker label="To" icon="arrow-right" value={accountName(to)} options={accountList} selected={to} onPick={setToAccountId} />
+          external ? (
+            <div style={{ ...pickerStyle, cursor: 'default', color: 'var(--color-text-secondary)', fontSize: 13 }}>
+              <Icon name="arrow-right" size={15} /> Outside
+            </div>
+          ) : (
+            <Picker label="To" icon="arrow-right" value={accountName(to)} options={accountList} selected={to} onPick={setToAccountId} />
+          )
         ) : (
           <label style={pickerStyle}>
             <span style={{ color: 'var(--color-text-muted)' }}><Icon name="calendar" size={14} /></span>
@@ -124,9 +145,9 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
 
       {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 10 }}>{error}</p>}
 
-      <button className="btn" onClick={save} disabled={saving} style={{ width: '100%', height: 52, marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>
+      <Button size="lg" block onClick={save} disabled={saving} style={{ marginTop: 12 }}>
         <Icon name="check" size={18} /> {saving ? 'Saving…' : saveLabel}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Card } from '../components/ui/Card';
 import { Icon } from '../components/Icon';
 import { iconFor } from '../lib/categories';
 import { currentMonth, monthTitle } from '../lib/dates';
@@ -41,7 +42,7 @@ export function Trends({ token }: { token: string }) {
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>This month</span>
       </div>
 
-      <section className="card" style={{ display: 'flex', alignItems: 'center', gap: 18, padding: 18 }}>
+      <Card as="section" style={{ display: 'flex', alignItems: 'center', gap: 18, padding: 18 }}>
         <div style={{ position: 'relative', width: 120, height: 120, flex: 'none' }}>
           <div
             style={{
@@ -70,7 +71,7 @@ export function Trends({ token }: { token: string }) {
             </div>
           ))}
         </div>
-      </section>
+      </Card>
       <div style={{ textAlign: 'center', fontSize: 11.5, color: 'var(--color-text-secondary)', margin: '9px 0 0' }}>{caption}</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 2px 14px' }}>

@@ -1,3 +1,4 @@
+import { Card } from '../components/ui/Card';
 import { Icon } from '../components/Icon';
 import { formatINR } from '../lib/money';
 import { BUCKET_LABEL } from '../lib/categories';
@@ -29,7 +30,7 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
         </button>
       </div>
 
-      <section className="card">
+      <Card as="section">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Balance left to spend</span>
           <span style={{ color: 'var(--color-text-muted)' }}><Icon name="info" size={15} /></span>
@@ -44,10 +45,10 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
           <span>Started <span style={{ color: 'var(--color-text-primary)' }}>{formatINR(data.openingPaise)}</span></span>
           <span>Spent <span style={{ color: 'var(--color-text-primary)' }}>{formatINR(spent)}</span></span>
         </div>
-      </section>
+      </Card>
 
-      <button
-        className="card"
+      <Card
+        as="button"
         onClick={() => go('lent')}
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 12, padding: 14, cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit', textAlign: 'left' }}
       >
@@ -56,7 +57,7 @@ export function Home({ token, go }: { token: string; go: (r: Route) => void }) {
           <LentTotal token={token} />
           <Icon name="chevron-right" size={16} />
         </span>
-      </button>
+      </Card>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '24px 2px 14px' }}>
         <span className="kicker">Budgets</span>

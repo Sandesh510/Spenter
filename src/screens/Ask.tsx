@@ -1,3 +1,5 @@
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Field';
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
@@ -73,11 +75,11 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
         <span style={{ width: 36 }} />
       </div>
 
-      <div className="card" style={{ padding: '12px 14px', marginTop: 8 }}>
+      <Card variant="compact" style={{ marginTop: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 8, borderBottom: '1px solid var(--color-border)' }}>
           <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
-          <input
-            className="input"
+          <Input
+            
             style={{ fontSize: 14, borderBottom: 'none', padding: 0 }}
             placeholder="What is it?"
             value={item}
@@ -91,7 +93,7 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
           <span className="heading" style={{ fontSize: 46, lineHeight: 1 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
           <span className="caret" />
         </div>
-      </div>
+      </Card>
 
       <div className="kicker" style={{ margin: '16px 0 6px' }}>Category</div>
       <div className="chiprow">

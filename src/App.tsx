@@ -1,10 +1,12 @@
+import { Button } from './components/ui/Button';
+import { Input } from './components/ui/Field';
 import { useEffect, useState, type FormEvent } from 'react';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { Icon } from './components/Icon';
 import { IDLE_LOCK_MS, isStillActive, touchActive, getLastActive } from './lib/prefs';
 import { api, ApiError } from './lib/api';
 import { cache, isStale, refreshAll, restoreSnapshot, type Bootstrap, type User } from './lib/cache';
-import type { Profile } from './lib/types';
+import type { Profile, TxnRow } from './lib/types';
 import { Ask } from './screens/Ask';
 import { Home } from './screens/Home';
 import { Lent } from './screens/Lent';
@@ -44,6 +46,7 @@ export function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [unlocked, setUnlocked] = useState(false);
   const [route, setRoute] = useState<Route>('home');
+  const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -158,20 +161,28 @@ export function App() {
   }
 
   const tab: Tab | null = NAV_TABS.includes(route as Tab) ? (route as Tab) : null;
-  const go = (r: Route) => setRoute(r);
+  // The edit target only lives while the edit form is open.
+  const go = (r: Route) => {
+    if (r !== 'manual') setEditTxn(null);
+    setRoute(r);
+  };
+  const edit = (t: TxnRow) => {
+    setEditTxn(t);
+    setRoute('manual');
+  };
   const showToast = (m: string) => setToast(m);
 
   return (
     <Frame>
       {route === 'home' && <Home token={token} go={go} />}
-      {route === 'log' && <Log token={token} go={go} />}
+      {route === 'log' && <Log token={token} go={go} onEdit={edit} />}
       {route === 'ask' && <Ask token={token} go={go} onToast={showToast} />}
       {route === 'trends' && <Trends token={token} />}
       {route === 'settings' && profile && (
         <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => { setUnlocked(false); }} email={user.email} />
       )}
       {route === 'quickadd' && <QuickAdd token={token} go={go} onToast={showToast} />}
-      {route === 'manual' && <Manual token={token} go={go} onToast={showToast} />}
+      {route === 'manual' && <Manual token={token} go={go} onToast={showToast} editing={editTxn} />}
       {route === 'lent' && <Lent token={token} go={go} onToast={showToast} />}
 
       {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}
@@ -227,9 +238,9 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
       </div>
 
       <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
-        <input className="input" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-        <input
-          className="input"
+        <Input  type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
+        <Input
+          
           type="password"
           placeholder={mode === 'signup' ? 'Password (min 8 characters)' : 'Password'}
           value={password}
@@ -238,9 +249,9 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
           minLength={mode === 'signup' ? 8 : undefined}
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
         />
-        <button className="btn" type="submit" disabled={busy} style={{ marginTop: 6 }}>
+        <Button type="submit" disabled={busy} style={{ marginTop: 6 }}>
           {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
-        </button>
+        </Button>
       </form>
 
       {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}

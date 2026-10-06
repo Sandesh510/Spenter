@@ -1,3 +1,6 @@
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Field';
 import { useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
@@ -93,8 +96,8 @@ export function Settings({
                 onSubmit={(e: FormEvent) => { e.preventDefault(); savePlan(c.id); }}
                 style={{ display: 'flex', gap: 8, padding: '0 14px 12px' }}
               >
-                <input className="input num" inputMode="decimal" placeholder="Monthly plan, e.g. 5000 (0 clears)" value={draft} onChange={e => setDraft(e.target.value)} style={{ fontSize: 15 }} autoFocus />
-                <button className="btn" type="submit" style={{ padding: '8px 12px' }}>Save</button>
+                <Input numeric inputMode="decimal" placeholder="Monthly plan, e.g. 5000 (0 clears)" value={draft} onChange={e => setDraft(e.target.value)} style={{ fontSize: 15 }} autoFocus />
+                <Button type="submit" size="sm">Save</Button>
               </form>
             )}
           </div>
@@ -207,7 +210,7 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 }
 
 function Group({ children }: { children: React.ReactNode }) {
-  return <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 14 }}>{children}</div>;
+  return <Card variant="group">{children}</Card>;
 }
 
 const rowButton = { display: 'flex', alignItems: 'center', gap: 11, width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: 'var(--color-text-primary)', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left' } as const;
@@ -237,8 +240,8 @@ function StartingBalance({ token, month, onSaved }: { token: string; month: stri
   return (
     <Group>
       <form onSubmit={save} style={{ display: 'flex', gap: 8, padding: 12 }}>
-        <input className="input num" inputMode="decimal" placeholder="Amount for this month, e.g. 92400" value={amount} onChange={e => setAmount(e.target.value)} required style={{ fontSize: 15 }} aria-label="Starting balance" />
-        <button className="btn" type="submit" disabled={busy} style={{ padding: '8px 12px' }}>{busy ? '…' : 'Save'}</button>
+        <Input numeric inputMode="decimal" placeholder="Amount for this month, e.g. 92400" value={amount} onChange={e => setAmount(e.target.value)} required style={{ fontSize: 15 }} aria-label="Starting balance" />
+        <Button type="submit" disabled={busy} size="sm">{busy ? '…' : 'Save'}</Button>
       </form>
       {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 12.5, margin: '0 14px 12px' }}>{error}</p>}
     </Group>
@@ -261,6 +264,19 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
     }
   }
 
+  async function remove() {
+    if (!window.confirm(`Delete the account "${a.nickname}"? This can't be undone.`)) return;
+    try {
+      await api(`accounts?id=${a.id}`, { method: 'DELETE', token });
+      haptic('warning');
+      setEditing(false);
+      onChanged();
+    } catch (err) {
+      haptic('error');
+      onError(err instanceof Error ? err.message : 'Could not delete account');
+    }
+  }
+
   return (
     <div style={{ borderBottom: '1px solid var(--color-border)' }}>
       <button onClick={() => setEditing(e => !e)} style={rowButton}>
@@ -274,10 +290,15 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
         <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
       </button>
       {editing && (
-        <form onSubmit={rename} style={{ display: 'flex', gap: 8, padding: '0 14px 12px' }}>
-          <input className="input" value={name} onChange={e => setName(e.target.value)} maxLength={40} style={{ fontSize: 15 }} aria-label="Account name" />
-          <button className="btn" type="submit" style={{ padding: '8px 12px' }}>Save</button>
-        </form>
+        <>
+          <form onSubmit={rename} style={{ display: 'flex', gap: 8, padding: '0 14px 12px' }}>
+            <Input  value={name} onChange={e => setName(e.target.value)} maxLength={40} style={{ fontSize: 15 }} aria-label="Account name" />
+            <Button type="submit" size="sm">Save</Button>
+          </form>
+          <div style={{ padding: '0 14px 12px' }}>
+            <button className="link" onClick={remove} style={{ padding: 0, color: 'var(--color-danger)', fontSize: 12.5 }}>Delete account</button>
+          </div>
+        </>
       )}
     </div>
   );
@@ -309,9 +330,9 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
 
   return (
     <form onSubmit={add} style={{ display: 'grid', gap: 8, padding: 12 }}>
-      <input className="input" placeholder="Nickname, e.g. HDFC Salary" value={nickname} onChange={e => setNickname(e.target.value)} required maxLength={40} style={{ fontSize: 15 }} />
-      <input className="input" placeholder="Bank (optional)" value={bank} onChange={e => setBank(e.target.value)} maxLength={60} style={{ fontSize: 15 }} />
-      <button className="btn" type="submit">Add account</button>
+      <Input  placeholder="Nickname, e.g. HDFC Salary" value={nickname} onChange={e => setNickname(e.target.value)} required maxLength={40} style={{ fontSize: 15 }} />
+      <Input  placeholder="Bank (optional)" value={bank} onChange={e => setBank(e.target.value)} maxLength={60} style={{ fontSize: 15 }} />
+      <Button type="submit">Add account</Button>
     </form>
   );
 }
@@ -361,15 +382,15 @@ function PasscodeRow({ token, profile, onProfile, onToast, onError }: { token: s
       </div>
       {mode === 'set' && (
         <form onSubmit={setPasscode} style={{ display: 'grid', gap: 8, padding: '0 14px 12px' }}>
-          <input className="input num" inputMode="numeric" maxLength={4} placeholder="New 4-digit passcode" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ''))} required style={{ fontSize: 15 }} />
-          <input className="input num" inputMode="numeric" maxLength={4} placeholder="Repeat passcode" value={confirm} onChange={e => setConfirm(e.target.value.replace(/\D/g, ''))} required style={{ fontSize: 15 }} />
-          <button className="btn" type="submit">Save passcode</button>
+          <Input numeric inputMode="numeric" maxLength={4} placeholder="New 4-digit passcode" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ''))} required style={{ fontSize: 15 }} />
+          <Input numeric inputMode="numeric" maxLength={4} placeholder="Repeat passcode" value={confirm} onChange={e => setConfirm(e.target.value.replace(/\D/g, ''))} required style={{ fontSize: 15 }} />
+          <Button type="submit">Save passcode</Button>
         </form>
       )}
       {mode === 'off' && (
         <div style={{ display: 'flex', gap: 10, padding: '0 14px 12px', alignItems: 'center' }}>
           <span style={{ flex: 1, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Turn off the passcode lock?</span>
-          <button className="btn" onClick={turnOff} style={{ padding: '8px 12px' }}>Turn off</button>
+          <Button variant="secondary" size="sm" onClick={turnOff}>Turn off</Button>
         </div>
       )}
     </div>

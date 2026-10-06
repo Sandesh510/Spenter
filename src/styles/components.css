@@ -1,0 +1,146 @@
+/* Shared component styles. Used only through the primitives in src/components/ui/. */
+
+/* Card */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  padding: 20px 20px 17px;
+}
+
+.card--compact {
+  padding: 12px 14px;
+}
+
+.card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.card--group {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.btn--secondary {
+  background: var(--color-surface-muted);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.btn--ghost {
+  background: none;
+  color: var(--color-accent-text);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.btn--danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.btn--sm {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.btn--lg {
+  height: 52px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* Link-style text button (sits inside rows and headers) */
+.link {
+  background: none;
+  border: none;
+  color: var(--color-accent-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+/* Input and field */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field__label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.field__error {
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--color-accent);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 18px;
+  padding: 8px 0;
+  outline: none;
+}
+
+.input--boxed {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  padding: 11px 13px;
+}
+
+.input--boxed:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 0;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}

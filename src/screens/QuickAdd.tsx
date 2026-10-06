@@ -1,3 +1,6 @@
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Field';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
@@ -104,9 +107,9 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           </p>
           <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
           {amountPaise > 0 && (
-            <button className="btn" onClick={() => setStep('category')} style={{ width: '100%', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Button block onClick={() => setStep('category')} style={{ marginTop: 12 }}>
               Continue <Icon name="arrow-right" size={16} />
-            </button>
+            </Button>
           )}
           <button className="link" onClick={() => go('manual')} style={{ display: 'block', margin: '18px auto 0' }}>
             Adding an older transaction? <strong>Manual entry →</strong>
@@ -146,9 +149,9 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
               />
             </div>
           )}
-          <button className="btn" disabled={!category} onClick={() => setStep('desc')} style={{ width: '100%', marginTop: 16, opacity: category ? 1 : 0.5 }}>
+          <Button block disabled={!category} onClick={() => setStep('desc')} style={{ marginTop: 16 }}>
             Continue
-          </button>
+          </Button>
         </>
       )}
 
@@ -158,8 +161,8 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
             {category && <span className="chip chip--on" style={{ cursor: 'default' }}>{category.name}</span>}
           </div>
           <div className="kicker" style={{ marginTop: 20 }}>What was it for?</div>
-          <input
-            className="input"
+          <Input
+            
             autoFocus
             placeholder={category ? `e.g. ${category.name} (optional)` : 'e.g. Coffee with Ana (optional)'}
             value={desc}
@@ -167,7 +170,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
             maxLength={120}
             style={{ marginTop: 10 }}
           />
-          <button className="btn" onClick={() => setStep('account')} style={{ width: '100%', marginTop: 24 }}>Next</button>
+          <Button block onClick={() => setStep('account')} style={{ marginTop: 24 }}>Next</Button>
         </>
       )}
 
@@ -182,17 +185,17 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           <div className="kicker" style={{ marginTop: 22 }}>Paid from</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
             {(accounts.data?.items ?? []).map(a => (
-              <button
+              <Card
+                as="button"
                 key={a.id}
                 disabled={saving}
                 onClick={() => save(a.id)}
-                className="card"
                 style={{ padding: 14, textAlign: 'left', cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit' }}
               >
                 <Icon name={a.icon ?? 'wallet'} size={18} />
                 <div style={{ fontSize: 13.5, marginTop: 8 }}>{a.nickname}</div>
                 <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>{a.bank ?? a.kind ?? ''}</div>
-              </button>
+              </Card>
             ))}
             {(accounts.data?.items.length ?? 0) < 6 && (
               <button

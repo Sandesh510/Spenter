@@ -1,3 +1,4 @@
+import { Button } from '../components/ui/Button';
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
@@ -10,10 +11,11 @@ import type { Account, Bucket, Category, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 /** Transactions, per screens/ScreenLog.dc.html. Filter chips narrow the list client-side. */
-export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
+export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => void; onEdit: (t: TxnRow) => void }) {
   const [month, setMonth] = useState(currentMonth());
   const [categoryId, setCategoryId] = useState('');
   const [accountId, setAccountId] = useState('');
+  const [selected, setSelected] = useState<TxnRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const txns = useApi<{ items: TxnRow[] }>(`transactions?month=${month}`, token);
@@ -23,6 +25,7 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
   const categories = home.data?.categories ?? [];
   const accountName = (id: string | null) => accounts.data?.items.find(a => a.id === id)?.nickname ?? '';
   const categoryOf = (id: string | null) => categories.find(c => c.id === id) ?? null;
+  const titleOf = (t: TxnRow) => t.description ?? (t.type === 'transfer' ? 'Transfer' : categoryOf(t.category_id)?.name ?? (t.type === 'credit' ? 'Money in' : 'Spend'));
 
   const rows = useMemo(() => {
     return (txns.data?.items ?? []).filter(t => {
@@ -91,12 +94,12 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
             const tint = t.type === 'spend' && bucket ? BUCKET_TINT[bucket] : { bg: 'var(--color-success-bg)', fg: 'var(--color-success)' };
             const isIn = t.type === 'credit';
             const icon = t.type === 'transfer' ? 'arrow-left-right' : isIn ? 'arrow-down-left' : iconFor(cat?.name);
-            const title = t.description ?? (t.type === 'transfer' ? 'Transfer' : cat?.name ?? (isIn ? 'Money in' : 'Spend'));
+            const title = titleOf(t);
             const meta = t.type === 'transfer'
               ? `${accountName(t.account_id)}${t.external ? ' → outside' : ` → ${accountName(t.to_account_id)}`}`
               : accountName(t.account_id);
             return (
-              <button key={t.id} className="row" onClick={() => remove(t)} style={{ width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', color: 'inherit', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }} aria-label={`Delete ${title}`}>
+              <button key={t.id} className="row" onClick={() => setSelected(t)} style={{ width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', color: 'inherit', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }} aria-label={`Edit or delete ${title}`}>
                 <div style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, display: 'grid', placeItems: 'center', background: tint.bg, color: tint.fg }}>
                   <Icon name={icon} size={17} />
                 </div>
@@ -117,6 +120,35 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
           })}
         </section>
       ))}
+
+      {selected && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Transaction actions"
+          onClick={() => setSelected(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 20 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 420, background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '14px 16px 22px', display: 'grid', gap: 9 }}
+          >
+            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', textAlign: 'center', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {titleOf(selected)} · {formatINR(selected.amount_paise)}
+            </div>
+            <Button block onClick={() => { const t = selected; setSelected(null); onEdit(t); }}>
+              <Icon name="pencil-line" size={16} /> Edit
+            </Button>
+            <button
+              onClick={() => { const t = selected; setSelected(null); remove(t); }}
+              style={{ height: 48, borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'transparent', border: '1px solid var(--color-danger)', color: 'var(--color-danger)' }}
+            >
+              <Icon name="trash-2" size={16} /> Delete
+            </button>
+            <button className="link" onClick={() => setSelected(null)} style={{ padding: 10, color: 'var(--color-text-secondary)' }}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
