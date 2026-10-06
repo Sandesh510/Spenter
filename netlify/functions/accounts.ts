@@ -7,9 +7,10 @@ const MAX_ACCOUNTS = 6;
 /**
  * GET   /accounts                       → the user's accounts (max 6)
  * POST  /accounts  { nickname, bank?, kind? }
- * PATCH /accounts  { id, nickname }     → rename
+ * PATCH  /accounts  { id, nickname }     → rename
+ * DELETE /accounts?id=…                 → remove (refused while transactions still use it)
  */
-export const handler = authed(['GET', 'POST', 'PATCH'], async ({ admin, userId, event }) => {
+export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin, userId, event }) => {
   if (event.httpMethod === 'GET') {
     const { data, error } = await admin
       .from('spend_accounts')
@@ -18,6 +19,22 @@ export const handler = authed(['GET', 'POST', 'PATCH'], async ({ admin, userId, 
       .order('position', { ascending: true });
     if (error) throw error;
     return json(200, { items: data ?? [] });
+  }
+
+  if (event.httpMethod === 'DELETE') {
+    const id = reqId({ id: event.queryStringParameters?.id ?? '' }, 'id');
+    const { error, count } = await admin
+      .from('spend_accounts')
+      .delete({ count: 'exact' })
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) {
+      // Transactions (even deleted ones, kept for history) reference accounts with ON DELETE RESTRICT.
+      if (error.code === '23503') throw new HttpError(409, 'This account has transactions. Delete or edit them first.');
+      throw error;
+    }
+    if (!count) throw new HttpError(404, 'Account not found');
+    return json(200, { ok: true });
   }
 
   const b = readJson(event.body);

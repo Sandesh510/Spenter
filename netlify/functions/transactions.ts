@@ -1,4 +1,5 @@
 import { parseRupeesToPaise } from '../../src/lib/money';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { authed } from './_lib/handler';
 import { assertOwned, dateOrToday, optStr, readJson, reqId, reqStr } from './_lib/input';
 import { monthRange, parseMonth } from './_lib/month';
@@ -10,9 +11,10 @@ type TxnType = (typeof TYPES)[number];
 /**
  * GET    /transactions?month=YYYY-MM   → the month's live transactions
  * POST   /transactions                 → add a spend, money-in (credit) or transfer
+ * PATCH  /transactions  { id, …fields } → replace a transaction's details (same rules as POST)
  * DELETE /transactions?id=…            → soft delete (kept for history, excluded from totals)
  */
-export const handler = authed(['GET', 'POST', 'DELETE'], async ({ admin, userId, event }) => {
+export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin, userId, event }) => {
   if (event.httpMethod === 'GET') {
     const month = parseMonth(event.queryStringParameters?.month);
     const { start, end } = monthRange(month);
@@ -43,8 +45,35 @@ export const handler = authed(['GET', 'POST', 'DELETE'], async ({ admin, userId,
     return json(200, { ok: true });
   }
 
-  // POST
   const b = readJson(event.body);
+
+  if (event.httpMethod === 'PATCH') {
+    const id = reqId(b, 'id');
+    const fields = await parseTxn(admin, userId, b);
+    const { error, count } = await admin
+      .from('spend_transactions')
+      .update({ ...fields, updated_at: new Date().toISOString() }, { count: 'exact' })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+    if (error) throw error;
+    if (!count) throw new HttpError(404, 'Transaction not found');
+    return json(200, { ok: true });
+  }
+
+  // POST
+  const { data, error } = await admin
+    .from('spend_transactions')
+    .insert({ user_id: userId, ...(await parseTxn(admin, userId, b)) })
+    .select('id')
+    .single();
+  if (error) throw error;
+
+  return json(201, { id: data.id });
+});
+
+/** Validates a spend, credit or transfer and returns the row fields. Shared by POST and PATCH. */
+async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string, unknown>) {
   const typeRaw = reqStr(b, 'type', 10);
   if (!(TYPES as readonly string[]).includes(typeRaw)) throw new HttpError(400, 'type must be spend, credit or transfer');
   const type = typeRaw as TxnType;
@@ -78,22 +107,14 @@ export const handler = authed(['GET', 'POST', 'DELETE'], async ({ admin, userId,
   await assertOwned(admin, userId, 'spend_categories', categoryId ? [categoryId] : []);
   await assertOwned(admin, userId, 'spend_accounts', [accountId, ...(toAccountId ? [toAccountId] : [])]);
 
-  const { data, error } = await admin
-    .from('spend_transactions')
-    .insert({
-      user_id: userId,
-      type,
-      amount_paise: amountPaise,
-      txn_date: txnDate,
-      description,
-      category_id: categoryId,
-      account_id: accountId,
-      to_account_id: type === 'transfer' && !external ? toAccountId : null,
-      external: type === 'transfer' && external,
-    })
-    .select('id')
-    .single();
-  if (error) throw error;
-
-  return json(201, { id: data.id });
-});
+  return {
+    type,
+    amount_paise: amountPaise,
+    txn_date: txnDate,
+    description,
+    category_id: categoryId,
+    account_id: accountId,
+    to_account_id: type === 'transfer' && !external ? toAccountId : null,
+    external: type === 'transfer' && external,
+  };
+}
