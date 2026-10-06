@@ -3,10 +3,11 @@ import { reqId, reqStr, optStr, readJson } from './_lib/input';
 import { HttpError, json } from './_lib/response';
 
 import { MAX_ACCOUNTS } from '../../src/lib/limits';
+import { isAccountKind } from '../../src/lib/accountTypes';
 
 /**
  * GET   /accounts                       → the user's accounts (max 10)
- * POST  /accounts  { nickname, bank?, kind? }
+ * POST  /accounts  { nickname, bank?, kind: bank | savings | credit_card | wallet }
  * PATCH  /accounts  { id, nickname }     → rename
  * DELETE /accounts?id=…                 → remove (refused while transactions still use it)
  */
@@ -47,13 +48,15 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     if (countErr) throw countErr;
     if ((count ?? 0) >= MAX_ACCOUNTS) throw new HttpError(400, `Up to ${MAX_ACCOUNTS} accounts`);
 
+    const kind = optStr(b, 'kind', 40) ?? 'bank';
+    if (!isAccountKind(kind)) throw new HttpError(400, 'Choose an account type');
     const { data, error } = await admin
       .from('spend_accounts')
       .insert({
         user_id: userId,
         nickname: reqStr(b, 'nickname', 40),
         bank: optStr(b, 'bank', 60),
-        kind: optStr(b, 'kind', 40),
+        kind,
         icon: 'wallet',
         position: count ?? 0,
       })

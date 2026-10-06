@@ -12,6 +12,8 @@ import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import type { Account, HomeData, Profile } from '../lib/types';
 import { MAX_ACCOUNTS } from '../lib/limits';
+import { ACCOUNT_KINDS, ACCOUNT_KIND_LABEL, isAccountKind, type AccountKind } from '../lib/accountTypes';
+import { Field } from '../components/ui/Field';
 
 const SHOW_FIRST = 5;
 
@@ -250,7 +252,7 @@ function AccountRow({ a, token, onChanged, onError }: { a: Account; token: strin
         </span>
         <span className="flex-1">
           <span className="fs-14" style={{ display: 'block' }}>{a.nickname}</span>
-          {(a.bank || a.kind) && <span className="fs-11 c-mut" style={{ display: 'block' }}>{[a.bank, a.kind].filter(Boolean).join(' · ')}</span>}
+          {(a.bank || a.kind) && <span className="fs-11 c-mut" style={{ display: 'block' }}>{[a.bank, isAccountKind(a.kind) ? ACCOUNT_KIND_LABEL[a.kind] : null].filter(Boolean).join(' · ')}</span>}
         </span>
         <span className="c-mut"><Icon name="pencil-line" size={15} /></span>
       </button>
@@ -273,6 +275,7 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
   const [open, setOpen] = useState(false);
   const [nickname, setNickname] = useState('');
   const [bank, setBank] = useState('');
+  const [kind, setKind] = useState<AccountKind>('bank');
 
   if (count >= MAX_ACCOUNTS) return <div className="fs-12 c-mut" style={{ padding: '12px 14px' }}>Up to {MAX_ACCOUNTS} accounts</div>;
   if (!open) return (
@@ -282,9 +285,10 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
   async function add(e: FormEvent) {
     e.preventDefault();
     try {
-      await api('accounts', { token, body: { nickname, bank: bank || undefined } });
+      await api('accounts', { token, body: { nickname, bank: bank || undefined, kind } });
       setNickname('');
       setBank('');
+      setKind('bank');
       setOpen(false);
       haptic('success');
       onAdded();
@@ -295,8 +299,20 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
 
   return (
     <form className="grid gap-8" onSubmit={add} style={{ padding: 12 }}>
-      <Input  placeholder="Nickname, e.g. HDFC Salary" value={nickname} onChange={e => setNickname(e.target.value)} required maxLength={40} style={{ fontSize: 15 }} />
-      <Input  placeholder="Bank (optional)" value={bank} onChange={e => setBank(e.target.value)} maxLength={60} style={{ fontSize: 15 }} />
+      <Field label="Nickname">
+        <Input placeholder="e.g. HDFC Salary" value={nickname} onChange={e => setNickname(e.target.value)} required maxLength={40} style={{ fontSize: 15 }} />
+      </Field>
+      <Field label="Bank (optional)">
+        <Input placeholder="e.g. HDFC" value={bank} onChange={e => setBank(e.target.value)} maxLength={60} style={{ fontSize: 15 }} />
+      </Field>
+      <fieldset className="fieldset-reset grid gap-6">
+        <legend className="kicker kicker--spaced">What type</legend>
+        <div className="chiprow" style={{ margin: 0, padding: 0 }}>
+          {ACCOUNT_KINDS.map(k => (
+            <button type="button" key={k} aria-pressed={kind === k} className={`chip ${kind === k ? 'chip--on' : ''}`} onClick={() => setKind(k)}>{ACCOUNT_KIND_LABEL[k]}</button>
+          ))}
+        </div>
+      </fieldset>
       <Button type="submit">Add account</Button>
     </form>
   );
