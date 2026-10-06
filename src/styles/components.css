@@ -179,7 +179,7 @@
 
 /* Section label used as a heading */
 .kicker--spaced {
-  margin-bottom: 8px;
+  margin: 0 0 8px;
 }
 
 /* Text link in the danger family */
