@@ -86,6 +86,7 @@ const GROUPS: RuleGroup[] = [
     rules: [
       'Amounts are rupees with up to 2 decimals and must be more than zero.',
       'Quick Add always uses today. Use Manual entry for back-dated entries.',
+      'Paste entries reads lines of date, account, amount (and an optional description). Each one is saved only when you tap Save; a possible duplicate is flagged but not blocked.',
       'After saving, you can add another entry for the same date and account.',
       `You can have up to ${MAX_ACCOUNTS} accounts. An account with entries can't be deleted.`,
     ],

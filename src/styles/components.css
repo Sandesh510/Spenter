@@ -341,3 +341,11 @@ li:last-child > .list-row {
   text-align: left;
   cursor: pointer;
 }
+
+.input--area {
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 160px;
+  resize: vertical;
+  font-family: var(--font-body);
+}

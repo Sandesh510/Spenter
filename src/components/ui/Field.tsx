@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
 
 interface FieldProps {
   label?: string;
@@ -26,4 +26,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export function Input({ boxed = false, numeric = false, className = '', ...rest }: InputProps) {
   const classes = ['input', boxed && 'input--boxed', numeric && 'num', className].filter(Boolean).join(' ');
   return <input className={classes} {...rest} />;
+}
+
+type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
+
+/** Multi-line text input in the boxed style, for pasted text. */
+export function TextArea({ className = '', ...rest }: TextAreaProps) {
+  return <textarea className={['input', 'input--boxed', 'input--area', className].filter(Boolean).join(' ')} {...rest} />;
 }
