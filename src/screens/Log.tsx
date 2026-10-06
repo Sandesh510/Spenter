@@ -73,22 +73,22 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
         <FilterSelect label={monthLabelShort(month)} value={month} onChange={setMonth} options={monthOptions.map(m => ({ value: m.value, label: m.label }))} allowAll={false} />
       </div>
 
-      {(txns.error || error) && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{txns.error ?? error}</p>}
+      {(txns.error || error) && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{txns.error ?? error}</p>}
 
       {groups.length === 0 && !txns.error && (
-        <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 24 }}>No transactions for this filter.</p>
+        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 24 }}>No transactions for this filter.</p>
       )}
 
       {groups.map(g => (
         <section key={g.date}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '16px 2px 6px' }}>
             <span className="kicker">{dayLabel(g.date)}</span>
-            <span className="num" style={{ fontSize: 11.5, color: 'var(--faint)' }}>{formatINR(g.total)}</span>
+            <span className="num" style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{formatINR(g.total)}</span>
           </div>
           {g.items.map(t => {
             const cat = categoryOf(t.category_id);
             const bucket: Bucket | null = cat?.bucket ?? null;
-            const tint = t.type === 'spend' && bucket ? BUCKET_TINT[bucket] : { bg: 'rgba(34,197,94,.16)', fg: 'var(--green)' };
+            const tint = t.type === 'spend' && bucket ? BUCKET_TINT[bucket] : { bg: 'var(--color-success-bg)', fg: 'var(--color-success)' };
             const isIn = t.type === 'credit';
             const icon = t.type === 'transfer' ? 'arrow-left-right' : isIn ? 'arrow-down-left' : iconFor(cat?.name);
             const title = t.description ?? (t.type === 'transfer' ? 'Transfer' : cat?.name ?? (isIn ? 'Money in' : 'Spend'));
@@ -96,7 +96,7 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
               ? `${accountName(t.account_id)}${t.external ? ' → outside' : ` → ${accountName(t.to_account_id)}`}`
               : accountName(t.account_id);
             return (
-              <button key={t.id} className="row" onClick={() => remove(t)} style={{ width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--line)', color: 'inherit', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }} aria-label={`Delete ${title}`}>
+              <button key={t.id} className="row" onClick={() => remove(t)} style={{ width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', color: 'inherit', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }} aria-label={`Delete ${title}`}>
                 <div style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, display: 'grid', placeItems: 'center', background: tint.bg, color: tint.fg }}>
                   <Icon name={icon} size={17} />
                 </div>
@@ -106,10 +106,10 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
                     {cat && t.type !== 'transfer' && (
                       <span style={{ fontSize: 10.5, padding: '2px 7px', borderRadius: 5, background: tint.bg, color: tint.fg }}>{cat.name}</span>
                     )}
-                    <span style={{ fontSize: 11, color: 'var(--faint)' }}>{meta}</span>
+                    <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{meta}</span>
                   </div>
                 </div>
-                <div className="num" style={{ fontSize: 14.5, color: isIn ? 'var(--green)' : 'var(--text)' }}>
+                <div className="num" style={{ fontSize: 14.5, color: isIn ? 'var(--color-success)' : 'var(--color-text-primary)' }}>
                   {isIn ? '+' : ''}{formatINR(t.amount_paise)}
                 </div>
               </button>

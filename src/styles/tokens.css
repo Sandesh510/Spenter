@@ -1,71 +1,111 @@
-/* Colour tokens from the design palette (Dark and Light). Dark is the default. */
+/* Semantic colour tokens. Components use --color-* names only; never raw hex or rgba.
+   Dark is the default. Light applies under data-theme="light" or the light system preference.
+   Accent is #4f6bed from the palette. accentText, accentTint and onAccent are derived from it
+   for contrast; replace them if the Color Reference file gives different values. */
 
 :root {
   color-scheme: dark;
 
-  /* Surfaces and text */
-  --page: #0b0f14;
-  --bg: #0b0f14; /* Background: main app bg */
-  --surface: #121821; /* Surface: cards, panels */
-  --surface2: #1e2938; /* Surface Alt: sections, tracks */
-  --line: #2a3649; /* Border: dividers */
-  --text: #f8fafc; /* Primary text */
-  --muted: #94a3b8; /* Secondary text */
-  --faint: #64748b; /* Muted / disabled */
+  /* Surfaces */
+  --color-shell: #0b0f14;
+  --color-surface: #121821;
+  --color-surface-muted: #1e2938;
+  --color-border: #2a3649;
+  --color-scrim: rgba(0, 0, 0, 0.45);
+  --color-plan-marker: rgba(248, 250, 252, 0.16);
+  --color-need-bg: rgba(6, 182, 212, 0.2);
 
-  /* Semantic colours */
-  --primary: #4f6bed; /* Buttons, links */
-  --green: #22c55e; /* Success: income, positive, under budget */
-  --amber: #f97316; /* Accent: highlights, CTA, Wants, active nav */
-  --warning: #f59e0b; /* Pending, alerts */
-  --red: #ef4444; /* Danger: overspend, errors */
-  --need: #06b6d4; /* Needs bucket, savings pending (Chart 2) */
-  --save: #a78bfa; /* Savings and goals (Chart 1) */
-  --on-amber: #ffffff; /* Text on accent buttons */
+  /* Text */
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
 
+  /* Accent */
+  --color-accent: #4f6bed;
+  --color-accent-text: #8fa3ff;
+  --color-accent-tint: rgba(79, 107, 237, 0.16);
+  --color-on-accent: #ffffff;
+
+  /* Status families: solid for text and icons, bg for tinted chips and rows */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.16);
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.16);
+  --color-danger: #ef4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.16);
+  --color-info: #06b6d4;
+  --color-info-bg: rgba(6, 182, 212, 0.16);
+  --color-reminder: #a78bfa;
+  --color-reminder-bg: rgba(167, 139, 250, 0.16);
+
+  /* Budget buckets */
+  --color-need: #06b6d4;
+  --color-save: #a78bfa;
+
+  /* Type families */
   --font-heading: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Lora', Georgia, serif;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
-    --page: #e2e8f0;
-    --bg: #f8fafc;
-    --surface: #ffffff;
-    --surface2: #e2e8f0;
-    --line: #cbd5e1;
-    --text: #0f172a;
-    --muted: #475569;
-    --faint: #64748b;
-    --primary: #4f6bed;
-    --green: #16a34a;
-    --amber: #f97316;
-    --warning: #f59e0b;
-    --red: #ef4444;
-    --need: #0e7490; /* darker cyan for text on light backgrounds */
-    --save: #8b5cf6;
-    --on-amber: #ffffff;
+    --color-shell: #f8fafc;
+    --color-surface: #ffffff;
+    --color-surface-muted: #e2e8f0;
+    --color-border: #cbd5e1;
+    --color-scrim: rgba(15, 23, 42, 0.35);
+    --color-plan-marker: rgba(15, 23, 42, 0.16);
+    --color-need-bg: rgba(14, 116, 144, 0.14);
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    --color-accent: #4f6bed;
+    --color-accent-text: #3b52c4;
+    --color-accent-tint: rgba(79, 107, 237, 0.12);
+    --color-on-accent: #ffffff;
+    --color-success: #16a34a;
+    --color-success-bg: rgba(22, 163, 74, 0.12);
+    --color-warning: #b45309;
+    --color-warning-bg: rgba(245, 158, 11, 0.14);
+    --color-danger: #dc2626;
+    --color-danger-bg: rgba(220, 38, 38, 0.1);
+    --color-info: #0e7490;
+    --color-info-bg: rgba(6, 182, 212, 0.14);
+    --color-reminder: #7c3aed;
+    --color-reminder-bg: rgba(124, 58, 237, 0.12);
+    --color-need: #0e7490;
+    --color-save: #7c3aed;
   }
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --page: #e2e8f0;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --surface2: #e2e8f0;
-  --line: #cbd5e1;
-  --text: #0f172a;
-  --muted: #475569;
-  --faint: #64748b;
-  --primary: #4f6bed;
-  --green: #16a34a;
-  --amber: #f97316;
-  --warning: #f59e0b;
-  --red: #ef4444;
-  --need: #0e7490; /* darker cyan for text on light backgrounds */
-  --save: #8b5cf6;
-  --on-amber: #ffffff;
+  --color-shell: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #e2e8f0;
+  --color-border: #cbd5e1;
+  --color-scrim: rgba(15, 23, 42, 0.35);
+  --color-plan-marker: rgba(15, 23, 42, 0.16);
+  --color-need-bg: rgba(14, 116, 144, 0.14);
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-accent: #4f6bed;
+  --color-accent-text: #3b52c4;
+  --color-accent-tint: rgba(79, 107, 237, 0.12);
+  --color-on-accent: #ffffff;
+  --color-success: #16a34a;
+  --color-success-bg: rgba(22, 163, 74, 0.12);
+  --color-warning: #b45309;
+  --color-warning-bg: rgba(245, 158, 11, 0.14);
+  --color-danger: #dc2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.1);
+  --color-info: #0e7490;
+  --color-info-bg: rgba(6, 182, 212, 0.14);
+  --color-reminder: #7c3aed;
+  --color-reminder-bg: rgba(124, 58, 237, 0.12);
+  --color-need: #0e7490;
+  --color-save: #7c3aed;
 }
 
 * {
@@ -75,8 +115,8 @@
 html,
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--color-shell);
+  color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
@@ -95,14 +135,14 @@ body {
 }
 
 .kicker {
-  color: var(--muted);
+  color: var(--color-text-secondary);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .kicker--amber {
-  color: var(--amber);
+  color: var(--color-accent-text);
   letter-spacing: 0.14em;
 }
 
@@ -113,8 +153,8 @@ body {
 }
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 20px 20px 17px;
 }
@@ -122,7 +162,7 @@ body {
 .track {
   height: 7px;
   border-radius: 6px;
-  background: var(--surface2);
+  background: var(--color-surface-muted);
   overflow: hidden;
 }
 
@@ -133,12 +173,12 @@ body {
 .fill {
   height: 100%;
   border-radius: 6px;
-  background: var(--amber);
+  background: var(--color-accent);
 }
 
 .btn {
-  background: var(--amber);
-  color: var(--on-amber);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   border: none;
   border-radius: 12px;
   padding: 12px 16px;
@@ -154,7 +194,7 @@ body {
 .link {
   background: none;
   border: none;
-  color: var(--amber);
+  color: var(--color-accent-text);
   font-family: var(--font-body);
   font-size: 13px;
   padding: 6px 0;
@@ -165,10 +205,16 @@ body {
   width: 100%;
   background: transparent;
   border: none;
-  border-bottom: 2px solid var(--amber);
-  color: var(--text);
+  border-bottom: 2px solid var(--color-accent);
+  color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: 18px;
   padding: 8px 0;
   outline: none;
+}
+
+/* Focus ring: one rule for every interactive control, in both themes. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }

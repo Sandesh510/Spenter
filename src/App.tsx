@@ -147,7 +147,7 @@ export function App() {
     setUnlocked(false);
   }
 
-  if (checking) return <Frame><p style={{ padding: 24, color: 'var(--muted)' }}>Loading…</p></Frame>;
+  if (checking) return <Frame><p style={{ padding: 24, color: 'var(--color-text-secondary)' }}>Loading…</p></Frame>;
   if (!user || !token) return <SignIn onSignedIn={signedIn} />;
   if (profile?.lockEnabled && !unlocked) {
     return (
@@ -219,11 +219,11 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
   return (
     <div className="phone" style={{ padding: '56px 24px 24px' }}>
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--amber)', display: 'grid', placeItems: 'center', color: 'var(--amber)', margin: '0 auto' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--color-accent)', display: 'grid', placeItems: 'center', color: 'var(--color-accent-text)', margin: '0 auto' }}>
           <Icon name="wallet" size={26} />
         </div>
         <div className="heading" style={{ fontSize: 23, marginTop: 14 }}>SpendCheck</div>
-        <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>{mode === 'login' ? 'Sign in to continue' : 'Create your account'}</div>
+        <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>{mode === 'login' ? 'Sign in to continue' : 'Create your account'}</div>
       </div>
 
       <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
@@ -243,8 +243,8 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
         </button>
       </form>
 
-      {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
-      {notice && <p style={{ color: 'var(--green)', fontSize: 13 }}>{notice}</p>}
+      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
+      {notice && <p style={{ color: 'var(--color-success)', fontSize: 13 }}>{notice}</p>}
 
       <button
         className="link"

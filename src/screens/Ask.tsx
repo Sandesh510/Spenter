@@ -74,8 +74,8 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
       </div>
 
       <div className="card" style={{ padding: '12px 14px', marginTop: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 8, borderBottom: '1px solid var(--line)' }}>
-          <span style={{ color: 'var(--faint)' }}><Icon name="pencil-line" size={15} /></span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 8, borderBottom: '1px solid var(--color-border)' }}>
+          <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
           <input
             className="input"
             style={{ fontSize: 14, borderBottom: 'none', padding: 0 }}
@@ -87,7 +87,7 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
           />
         </div>
         <div className="num" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '10px 0 2px' }}>
-          <span className="heading" style={{ fontSize: 26, color: 'var(--muted)' }}>₹</span>
+          <span className="heading" style={{ fontSize: 26, color: 'var(--color-text-secondary)' }}>₹</span>
           <span className="heading" style={{ fontSize: 46, lineHeight: 1 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
           <span className="caret" />
         </div>
@@ -113,16 +113,16 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
             category={{ name: selected.name, bucket: selected.bucket, plannedPaise: selected.plannedPaise, spentPaise: selected.spentPaise }}
             spendableBalancePaise={home.data.spendableBalancePaise}
           />
-          <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 6 }}>{BUCKET_LABEL[selected.bucket]} · {BUCKET_TAG[selected.bucket]}</div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 6 }}>{BUCKET_LABEL[selected.bucket]} · {BUCKET_TAG[selected.bucket]}</div>
         </div>
       )}
 
-      {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, marginTop: 12 }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 12 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 9, marginTop: 16 }}>
-        <DecisionButton label="Bought" colour="var(--green)" disabled={busy} onClick={() => decide('bought')} />
-        <DecisionButton label="Skipped" colour="var(--red)" disabled={busy} onClick={() => decide('skipped')} />
-        <DecisionButton label="Delayed" colour="var(--amber)" disabled={busy} onClick={() => decide('delayed')} />
+        <DecisionButton label="Bought" colour="var(--color-success)" disabled={busy} onClick={() => decide('bought')} />
+        <DecisionButton label="Skipped" colour="var(--color-danger)" disabled={busy} onClick={() => decide('skipped')} />
+        <DecisionButton label="Delayed" colour="var(--color-accent)" disabled={busy} onClick={() => decide('delayed')} />
       </div>
     </div>
   );

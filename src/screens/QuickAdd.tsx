@@ -99,7 +99,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
       {step === 'amount' && (
         <>
-          <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--muted)', margin: '4px 0 12px' }}>
+          <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary)', margin: '4px 0 12px' }}>
             {amountPaise > 0 ? 'Pause a second — we’ll move on automatically.' : 'Type the amount'}
           </p>
           <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
@@ -123,7 +123,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
             const items = home.data?.categories.filter(c => c.bucket === g.bucket) ?? [];
             return (
               <div key={g.bucket} style={{ marginTop: 14 }}>
-                <div className="kicker" style={{ color: g.bucket === 'need' ? 'var(--need)' : g.bucket === 'want' ? 'var(--amber)' : 'var(--green)', marginBottom: 8 }}>{g.label}</div>
+                <div className="kicker" style={{ color: g.bucket === 'need' ? 'var(--color-need)' : g.bucket === 'want' ? 'var(--color-accent)' : 'var(--color-success)', marginBottom: 8 }}>{g.label}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {items.map(c => (
                     <button key={c.id} className={`chip ${categoryId === c.id ? 'chip--on' : ''}`} onClick={() => setCategoryId(c.id)}>
@@ -154,7 +154,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
       {step === 'desc' && (
         <>
-          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
             {category && <span className="chip chip--on" style={{ cursor: 'default' }}>{category.name}</span>}
           </div>
           <div className="kicker" style={{ marginTop: 20 }}>What was it for?</div>
@@ -175,7 +175,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
         <>
           <div style={{ textAlign: 'center', marginTop: 6 }}>
             <div className="num heading" style={{ fontSize: 34 }}>{formatINR(amountPaise)}</div>
-            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>
+            <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 4 }}>
               {category?.name} · {desc.trim() || 'No note'} · Today
             </div>
           </div>
@@ -187,23 +187,23 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
                 disabled={saving}
                 onClick={() => save(a.id)}
                 className="card"
-                style={{ padding: 14, textAlign: 'left', cursor: 'pointer', color: 'var(--text)', fontFamily: 'inherit' }}
+                style={{ padding: 14, textAlign: 'left', cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit' }}
               >
                 <Icon name={a.icon ?? 'wallet'} size={18} />
                 <div style={{ fontSize: 13.5, marginTop: 8 }}>{a.nickname}</div>
-                <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>{a.bank ?? a.kind ?? ''}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>{a.bank ?? a.kind ?? ''}</div>
               </button>
             ))}
             {(accounts.data?.items.length ?? 0) < 6 && (
               <button
                 onClick={() => go('settings')}
-                style={{ padding: 14, borderRadius: 18, border: '1px dashed var(--line)', background: 'transparent', color: 'var(--amber)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}
+                style={{ padding: 14, borderRadius: 18, border: '1px dashed var(--color-border)', background: 'transparent', color: 'var(--color-accent-text)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}
               >
                 + Add account
               </button>
             )}
           </div>
-          {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, marginTop: 12 }}>{error}</p>}
+          {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 12 }}>{error}</p>}
         </>
       )}
     </div>
@@ -214,7 +214,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 function AmountDisplay({ value, big }: { value: string; big: boolean }) {
   return (
     <div className="num" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: big ? '18px 0 12px' : '14px 0 10px' }}>
-      <span className="heading" style={{ fontSize: big ? 34 : 24, color: 'var(--muted)' }}>₹</span>
+      <span className="heading" style={{ fontSize: big ? 34 : 24, color: 'var(--color-text-secondary)' }}>₹</span>
       <span className="heading" style={{ fontSize: big ? 66 : 42, lineHeight: 1, fontWeight: 600 }}>{value ? Number(value).toLocaleString('en-IN') : '0'}</span>
       {big && <span className="caret" style={{ height: 52 }} />}
     </div>

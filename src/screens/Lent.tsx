@@ -80,16 +80,16 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
         <span style={{ width: 36 }} />
       </div>
 
-      {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
 
       <section className="card" style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>Yet to get back</div>
+        <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>Yet to get back</div>
         <div className="heading num" style={{ fontSize: 42, lineHeight: 1.05, marginTop: 4 }}>{formatINR(totalOwed)}</div>
-        <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>{outstanding.length} {outstanding.length === 1 ? 'person owes' : 'people owe'} you</div>
+        <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 4 }}>{outstanding.length} {outstanding.length === 1 ? 'person owes' : 'people owe'} you</div>
       </section>
 
       <div className="kicker" style={{ margin: '22px 2px 10px' }}>Outstanding</div>
-      {outstanding.length === 0 && <p style={{ fontSize: 13, color: 'var(--muted)' }}>Nothing outstanding.</p>}
+      {outstanding.length === 0 && <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nothing outstanding.</p>}
       <div style={{ display: 'grid', gap: 10 }}>
         {outstanding.map(p => (
           <div key={p.name} className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -97,18 +97,18 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
               <span style={avatar}>{p.name.slice(0, 1).toUpperCase()}</span>
               <span style={{ flex: 1 }}>
                 <span style={{ display: 'block', fontSize: 14 }}>{p.name}</span>
-                <span style={{ display: 'block', fontSize: 11.5, color: 'var(--muted)' }}>{p.open.length} {p.open.length === 1 ? 'loan' : 'loans'} · since {p.since}</span>
+                <span style={{ display: 'block', fontSize: 11.5, color: 'var(--color-text-secondary)' }}>{p.open.length} {p.open.length === 1 ? 'loan' : 'loans'} · since {p.since}</span>
               </span>
               <span className="num" style={{ fontSize: 14.5 }}>{formatINR(p.owed)}</span>
               <Icon name={open === p.name ? 'chevron-down' : 'chevron-right'} size={15} />
             </button>
             {open === p.name && (
-              <div style={{ borderTop: '1px solid var(--line)', padding: '6px 14px 14px', display: 'grid', gap: 8 }}>
+              <div style={{ borderTop: '1px solid var(--color-border)', padding: '6px 14px 14px', display: 'grid', gap: 8 }}>
                 {p.open.map(l => (
                   <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="num" style={{ fontSize: 13.5 }}>{formatINR(l.amount_paise)}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{l.note ?? 'No note'} · {l.lent_on}</div>
+                      <div style={{ fontSize: 11.5, color: 'var(--color-text-secondary)' }}>{l.note ?? 'No note'} · {l.lent_on}</div>
                     </div>
                     <button className="link" disabled={busy} onClick={() => run({ action: 'settle', id: l.id }, `${p.name} returned ${formatINR(l.amount_paise)}`)}>Got back</button>
                   </div>
@@ -130,11 +130,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
             {settled.map(p => (
               <div key={p.name} className="row" style={{ padding: '12px 14px', margin: 0 }}>
                 <span style={{ ...avatar, opacity: 0.6 }}>{p.name.slice(0, 1).toUpperCase()}</span>
-                <span style={{ flex: 1, fontSize: 13.5, color: 'var(--muted)' }}>{p.name}</span>
-                <span className="num" style={{ fontSize: 13, color: 'var(--faint)', textDecoration: 'line-through' }}>
+                <span style={{ flex: 1, fontSize: 13.5, color: 'var(--color-text-secondary)' }}>{p.name}</span>
+                <span className="num" style={{ fontSize: 13, color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
                   {formatINR(loans.filter(l => l.person_name === p.name).reduce((s, l) => s + l.amount_paise, 0))}
                 </span>
-                <span style={{ color: 'var(--green)' }}><Icon name="check" size={16} /></span>
+                <span style={{ color: 'var(--color-success)' }}><Icon name="check" size={16} /></span>
               </div>
             ))}
           </div>
@@ -149,8 +149,8 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
 
       {adding && (
         <div role="dialog" aria-modal="true" aria-label="Record money lent" style={{ position: 'absolute', inset: 0, zIndex: 30, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setAdding(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
-          <form onSubmit={record} className="sheet pop" style={{ position: 'relative', background: 'var(--surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', display: 'grid', gap: 10, borderTop: '1px solid var(--line)' }}>
+          <div onClick={() => setAdding(false)} style={{ position: 'absolute', inset: 0, background: 'var(--color-scrim)' }} />
+          <form onSubmit={record} className="sheet pop" style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', display: 'grid', gap: 10, borderTop: '1px solid var(--color-border)' }}>
           <div className="kicker">Name</div>
           <div className="chiprow" style={{ margin: 0, padding: 0 }}>
             {previousNames.map(n => (
@@ -160,7 +160,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
           <input className="input" placeholder="Person" value={name} onChange={e => setName(e.target.value)} required maxLength={60} />
           <input className="input num" inputMode="decimal" placeholder="Amount, e.g. 1500" value={amount} onChange={e => setAmount(e.target.value)} required />
           <input className="input" placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
-          {err && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{err}</p>}
+          {err && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>{err}</p>}
           <button className="btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
           </form>
         </div>
@@ -169,5 +169,5 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
   );
 }
 
-const rowBtn = { display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '13px 14px', background: 'none', border: 'none', color: 'var(--text)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' } as const;
-const avatar = { width: 36, height: 36, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'var(--surface2)', color: 'var(--amber)', fontFamily: 'var(--font-heading)', fontWeight: 600, flex: 'none' } as const;
+const rowBtn = { display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '13px 14px', background: 'none', border: 'none', color: 'var(--color-text-primary)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' } as const;
+const avatar = { width: 36, height: 36, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'var(--color-surface-muted)', color: 'var(--color-accent-text)', fontFamily: 'var(--font-heading)', fontWeight: 600, flex: 'none' } as const;

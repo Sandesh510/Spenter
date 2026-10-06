@@ -46,19 +46,19 @@ export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void 
   return (
     <div className="phone" style={{ justifyContent: 'space-between', padding: '0 24px 26px' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--amber)', display: 'grid', placeItems: 'center', color: 'var(--amber)' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, border: '1px solid var(--color-accent)', display: 'grid', placeItems: 'center', color: 'var(--color-accent-text)' }}>
           <Icon name="lock-keyhole" size={26} />
         </div>
         <div style={{ textAlign: 'center' }}>
           <div className="heading" style={{ fontSize: 23 }}>SpendCheck</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>Enter your passcode</div>
+          <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>Enter your passcode</div>
         </div>
         <div style={{ display: 'flex', gap: 15 }} aria-label={`${pin.length} of 4 digits entered`}>
           {[0, 1, 2, 3].map(i => (
-            <span key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: i < pin.length ? 'var(--amber)' : 'transparent', border: i < pin.length ? 'none' : '1.5px solid var(--line)' }} />
+            <span key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: i < pin.length ? 'var(--color-accent)' : 'transparent', border: i < pin.length ? 'none' : '1.5px solid var(--color-border)' }} />
           ))}
         </div>
-        {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>}
+        {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>{error}</p>}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 250, margin: '0 auto' }}>
         {keys.map((k, i) => (
@@ -67,7 +67,7 @@ export function Lock({ token, onUnlock }: { token: string; onUnlock: () => void 
             onClick={() => press(k)}
             disabled={k === '' || busy}
             aria-label={k === '⌫' ? 'Delete' : k || undefined}
-            style={{ height: 58, borderRadius: '50%', border: 'none', background: 'transparent', color: k === '⌫' || k === '' ? 'var(--faint)' : 'var(--text)', fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 24, cursor: k === '' ? 'default' : 'pointer' }}
+            style={{ height: 58, borderRadius: '50%', border: 'none', background: 'transparent', color: k === '⌫' || k === '' ? 'var(--color-text-muted)' : 'var(--color-text-primary)', fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 24, cursor: k === '' ? 'default' : 'pointer' }}
           >
             {k}
           </button>

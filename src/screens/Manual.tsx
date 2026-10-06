@@ -87,8 +87,8 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--line)', borderRadius: 12, padding: '11px 13px', background: 'var(--surface)', marginTop: 12 }}>
-        <span style={{ color: 'var(--faint)' }}><Icon name="pencil-line" size={15} /></span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--color-border)', borderRadius: 12, padding: '11px 13px', background: 'var(--color-surface)', marginTop: 12 }}>
+        <span style={{ color: 'var(--color-text-muted)' }}><Icon name="pencil-line" size={15} /></span>
         <input className="input" style={{ fontSize: 14, borderBottom: 'none', padding: 0 }} placeholder="Description (optional)" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} aria-label="Description" />
       </div>
 
@@ -98,8 +98,8 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
           <Picker label="To" icon="arrow-right" value={accountName(to)} options={accountList} selected={to} onPick={setToAccountId} />
         ) : (
           <label style={pickerStyle}>
-            <span style={{ color: 'var(--faint)' }}><Icon name="calendar" size={14} /></span>
-            <input type="date" value={date} max={todayIST()} onChange={e => setDate(e.target.value)} aria-label="Date" style={{ background: 'transparent', border: 'none', color: 'var(--text)', fontFamily: 'inherit', fontSize: 13, padding: 0, flex: 1, minWidth: 0 }} />
+            <span style={{ color: 'var(--color-text-muted)' }}><Icon name="calendar" size={14} /></span>
+            <input type="date" value={date} max={todayIST()} onChange={e => setDate(e.target.value)} aria-label="Date" style={{ background: 'transparent', border: 'none', color: 'var(--color-text-primary)', fontFamily: 'inherit', fontSize: 13, padding: 0, flex: 1, minWidth: 0 }} />
           </label>
         )}
       </div>
@@ -116,13 +116,13 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
       )}
 
       <div className="num" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, padding: '16px 0 12px' }}>
-        <span className="heading" style={{ fontSize: 24, color: 'var(--muted)' }}>₹</span>
+        <span className="heading" style={{ fontSize: 24, color: 'var(--color-text-secondary)' }}>₹</span>
         <span className="heading" style={{ fontSize: 42, lineHeight: 1, fontWeight: 600 }}>{amount ? Number(amount).toLocaleString('en-IN') : '0'}</span>
       </div>
 
       <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
 
-      {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13, marginTop: 10 }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--color-danger)', fontSize: 13, marginTop: 10 }}>{error}</p>}
 
       <button className="btn" onClick={save} disabled={saving} style={{ width: '100%', height: 52, marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'var(--font-heading)', fontWeight: 600 }}>
         <Icon name="check" size={18} /> {saving ? 'Saving…' : saveLabel}
@@ -131,13 +131,13 @@ export function Manual({ token, go, onToast }: { token: string; go: (r: Route) =
   );
 }
 
-const pickerStyle = { flex: 1, display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--line)', borderRadius: 12, padding: '11px 12px', minWidth: 0, cursor: 'pointer' } as const;
+const pickerStyle = { flex: 1, display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--color-border)', borderRadius: 12, padding: '11px 12px', minWidth: 0, cursor: 'pointer' } as const;
 
 /** Account picker: a native select styled as the mockup's bordered card. */
 function Picker({ label, icon, value, options, selected, onPick }: { label: string; icon: string; value: string; options: Account[]; selected: string | null; onPick: (id: string) => void }) {
   return (
     <label style={{ ...pickerStyle, position: 'relative' }}>
-      <span style={{ color: 'var(--faint)' }}><Icon name={icon} size={15} /></span>
+      <span style={{ color: 'var(--color-text-muted)' }}><Icon name={icon} size={15} /></span>
       <span style={{ fontSize: 13, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
       <Icon name="chevron-down" size={14} />
       <select aria-label={label} value={selected ?? ''} onChange={e => onPick(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}>
