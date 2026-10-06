@@ -22,7 +22,9 @@ Apply these to every new or changed screen.
 **Inline styles**
 - Do not add `style={{ }}` for layout, spacing, colour or type. Use a utility class (`flex`, `gap-8`, `mt-16`, `fs-14`, `c-sec`) or a named class in `src/styles/components.css`.
 - Inline styles are allowed only for values that depend on runtime data (for example a progress width).
-- Font sizes come from the scale only: 11, 12, 13, 14, 15, 18, 22, 24, 26, 34, 44. Radii come from `--radius-*` or the card/button values in `components.css`.
+- Font sizes come from the scale only: 11, 12, 13, 14, 15, 18, 22, 24, 26, 34, 44.
+- Fonts: `--font-heading` (Playfair Display) for headings, `--font-body` (Inter) for text, and `--font-numeric` (Inter, tabular lining figures) for every amount via the `num` class, including large `heading num` balances. Do not set a font family anywhere else.
+- Radii come from `--radius-*` or the card/button values in `components.css`.
 
 **Semantics**
 - One `h1` per screen (the topbar title). Sections use `h2`, items use `h3`.

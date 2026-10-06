@@ -43,8 +43,10 @@
   --color-save: #a78bfa;
 
   /* Type families */
-  --font-heading: 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'Lora', Georgia, serif;
+  /* Classic serif for headings, a standard UI sans for reading, and the sans for every amount. */
+  --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-numeric: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: light) {
@@ -120,10 +122,18 @@ body {
   font-family: var(--font-body);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.num {
-  font-variant-numeric: tabular-nums;
+/* Amounts: one font, lining figures of equal width, so columns of money line up. */
+.num,
+.heading.num {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.heading.num {
+  letter-spacing: -0.02em;
 }
 
 /* Layout: a single phone-width column. */
@@ -149,6 +159,8 @@ body {
 .heading {
   font-family: var(--font-heading);
   font-weight: 600;
+  font-variant-numeric: lining-nums;
+  letter-spacing: -0.005em;
   margin: 0;
 }
 

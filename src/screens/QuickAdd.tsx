@@ -245,7 +245,7 @@ function AmountDisplay({ value, big }: { value: string; big: boolean }) {
   return (
     <div className="num flex ai-c jc-c gap-2" style={{ padding: big ? '18px 0 12px' : '14px 0 10px' }}>
       <span className="heading c-sec" style={{ fontSize: big ? 34 : 24 }}>₹</span>
-      <span className="heading fw-600" style={{ fontSize: big ? 66 : 42, lineHeight: 1 }}>{value ? Number(value).toLocaleString('en-IN') : '0'}</span>
+      <span className="heading num fw-600" style={{ fontSize: big ? 66 : 42, lineHeight: 1 }}>{value ? Number(value).toLocaleString('en-IN') : '0'}</span>
       {big && <span className="caret" style={{ height: 52 }} />}
     </div>
   );

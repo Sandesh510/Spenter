@@ -35,7 +35,7 @@ Values used in TSX `borderRadius`: 3, 4, 5, 6, 9, 11, 12, 14, 16, 18, 50%. In CS
 
 Font sizes used in inline styles, most frequent first: 13 (27×), 13.5 (14×), 12.5 (10×), 12 (10×), 11 (10×), 15 (7×), 14 (7×), 24 (5×), 11.5 (5×), 10, 10.5, 14.5, 23, 42, 44, 46, 34, 26, 22, 19, 18, 9.5. Roughly 22 distinct sizes.
 
-Font families: `Cormorant Garamond` (headings), `Lora` (body), set in `index.html` and `tokens.css`.
+Font families: `Playfair Display` (headings), `Inter` (body and every amount, tabular lining figures), set in `index.html` and `tokens.css`. Changed from Cormorant Garamond and Lora in the Oct 2026 font audit: Cormorant was too thin below 18px and Lora figures did not line up in money columns.
 
 ## Components
 

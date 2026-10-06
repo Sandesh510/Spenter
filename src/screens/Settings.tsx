@@ -135,11 +135,11 @@ export function Settings({
             )}
           </div>
         ))}
-        <button onClick={() => setEditorFor('new')} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 12.5, justifyContent: 'center', borderTop: '1px solid var(--color-border)' }}>
+        <button onClick={() => setEditorFor('new')} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 13, justifyContent: 'center', borderTop: '1px solid var(--color-border)' }}>
           + Add category
         </button>
         {cats.length > SHOW_FIRST && (
-          <button onClick={() => setShowAll(s => !s)} style={{ ...rowButton, justifyContent: 'center', color: 'var(--color-accent-text)', fontSize: 12.5 }}>
+          <button onClick={() => setShowAll(s => !s)} style={{ ...rowButton, justifyContent: 'center', color: 'var(--color-accent-text)', fontSize: 13 }}>
             {showAll ? 'Show fewer' : `Show all ${cats.length} categories`}
           </button>
         )}
@@ -471,7 +471,7 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
 
   if (count >= MAX_ACCOUNTS) return <div className="fs-12 c-mut" style={{ padding: '12px 14px' }}>Up to {MAX_ACCOUNTS} accounts</div>;
   if (!open) return (
-    <button onClick={() => setOpen(true)} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 12.5, justifyContent: 'center' }}>+ Add account</button>
+    <button onClick={() => setOpen(true)} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 13, justifyContent: 'center' }}>+ Add account</button>
   );
 
   async function add(e: FormEvent) {
