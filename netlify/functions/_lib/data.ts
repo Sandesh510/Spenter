@@ -141,7 +141,7 @@ export async function loadAccounts(admin: SupabaseClient, userId: string) {
 }
 
 /**
- * Loans with what has come back. A Gone back credit links to its loan, so the outstanding amount
+ * Loans with what has come back. A Got back credit links to its loan, so the outstanding amount
  * is derived from those credits and is never stored. Deleting the credit restores the amount.
  */
 export async function loadLent(admin: SupabaseClient, userId: string) {

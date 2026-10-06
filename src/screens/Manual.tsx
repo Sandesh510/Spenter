@@ -24,7 +24,7 @@ const KINDS: { id: Kind; label: string; icon: string }[] = [
 type CreditCategory = 'salary' | 'gone_back' | 'others';
 const CREDIT_SECTIONS: { id: CreditCategory; label: string }[] = [
   { id: 'salary', label: 'Salary' },
-  { id: 'gone_back', label: 'Gone back' },
+  { id: 'gone_back', label: 'Got back' },
   { id: 'others', label: 'Others' },
 ];
 

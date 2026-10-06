@@ -237,7 +237,7 @@ function CommitmentsCard({ token, onOpen }: { token: string; onOpen: () => void 
   );
 }
 
-/** Total still owed to you: each loan's outstanding amount, after Gone back credits. */
+/** Total still owed to you: each loan's outstanding amount, after Got back credits. */
 function LentTotal({ token }: { token: string }) {
   const { data } = useApi<{ items: Loan[] }>('lent', token);
   const total = (data?.items ?? []).reduce((s, l) => s + l.outstanding_paise, 0);

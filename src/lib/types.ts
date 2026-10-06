@@ -83,7 +83,7 @@ export interface Loan {
   note: string | null;
   settled_at: string | null;
   created_at: string;
-  /** Sum of Gone back credits linked to this loan. */
+  /** Sum of Got back credits linked to this loan. */
   returned_paise: number;
   /** Amount still owed: the loan less what has come back, or 0 once settled. */
   outstanding_paise: number;

@@ -68,8 +68,8 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
     }
   }
 
-  /** Records each loan's outstanding amount as a Gone back credit into the first account. */
-  async function goneBack(list: Loan[], done: string) {
+  /** Records each loan's outstanding amount as a Got back credit into the first account. */
+  async function gotBack(list: Loan[], done: string) {
     const accountId = accounts.data?.items[0]?.id;
     if (!accountId) return setErr('Add an account in Settings first');
     setErr(null);
@@ -139,11 +139,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
                       <div className="num fs-14">{formatINR(l.outstanding_paise)} <span className="c-mut">of {formatINR(l.amount_paise)}</span></div>
                       <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}</div>
                     </div>
-                    <button className="link" disabled={busy} onClick={() => goneBack([l], `${p.name} gone back ${formatINR(l.outstanding_paise)}`)}>Gone back</button>
+                    <button className="link" disabled={busy} onClick={() => gotBack([l], `${p.name} got back ${formatINR(l.outstanding_paise)}`)}>Got back</button>
                   </div>
                 ))}
                 <div className="flex gap-14 mt-4">
-                  <button className="link" disabled={busy} onClick={() => goneBack(p.open, `${p.name} has gone back everything`)}>All gone back</button>
+                  <button className="link" disabled={busy} onClick={() => gotBack(p.open, `${p.name} has got back everything`)}>All got back</button>
                   <button className="link" onClick={() => { setAdding(true); setName(p.name); }}>Lend more</button>
                 </div>
               </div>
