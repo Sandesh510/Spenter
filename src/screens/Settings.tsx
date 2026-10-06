@@ -14,6 +14,10 @@ import type { Account, HomeData, Profile } from '../lib/types';
 import { MAX_ACCOUNTS } from '../lib/limits';
 import { ACCOUNT_KINDS, ACCOUNT_KIND_LABEL, isAccountKind, type AccountKind } from '../lib/accountTypes';
 import { Field } from '../components/ui/Field';
+import { CategoryTile } from '../components/ui/CategoryTile';
+import { CategoryEditor } from './CategoryEditor';
+import { categoryIcon } from '../lib/categories';
+import type { Category } from '../lib/types';
 
 const SHOW_FIRST = 5;
 
@@ -47,6 +51,8 @@ export function Settings({
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
+  /** The category being added ('new') or edited. */
+  const [editorFor, setEditorFor] = useState<Category | 'new' | null>(null);
 
   async function savePlan(categoryId: string) {
     setError(null);
@@ -89,7 +95,7 @@ export function Settings({
               onClick={() => { setEditing(c.id); setDraft(c.plannedPaise ? String(c.plannedPaise / 100) : ''); }}
               style={rowButton}
             >
-              <span className="flex-none" style={{ width: 9, height: 9, borderRadius: 3, background: c.bucket === 'need' ? 'var(--color-need)' : c.bucket === 'want' ? 'var(--color-accent)' : 'var(--color-success)' }} />
+              <CategoryTile icon={categoryIcon(c)} bucket={c.bucket} />
               <span className="flex-1 fs-14">{c.name}</span>
               <span className="fs-11 c-mut" style={{ textTransform: 'uppercase', letterSpacing: '.06em' }}>{BUCKET_LABEL[c.bucket]}</span>
               <span className="num fs-13 ta-r" style={{ minWidth: 64 }}>{c.plannedPaise ? formatINR(c.plannedPaise) : '—'}</span>
@@ -103,14 +109,32 @@ export function Settings({
                 <Button type="submit" size="sm">Save</Button>
               </form>
             )}
+            {editing === c.id && (
+              <div style={{ padding: '0 14px 12px' }}>
+                <button className="link" onClick={() => setEditorFor(c)}>Edit name, icon or bucket</button>
+              </div>
+            )}
           </div>
         ))}
+        <button onClick={() => setEditorFor('new')} style={{ ...rowButton, color: 'var(--color-accent-text)', fontSize: 12.5, justifyContent: 'center', borderTop: '1px solid var(--color-border)' }}>
+          + Add category
+        </button>
         {cats.length > SHOW_FIRST && (
           <button onClick={() => setShowAll(s => !s)} style={{ ...rowButton, justifyContent: 'center', color: 'var(--color-accent-text)', fontSize: 12.5 }}>
             {showAll ? 'Show fewer' : `Show all ${cats.length} categories`}
           </button>
         )}
       </Group>
+
+      {editorFor !== null && (
+        <CategoryEditor
+          token={token}
+          category={editorFor === 'new' ? null : editorFor}
+          others={cats.filter(c => c.id !== (editorFor === 'new' ? null : editorFor.id))}
+          onClose={() => setEditorFor(null)}
+          onSaved={msg => { home.reload(); onToast(msg); }}
+        />
+      )}
 
       <SectionTitle>Accounts</SectionTitle>
       <Group>

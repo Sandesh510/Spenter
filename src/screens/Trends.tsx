@@ -1,6 +1,6 @@
 import { Card } from '../components/ui/Card';
 import { Icon } from '../components/Icon';
-import { iconFor } from '../lib/categories';
+import { categoryIcon } from '../lib/categories';
 import { currentMonth, monthTitle } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
@@ -121,7 +121,7 @@ function PlanBar({ c, max }: { c: Category; max: number }) {
     <div className="flex gap-6" style={{ flexDirection: 'column' }}>
       <div className="flex jc-sb ai-base">
         <span className="fs-13 flex ai-c gap-6">
-          <Icon name={iconFor(c.name)} size={13} /> {c.name}
+          <Icon name={categoryIcon(c)} size={13} /> {c.name}
         </span>
         <span className="num fs-11 c-sec">
           <span style={{ color: colour }}>{formatINR(c.spentPaise)}</span> / {plan > 0 ? formatINR(plan) : 'no plan'}
@@ -140,7 +140,7 @@ function buildPatterns(categories: Category[], buckets: HomeData['buckets']) {
   const over = categories.filter(c => c.plannedPaise && c.spentPaise > c.plannedPaise).sort((a, b) => b.spentPaise - b.plannedPaise! - (a.spentPaise - a.plannedPaise!));
   for (const c of over.slice(0, 2)) {
     out.push({
-      icon: iconFor(c.name),
+      icon: categoryIcon(c),
       colour: 'var(--color-danger)',
       text: `${c.name}: spent ${formatINR(c.spentPaise)} vs ${formatINR(c.plannedPaise!)} planned — ${formatINR(c.spentPaise - c.plannedPaise!)} over.`,
     });

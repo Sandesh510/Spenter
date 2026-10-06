@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
-import { BUCKET_TINT, iconFor } from '../lib/categories';
+import { BUCKET_TINT, categoryIcon } from '../lib/categories';
 import { currentMonth, dayLabel } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
@@ -93,7 +93,7 @@ export function Log({ token, go, onEdit }: { token: string; go: (r: Route) => vo
             const bucket: Bucket | null = cat?.bucket ?? null;
             const tint = t.type === 'spend' && bucket ? BUCKET_TINT[bucket] : { bg: 'var(--color-success-bg)', fg: 'var(--color-success)' };
             const isIn = t.type === 'credit';
-            const icon = t.type === 'transfer' ? 'arrow-left-right' : isIn ? 'arrow-down-left' : iconFor(cat?.name);
+            const icon = t.type === 'transfer' ? 'arrow-left-right' : isIn ? 'arrow-down-left' : cat ? categoryIcon(cat) : 'circle';
             const title = titleOf(t);
             const meta = t.type === 'transfer'
               ? `${accountName(t.account_id)}${t.external ? ' → outside' : ` → ${accountName(t.to_account_id)}`}`

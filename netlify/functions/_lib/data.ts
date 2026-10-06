@@ -22,7 +22,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   await postDue(admin, userId, todayIST());
 
   const [catRes, openRes, budgetRes, txnRes, askRes] = await Promise.all([
-    admin.from('spend_categories').select('id,name,bucket,icon').eq('user_id', userId),
+    admin.from('spend_categories').select('id,name,bucket,icon,sort_order').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
     admin.from('spend_budgets').select('category_id,planned_paise').eq('user_id', userId).eq('month', firstDay),
     admin

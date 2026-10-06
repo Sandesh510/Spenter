@@ -32,3 +32,8 @@ export const CATEGORY_ICON: Record<string, string> = {
 export function iconFor(name: string | null | undefined): string {
   return (name && CATEGORY_ICON[name]) || 'circle';
 }
+
+/** The icon a category shows: the one chosen for it, or the handoff's icon for the default names. */
+export function categoryIcon(c: { name: string; icon: string | null }): string {
+  return c.icon ?? iconFor(c.name);
+}

@@ -62,7 +62,7 @@ export async function ensureSeeded(admin: SupabaseClient, userId: string): Promi
     if (accErr) throw accErr;
   }
 
-  const rows = DEFAULT_CATEGORIES.map(c => ({ ...c, user_id: userId }));
+  const rows = DEFAULT_CATEGORIES.map((c, sort_order) => ({ ...c, user_id: userId, sort_order }));
   const { error: catErr } = await admin
     .from('spend_categories')
     .upsert(rows, { onConflict: 'user_id,name', ignoreDuplicates: true });

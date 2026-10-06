@@ -9,7 +9,7 @@ import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
 import { refreshAll } from '../lib/cache';
 import { haptic } from '../lib/haptics';
-import { iconFor } from '../lib/categories';
+import { categoryIcon } from '../lib/categories';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { currentMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
@@ -134,7 +134,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
                   {items.map(c => (
                     <button key={c.id} className={`chip ${categoryId === c.id ? 'chip--on' : ''}`} onClick={() => setCategoryId(c.id)}>
                       <span className="ai-c gap-6" style={{ display: 'inline-flex' }}>
-                        <Icon name={iconFor(c.name)} size={13} />
+                        <Icon name={categoryIcon(c)} size={13} />
                         {c.name}
                       </span>
                     </button>
