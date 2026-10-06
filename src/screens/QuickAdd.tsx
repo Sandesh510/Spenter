@@ -123,7 +123,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
             const items = home.data?.categories.filter(c => c.bucket === g.bucket) ?? [];
             return (
               <div key={g.bucket} style={{ marginTop: 14 }}>
-                <div className="kicker" style={{ color: g.bucket === 'need' ? '#aeb9cf' : g.bucket === 'want' ? 'var(--amber)' : 'var(--green)', marginBottom: 8 }}>{g.label}</div>
+                <div className="kicker" style={{ color: g.bucket === 'need' ? '#67e8f9' : g.bucket === 'want' ? 'var(--amber)' : 'var(--green)', marginBottom: 8 }}>{g.label}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {items.map(c => (
                     <button key={c.id} className={`chip ${categoryId === c.id ? 'chip--on' : ''}`} onClick={() => setCategoryId(c.id)}>

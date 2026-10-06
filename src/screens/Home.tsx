@@ -130,9 +130,9 @@ function BudgetBar({ b }: { b: HomeBucket }) {
 
 function AskRow({ a }: { a: AskItem }) {
   const v = {
-    bought: { icon: 'check', bg: 'rgba(132,176,111,.15)', color: 'var(--green)', label: 'Bought' },
-    skipped: { icon: 'x', bg: 'rgba(215,111,94,.15)', color: 'var(--red)', label: 'Skipped' },
-    delayed: { icon: 'clock', bg: 'rgba(227,164,88,.15)', color: 'var(--amber)', label: 'Delayed' },
+    bought: { icon: 'check', bg: 'rgba(34,197,94,.15)', color: 'var(--green)', label: 'Bought' },
+    skipped: { icon: 'x', bg: 'rgba(239,68,68,.15)', color: 'var(--red)', label: 'Skipped' },
+    delayed: { icon: 'clock', bg: 'rgba(249,115,22,.15)', color: 'var(--amber)', label: 'Delayed' },
   }[a.decision];
 
   return (

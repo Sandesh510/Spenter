@@ -172,7 +172,7 @@ body {
 
 .chip--on {
   border-color: var(--amber);
-  background: rgba(227, 164, 88, 0.16);
+  background: rgba(249,115,22,0.16);
   color: var(--amber);
 }
 

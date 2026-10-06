@@ -125,7 +125,7 @@ function PlanBar({ c, max }: { c: Category; max: number }) {
         </span>
       </div>
       <div style={{ position: 'relative', height: 14 }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, height: 5, borderRadius: 4, background: 'rgba(241,237,228,.16)', width: `${(plan / max) * 100}%` }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, height: 5, borderRadius: 4, background: 'rgba(248,250,252,.16)', width: `${(plan / max) * 100}%` }} />
         <div style={{ position: 'absolute', top: 8, left: 0, height: 6, borderRadius: 4, background: colour, width: `${Math.min(100, (c.spentPaise / max) * 100)}%` }} />
       </div>
     </div>

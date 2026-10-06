@@ -1,20 +1,27 @@
-/* Design tokens from design_handoff_spendcheck/README.md. Dark is the default; light overrides below. */
+/* Colour tokens from the design palette (Dark and Light). Dark is the default. */
 
 :root {
   color-scheme: dark;
-  --page: #0e0d0a;
-  --bg: #181510;
-  --surface: #211d17;
-  --surface2: #2b2620;
-  --text: #f1ede4;
-  --muted: #a89f8e;
-  --faint: #6f685c;
-  --line: rgba(241, 237, 228, 0.1);
-  --amber: #e3a458;
-  --green: #84b06f;
-  --red: #d76f5e;
-  --need: #93a0b8;
-  --on-amber: #231a0c;
+
+  /* Surfaces and text */
+  --page: #0b0f14;
+  --bg: #0b0f14; /* Background: main app bg */
+  --surface: #121821; /* Surface: cards, panels */
+  --surface2: #1e2938; /* Surface Alt: sections, tracks */
+  --line: #2a3649; /* Border: dividers */
+  --text: #f8fafc; /* Primary text */
+  --muted: #94a3b8; /* Secondary text */
+  --faint: #64748b; /* Muted / disabled */
+
+  /* Semantic colours */
+  --primary: #4f6bed; /* Buttons, links */
+  --green: #22c55e; /* Success: income, positive, under budget */
+  --amber: #f97316; /* Accent: highlights, CTA, Wants, active nav */
+  --warning: #f59e0b; /* Pending, alerts */
+  --red: #ef4444; /* Danger: overspend, errors */
+  --need: #06b6d4; /* Needs bucket, savings pending (Chart 2) */
+  --save: #a78bfa; /* Savings and goals (Chart 1) */
+  --on-amber: #ffffff; /* Text on accent buttons */
 
   --font-heading: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Lora', Georgia, serif;
@@ -22,35 +29,43 @@
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
-    --page: #e7e5e1;
-    --bg: #f6f5f3;
+    --page: #e2e8f0;
+    --bg: #f8fafc;
     --surface: #ffffff;
-    --surface2: #ecebe7;
-    --text: #201f1d;
-    --muted: #6b665e;
-    --faint: #9a948a;
-    --line: rgba(32, 31, 29, 0.12);
-    --amber: #b68235;
-    --green: #5f8a4c;
-    --red: #c0503d;
-    --need: #5b6683;
+    --surface2: #e2e8f0;
+    --line: #cbd5e1;
+    --text: #0f172a;
+    --muted: #475569;
+    --faint: #64748b;
+    --primary: #4f6bed;
+    --green: #16a34a;
+    --amber: #f97316;
+    --warning: #f59e0b;
+    --red: #ef4444;
+    --need: #0891b2;
+    --save: #8b5cf6;
+    --on-amber: #ffffff;
   }
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --page: #e7e5e1;
-  --bg: #f6f5f3;
+  --page: #e2e8f0;
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --surface2: #ecebe7;
-  --text: #201f1d;
-  --muted: #6b665e;
-  --faint: #9a948a;
-  --line: rgba(32, 31, 29, 0.12);
-  --amber: #b68235;
-  --green: #5f8a4c;
-  --red: #c0503d;
-  --need: #5b6683;
+  --surface2: #e2e8f0;
+  --line: #cbd5e1;
+  --text: #0f172a;
+  --muted: #475569;
+  --faint: #64748b;
+  --primary: #4f6bed;
+  --green: #16a34a;
+  --amber: #f97316;
+  --warning: #f59e0b;
+  --red: #ef4444;
+  --need: #0891b2;
+  --save: #8b5cf6;
+  --on-amber: #ffffff;
 }
 
 * {

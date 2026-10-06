@@ -2,9 +2,9 @@ import type { Bucket } from './types';
 
 /** Icon and colour per bucket, from the handoff's bucket tints. */
 export const BUCKET_TINT: Record<Bucket, { bg: string; fg: string }> = {
-  need: { bg: 'rgba(147,160,184,.15)', fg: '#aeb9cf' },
-  want: { bg: 'rgba(227,164,88,.15)', fg: 'var(--amber)' },
-  save: { bg: 'rgba(132,176,111,.16)', fg: 'var(--green)' },
+  need: { bg: 'rgba(6,182,212,.15)', fg: '#67e8f9' },
+  want: { bg: 'rgba(249,115,22,.15)', fg: 'var(--amber)' },
+  save: { bg: 'rgba(34,197,94,.16)', fg: 'var(--green)' },
 };
 
 export const BUCKET_LABEL: Record<Bucket, string> = { need: 'Needs', want: 'Wants', save: 'Savings' };

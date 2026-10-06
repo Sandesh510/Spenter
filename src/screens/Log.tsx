@@ -88,7 +88,7 @@ export function Log({ token, go }: { token: string; go: (r: Route) => void }) {
           {g.items.map(t => {
             const cat = categoryOf(t.category_id);
             const bucket: Bucket | null = cat?.bucket ?? null;
-            const tint = t.type === 'spend' && bucket ? BUCKET_TINT[bucket] : { bg: 'rgba(132,176,111,.16)', fg: 'var(--green)' };
+            const tint = t.type === 'spend' && bucket ? BUCKET_TINT[bucket] : { bg: 'rgba(34,197,94,.16)', fg: 'var(--green)' };
             const isIn = t.type === 'credit';
             const icon = t.type === 'transfer' ? 'arrow-left-right' : isIn ? 'arrow-down-left' : iconFor(cat?.name);
             const title = t.description ?? (t.type === 'transfer' ? 'Transfer' : cat?.name ?? (isIn ? 'Money in' : 'Spend'));

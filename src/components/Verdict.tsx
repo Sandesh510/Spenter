@@ -69,7 +69,7 @@ export function Verdict({ amountPaise, category, spendableBalancePaise }: Props)
           <Icon name={icon} size={15} />
         </span>
         <span style={{ fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', color: colour }}>{head}</span>
-        <span style={{ marginLeft: 'auto', padding: '3px 9px', borderRadius: 6, background: 'rgba(227,164,88,.15)', color: 'var(--amber)', fontSize: 11 }}>
+        <span style={{ marginLeft: 'auto', padding: '3px 9px', borderRadius: 6, background: 'rgba(249,115,22,.15)', color: 'var(--amber)', fontSize: 11 }}>
           {category.name} · {BUCKET_TAG[category.bucket]}
         </span>
       </div>
