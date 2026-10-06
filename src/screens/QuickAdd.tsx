@@ -90,7 +90,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
         </button>
       </div>
 
-      {step !== 'desc' && step !== 'account' && (
+      {step !== 'account' && (
         <AmountDisplay value={amount} big={step === 'amount'} />
       )}
 
@@ -107,6 +107,9 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           )}
           <button className="link" onClick={() => go('manual')} style={{ display: 'block', margin: '18px auto 0' }}>
             Adding an older transaction? <strong>Manual entry →</strong>
+          </button>
+          <button className="link" onClick={() => go('ask')} style={{ display: 'block', margin: '6px auto 0' }}>
+            Thinking about a purchase? <strong>Should I buy this? →</strong>
           </button>
         </>
       )}

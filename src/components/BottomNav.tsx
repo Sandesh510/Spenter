@@ -1,10 +1,10 @@
 import { Icon } from './Icon';
 
-export type Tab = 'home' | 'log' | 'ask' | 'trends' | 'settings';
+export type Tab = 'home' | 'log' | 'trends' | 'settings';
 
-/** Bottom nav from the mockups: Home · Log · Ask (raised centre) · Trends · Settings. */
-export function BottomNav({ active, onGo }: { active: Tab; onGo: (t: Tab) => void }) {
-  const slot = (tab: Exclude<Tab, 'ask'>, icon: string, label: string) => (
+/** Bottom nav per the README: Home · Log · Add (raised centre, opens Quick Add) · Trends · Settings. */
+export function BottomNav({ active, onGo, onAdd }: { active: Tab; onGo: (t: Tab) => void; onAdd: () => void }) {
+  const slot = (tab: Tab, icon: string, label: string) => (
     <button
       className={`nav__slot ${active === tab ? 'nav__slot--on' : ''}`}
       onClick={() => onGo(tab)}
@@ -19,11 +19,11 @@ export function BottomNav({ active, onGo }: { active: Tab; onGo: (t: Tab) => voi
     <nav className="nav" aria-label="Main">
       {slot('home', 'home', 'Home')}
       {slot('log', 'receipt-text', 'Log')}
-      <button className="nav__slot nav__slot--centre" onClick={() => onGo('ask')} aria-label="Should I buy this?">
+      <button className="nav__slot nav__slot--centre" onClick={onAdd} aria-label="Add transaction">
         <span className="nav__fab">
-          <Icon name="help-circle" size={25} />
+          <Icon name="plus" size={26} />
         </span>
-        <span className="label" style={{ fontSize: 10 }}>Ask</span>
+        <span className="label" style={{ fontSize: 10 }}>Add</span>
       </button>
       {slot('trends', 'bar-chart-3', 'Trends')}
       {slot('settings', 'settings', 'Settings')}

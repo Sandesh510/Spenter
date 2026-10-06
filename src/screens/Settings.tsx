@@ -19,6 +19,7 @@ export function Settings({
   profile,
   onProfile,
   onSignOut,
+  onLockNow,
   email,
 }: {
   token: string;
@@ -26,6 +27,7 @@ export function Settings({
   profile: Profile;
   onProfile: (p: Profile) => void;
   onSignOut: () => void;
+  onLockNow: () => void;
   email: string | undefined;
 }) {
   const month = currentMonth();
@@ -110,6 +112,13 @@ export function Settings({
 
       <SectionTitle>Security</SectionTitle>
       <Group>
+        {profile.lockEnabled && (
+          <button onClick={onLockNow} style={{ ...rowButton, borderBottom: '1px solid var(--line)' }}>
+            <span style={{ color: 'var(--muted)' }}><Icon name="lock-keyhole" size={17} /></span>
+            <span style={{ flex: 1, fontSize: 13.5 }}>Lock now</span>
+            <span style={{ fontSize: 12, color: 'var(--faint)' }}>passcode</span>
+          </button>
+        )}
         <PasscodeRow token={token} profile={profile} onProfile={onProfile} onToast={onToast} onError={setError} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
           <span style={{ color: 'var(--muted)' }}><Icon name="scan-face" size={17} /></span>

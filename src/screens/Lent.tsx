@@ -128,6 +128,9 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
               <div key={p.name} className="row" style={{ padding: '12px 14px', margin: 0 }}>
                 <span style={{ ...avatar, opacity: 0.6 }}>{p.name.slice(0, 1).toUpperCase()}</span>
                 <span style={{ flex: 1, fontSize: 13.5, color: 'var(--muted)' }}>{p.name}</span>
+                <span className="num" style={{ fontSize: 13, color: 'var(--faint)', textDecoration: 'line-through' }}>
+                  {formatINR(loans.filter(l => l.person_name === p.name).reduce((s, l) => s + l.amount_paise, 0))}
+                </span>
                 <span style={{ color: 'var(--green)' }}><Icon name="check" size={16} /></span>
               </div>
             ))}

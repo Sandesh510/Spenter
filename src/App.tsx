@@ -14,11 +14,11 @@ import { QuickAdd } from './screens/QuickAdd';
 import { Settings } from './screens/Settings';
 import { Trends } from './screens/Trends';
 
-export type Route = Tab | 'quickadd' | 'manual' | 'lent';
+export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent';
 
 
 const TOKEN_KEY = 'spendcheck.accessToken';
-const NAV_TABS: Tab[] = ['home', 'log', 'ask', 'trends', 'settings'];
+const NAV_TABS: Tab[] = ['home', 'log', 'trends', 'settings'];
 
 function readToken(): string | null {
   try {
@@ -136,13 +136,13 @@ export function App() {
       {route === 'ask' && <Ask token={token} go={go} onToast={showToast} />}
       {route === 'trends' && <Trends token={token} />}
       {route === 'settings' && profile && (
-        <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} email={user.email} />
+        <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => setUnlocked(false)} email={user.email} />
       )}
       {route === 'quickadd' && <QuickAdd token={token} go={go} onToast={showToast} />}
       {route === 'manual' && <Manual token={token} go={go} onToast={showToast} />}
       {route === 'lent' && <Lent token={token} go={go} onToast={showToast} />}
 
-      {tab && <BottomNav active={tab} onGo={go} />}
+      {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </Frame>
   );
