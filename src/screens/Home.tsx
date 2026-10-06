@@ -13,6 +13,7 @@ import type { Bucket, Category, CommitmentsData, HomeBucket, HomeData, AskItem, 
 import { CategoryTile } from '../components/ui/CategoryTile';
 import { Badge } from '../components/ui/Badge';
 import { InsuranceReminders } from './Insurance';
+import { SavingsCard } from './Savings';
 import type { Route } from '../App';
 
 /**
@@ -90,6 +91,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
       </Card>
 
       <CommitmentsCard token={token} onOpen={() => go('commitments')} />
+      <SavingsCard token={token} onOpen={() => go('savings')} />
 
       <InsuranceReminders policies={insurance.data?.items ?? []} onOpen={() => go('commitments')} />
 

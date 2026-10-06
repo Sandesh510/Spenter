@@ -294,6 +294,22 @@
   outline-offset: 2px;
 }
 
+/* Savings plans: chips that wrap inside a form or card instead of scrolling past its edge,
+   action links that wrap on a narrow phone, and a progress fill for a reached goal.
+   .chiprow is defined in app.css, which loads later, so the modifier needs both classes. */
+.chiprow.chiprow--wrap {
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.fill--success {
+  background: var(--color-success);
+}
+
 /* Bulleted list inside a card (Rules to remember) */
 .rules-list {
   margin: 0;
