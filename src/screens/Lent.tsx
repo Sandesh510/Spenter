@@ -1,6 +1,6 @@
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Field';
+import { Field, Input } from '../components/ui/Field';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
@@ -18,19 +18,25 @@ interface Person {
   since: string;
 }
 
+interface LoanForm {
+  name: string;
+  amount: string;
+  note: string;
+  lentOn: string;
+  accountId: string | null;
+}
+
 /**
  * Money lent, per the README. Lent money is not part of budgets or the Log and does not change the balance.
  */
 export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
   const { data, error, reload } = useApi<{ items: Loan[] }>('lent', token);
   const accounts = useApi<{ items: { id: string; nickname: string }[] }>('accounts', token);
-  const [fromAccountId, setFromAccountId] = useState<string | null>(null);
   const accountName = (id: string | null) => accounts.data?.items.find(a => a.id === id)?.nickname ?? '';
   const [open, setOpen] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
+  /** null = dialog closed; 'new' = recording a loan; a loan = editing that loan. */
+  const [dialog, setDialog] = useState<'new' | Loan | null>(null);
+  const [form, setForm] = useState<LoanForm>({ name: '', amount: '', note: '', lentOn: todayIST(), accountId: null });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -53,6 +59,25 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
   const settled = people.filter(p => p.open.length === 0);
   const totalOwed = outstanding.reduce((s, p) => s + p.owed, 0);
   const previousNames = [...new Set(loans.map(l => l.person_name))];
+  const accountItems = accounts.data?.items ?? [];
+
+  function openNew(prefillName = '') {
+    setErr(null);
+    setForm({ name: prefillName, amount: '', note: '', lentOn: todayIST(), accountId: accountItems[0]?.id ?? null });
+    setDialog('new');
+  }
+
+  function openEdit(l: Loan) {
+    setErr(null);
+    setForm({
+      name: l.person_name,
+      amount: String(l.amount_paise / 100),
+      note: l.note ?? '',
+      lentOn: l.lent_on,
+      accountId: l.debit_account_id,
+    });
+    setDialog(l);
+  }
 
   async function run(body: Record<string, unknown>, done: string) {
     setErr(null);
@@ -62,9 +87,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
       haptic('success');
       reload();
       onToast(done);
+      return true;
     } catch (e) {
       haptic('error');
       setErr(e instanceof Error ? e.message : 'Could not save');
+      return false;
     } finally {
       setBusy(false);
     }
@@ -73,7 +100,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
   /** Records each loan's outstanding amount as a Got back credit into the first account. */
   async function gotBack(list: Loan[], done: string) {
     // A Got back goes into the account the loan was lent from; otherwise the first account.
-    const accountId = list[0]?.debit_account_id ?? accounts.data?.items[0]?.id;
+    const accountId = list[0]?.debit_account_id ?? accountItems[0]?.id;
     if (!accountId) return setErr('Add an account in Settings first');
     setErr(null);
     setBusy(true);
@@ -95,14 +122,18 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
     }
   }
 
-  async function record(e: FormEvent) {
+  async function save(e: FormEvent) {
     e.preventDefault();
-    await run({ action: 'add', name: name.trim(), amount, note: note.trim() || undefined, accountId: fromAccountId ?? undefined }, `Lent ${formatINR(Math.round(Number(amount) * 100))} to ${name.trim()}`);
-    setAdding(false);
-    setName('');
-    setAmount('');
-    setNote('');
+    const name = form.name.trim();
+    const amountRupees = Number(form.amount);
+    const summary = `${formatINR(Math.round(amountRupees * 100))} for ${name}`;
+    const ok = dialog && dialog !== 'new'
+      ? await run({ action: 'update', id: dialog.id, name, amount: form.amount, note: form.note.trim() || undefined, lentOn: form.lentOn, accountId: form.accountId ?? '' }, `Updated ${summary}`)
+      : await run({ action: 'add', name, amount: form.amount, note: form.note.trim() || undefined, lentOn: form.lentOn, accountId: form.accountId ?? undefined }, `Lent ${summary}`);
+    if (ok) setDialog(null);
   }
+
+  const editing = dialog !== null && dialog !== 'new';
 
   return (
     <div className="scroll">
@@ -137,17 +168,18 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
             {open === p.name && (
               <div className="grid gap-8" style={{ borderTop: '1px solid var(--color-border)', padding: '6px 14px 14px' }}>
                 {p.open.map(l => (
-                  <div className="flex ai-c gap-10" key={l.id} >
+                  <div className="flex ai-c gap-10" key={l.id}>
                     <div className="flex-1 min-0">
                       <div className="num fs-14">{formatINR(l.outstanding_paise)} <span className="c-mut">of {formatINR(l.amount_paise)}</span></div>
-                      <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}{l.debit_account_id ? ` · from ${accountName(l.debit_account_id)}` : ''}</div>
+                      <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}{l.debit_account_id ? ` · from ${accountName(l.debit_account_id)}` : ' · no account'}</div>
                     </div>
+                    <button className="link" disabled={busy} onClick={() => openEdit(l)}>Edit</button>
                     <button className="link" disabled={busy} onClick={() => gotBack([l], `${p.name} got back ${formatINR(l.outstanding_paise)}`)}>Got back</button>
                   </div>
                 ))}
                 <div className="flex gap-14 mt-4">
                   <button className="link" disabled={busy} onClick={() => gotBack(p.open, `${p.name} has got back everything`)}>All got back</button>
-                  <button className="link" onClick={() => { setAdding(true); setName(p.name); }}>Lend more</button>
+                  <button className="link" onClick={() => openNew(p.name)}>Lend more</button>
                 </div>
               </div>
             )}
@@ -174,32 +206,55 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
       )}
 
       <div className="mt-20" style={{ position: 'sticky', bottom: 16 }}>
-        <Button block size="lg" onClick={() => setAdding(a => !a)}>
+        <Button block size="lg" onClick={() => (dialog ? setDialog(null) : openNew())}>
           <Icon name="plus" size={17} /> Record money lent
         </Button>
       </div>
 
-      {adding && (
-        <div className="abs inset-0 flex" role="dialog" aria-modal="true" aria-label="Record money lent" style={{ zIndex: 30, flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setAdding(false)} style={{ position: 'absolute', inset: 0, background: 'var(--color-scrim)' }} />
-          <form onSubmit={record} className="pop rel grid gap-10" style={{ background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', borderTop: '1px solid var(--color-border)' }}>
-          <div className="kicker">Name</div>
-          <div className="chiprow" style={{ margin: 0, padding: 0 }}>
-            {previousNames.map(n => (
-              <button type="button" key={n} className={`chip ${name === n ? 'chip--on' : ''}`} onClick={() => setName(n)}>{n}</button>
-            ))}
-          </div>
-          <Input  placeholder="Person" value={name} onChange={e => setName(e.target.value)} required maxLength={60} />
-          <Input numeric inputMode="decimal" placeholder="Amount, e.g. 1500" value={amount} onChange={e => setAmount(e.target.value)} required />
-          <Input  placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} maxLength={120} />
-          <div className="kicker">Paid from (debit account)</div>
-          <div className="chiprow">
-            {(accounts.data?.items ?? []).map(a => (
-              <button type="button" key={a.id} aria-pressed={(fromAccountId ?? accounts.data?.items[0]?.id) === a.id} className={`chip ${(fromAccountId ?? accounts.data?.items[0]?.id) === a.id ? 'chip--on' : ''}`} onClick={() => setFromAccountId(a.id)}>{a.nickname}</button>
-            ))}
-          </div>
-          {err && <p className="c-danger fs-13" role="alert" style={{ margin: 0 }}>{err}</p>}
-          <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
+      {dialog !== null && (
+        <div className="abs inset-0 flex" role="dialog" aria-modal="true" aria-label={editing ? 'Edit money lent' : 'Record money lent'} style={{ zIndex: 30, flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div onClick={() => setDialog(null)} style={{ position: 'absolute', inset: 0, background: 'var(--color-scrim)' }} />
+          <form onSubmit={save} className="pop rel grid gap-10" style={{ background: 'var(--color-surface)', borderRadius: '18px 18px 0 0', padding: '18px 18px 26px', borderTop: '1px solid var(--color-border)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="kicker">{editing ? 'Edit loan' : 'New loan'}</div>
+
+            {!editing && previousNames.length > 0 && (
+              <fieldset className="fieldset-reset grid gap-6">
+                <legend className="kicker kicker--spaced">Person</legend>
+                <div className="chiprow" style={{ margin: 0, padding: 0 }}>
+                  {previousNames.map(n => (
+                    <button type="button" key={n} aria-pressed={form.name === n} className={`chip ${form.name === n ? 'chip--on' : ''}`} onClick={() => setForm(f => ({ ...f, name: n }))}>{n}</button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
+            <Field label="Person">
+              <Input placeholder="Name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required maxLength={60} />
+            </Field>
+            <Field label="Amount (₹)">
+              <Input numeric inputMode="decimal" placeholder="e.g. 1500" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required />
+            </Field>
+            <Field label="Date lent">
+              <Input type="date" value={form.lentOn} onChange={e => setForm(f => ({ ...f, lentOn: e.target.value }))} required max={todayIST()} />
+            </Field>
+            <Field label="Note (optional)">
+              <Input placeholder="What it was for" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} maxLength={120} />
+            </Field>
+
+            <fieldset className="fieldset-reset grid gap-6">
+              <legend className="kicker kicker--spaced">Paid from (debit account)</legend>
+              <div className="chiprow" style={{ margin: 0, padding: 0 }}>
+                {editing && (
+                  <button type="button" aria-pressed={form.accountId === null} className={`chip ${form.accountId === null ? 'chip--on' : ''}`} onClick={() => setForm(f => ({ ...f, accountId: null }))}>No account</button>
+                )}
+                {accountItems.map(a => (
+                  <button type="button" key={a.id} aria-pressed={form.accountId === a.id} className={`chip ${form.accountId === a.id ? 'chip--on' : ''}`} onClick={() => setForm(f => ({ ...f, accountId: a.id }))}>{a.nickname}</button>
+                ))}
+              </div>
+            </fieldset>
+
+            {err && <p className="c-danger fs-13" role="alert" style={{ margin: 0 }}>{err}</p>}
+            <Button type="submit" disabled={busy}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Save'}</Button>
           </form>
         </div>
       )}
