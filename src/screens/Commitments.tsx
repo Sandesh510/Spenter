@@ -69,7 +69,7 @@ export function Commitments({ token, go, onToast }: { token: string; go: (r: Rou
 
       {error && <p className="c-danger fs-13" role="alert">{error}</p>}
 
-      <Card as="section" className="mt-8" aria-labelledby="commitments-totals">
+      <Card as="section" variant="compact" className="mt-8" aria-labelledby="commitments-totals">
         <h2 id="commitments-totals" className="fs-13 c-sec kicker--spaced fw-400">Every month · {monthTitle(currentMonth())}</h2>
         <dl className="grid gap-8 m-0">
           <Total label="Subscriptions" paise={data?.totals.subscriptionsPaise ?? 0} />
