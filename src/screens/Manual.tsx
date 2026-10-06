@@ -9,6 +9,8 @@ import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import { refreshAll } from '../lib/cache';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { AddAnotherPrompt } from '../components/ui/AddAnotherPrompt';
 import type { Account, HomeData, Loan, TxnRow } from '../lib/types';
 import type { Route } from '../App';
@@ -43,6 +45,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
   const [lentLoanId, setLentLoanId] = useState<string | null>(editing?.lent_loan_id ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(editing?.category_id ?? null);
   const [accountId, setAccountId] = useState<string | null>(editing?.account_id ?? null);
+  const defaultAccountId = useDefaultAccountId(token);
   const [toAccountId, setToAccountId] = useState<string | null>(editing?.to_account_id ?? null);
   const [date, setDate] = useState(editing?.txn_date ?? todayIST());
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +63,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
   const isCredit = kind === 'credit';
   // Transfers to outside the tracked accounts have no destination account; they can only be edited, not created here.
   const external = editing?.external ?? false;
-  const from = accountId ?? accountList[0]?.id ?? null;
+  const from = accountId ?? pickAccount(accountList, defaultAccountId);
   const to = toAccountId ?? accountList.find(a => a.id !== from)?.id ?? null;
   // A credit has one note, the reference. Spend and transfers use the description.
   const note = isCredit ? reference : desc;

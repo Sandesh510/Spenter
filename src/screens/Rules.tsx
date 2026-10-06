@@ -85,6 +85,7 @@ const GROUPS: RuleGroup[] = [
     icon: 'wallet',
     rules: [
       'Amounts are rupees with up to 2 decimals and must be more than zero.',
+      'Every new entry starts with your default account (Settings, Entries). You can change it on each entry.',
       'Quick Add always uses today. Use Manual entry for back-dated entries.',
       'Paste entries reads lines of date, account, amount (and an optional description). Each one is saved only when you tap Save; a possible duplicate is flagged but not blocked.',
       'After saving, you can add another entry for the same date and account.',

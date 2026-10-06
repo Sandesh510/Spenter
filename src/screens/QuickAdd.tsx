@@ -8,6 +8,8 @@ import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
 import { refreshAll } from '../lib/cache';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { AddAnotherPrompt } from '../components/ui/AddAnotherPrompt';
 import { todayIST } from '../lib/dates';
 import { haptic } from '../lib/haptics';
@@ -37,6 +39,10 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
   const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
+  const defaultAccountId = useDefaultAccountId(token);
+  // The default account comes first, so it is one tap away.
+  const firstId = pickAccount(accounts.data?.items ?? [], defaultAccountId);
+  const orderedAccounts = [...(accounts.data?.items ?? [])].sort((a, b) => Number(b.id === firstId) - Number(a.id === firstId));
   const category = home.data?.categories.find(c => c.id === categoryId) ?? null;
   const amountPaise = (() => {
     try {
@@ -205,7 +211,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           </div>
           <div className="kicker mt-22">Paid from</div>
           <div className="grid gap-10 mt-10" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            {(accounts.data?.items ?? []).map(a => (
+            {orderedAccounts.map(a => (
               <Card
                 as="button"
                 key={a.id}
@@ -215,7 +221,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
               >
                 <Icon name={a.icon ?? 'wallet'} size={18} />
                 <div className="fs-14 mt-8">{a.nickname}</div>
-                <div className="fs-11 c-mut mt-2">{a.bank ?? a.kind ?? ''}</div>
+                <div className="fs-11 c-mut mt-2">{a.id === defaultAccountId ? 'Default' : a.bank ?? a.kind ?? ''}</div>
               </Card>
             ))}
             {(accounts.data?.items.length ?? 0) < MAX_ACCOUNTS && (

@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { authed } from './_lib/handler';
-import { readJson, reqStr } from './_lib/input';
+import { assertOwned, readJson, reqId, reqStr } from './_lib/input';
 import { HttpError, json } from './_lib/response';
 
 const PIN = /^\d{4}$/;
@@ -14,6 +14,7 @@ function hashPin(salt: string, pin: string): string {
 /**
  * GET   /profile                    → theme and whether the passcode lock is on
  * PATCH /profile { theme }          → 'dark' | 'light'
+ * PATCH /profile { defaultAccountId } → the account new entries start with; null clears it
  * PATCH /profile { pin } | { clearPin: true }
  * POST  /profile { action:'unlock', pin } → { ok } — the PIN hash never leaves the server
  */
@@ -21,11 +22,11 @@ export const handler = authed(['GET', 'PATCH', 'POST'], async ({ admin, userId, 
   if (event.httpMethod === 'GET') {
     const { data, error } = await admin
       .from('spend_profiles')
-      .select('theme,lock_hash')
+      .select('theme,lock_hash,default_account_id')
       .eq('user_id', userId)
       .single();
     if (error) throw error;
-    return json(200, { theme: data.theme, lockEnabled: data.lock_hash !== null });
+    return json(200, { theme: data.theme, lockEnabled: data.lock_hash !== null, defaultAccountId: data.default_account_id });
   }
 
   const b = readJson(event.body);
@@ -73,6 +74,14 @@ export const handler = authed(['GET', 'PATCH', 'POST'], async ({ admin, userId, 
   }
 
   // PATCH
+  if (b.defaultAccountId !== undefined) {
+    const id = b.defaultAccountId === null || b.defaultAccountId === '' ? null : reqId(b, 'defaultAccountId');
+    if (id) await assertOwned(admin, userId, 'spend_accounts', [id]);
+    const { error } = await admin.from('spend_profiles').update({ default_account_id: id }).eq('user_id', userId);
+    if (error) throw error;
+    return json(200, { ok: true, defaultAccountId: id });
+  }
+
   if (b.theme !== undefined) {
     const theme = reqStr(b, 'theme', 5);
     if (theme !== 'dark' && theme !== 'light') throw new HttpError(400, 'theme must be dark or light');

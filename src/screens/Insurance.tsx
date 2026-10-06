@@ -5,6 +5,8 @@ import { Card } from '../components/ui/Card';
 import { Field, Input } from '../components/ui/Field';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { todayIST } from '../lib/dates';
 import { haptic } from '../lib/haptics';
 import {
@@ -129,7 +131,8 @@ function AddPolicy({ token, accounts, categories, onCancel, onSaved }: {
   const [frequency, setFrequency] = useState<Frequency>('yearly');
   const [nextDueOn, setNextDueOn] = useState(todayIST());
   const [sumAssured, setSumAssured] = useState('');
-  const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
+  const defaultAccountId = useDefaultAccountId(token);
+  const [accountId, setAccountId] = useState(pickAccount(accounts, defaultAccountId) ?? '');
   const [categoryId, setCategoryId] = useState(insuranceCategory?.id ?? '');
   const [autoDebit, setAutoDebit] = useState(false);
   const [err, setErr] = useState<string | null>(null);

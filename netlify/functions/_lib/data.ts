@@ -245,9 +245,9 @@ export async function loadLent(admin: SupabaseClient, userId: string) {
 }
 
 export async function loadProfile(admin: SupabaseClient, userId: string) {
-  const { data, error } = await admin.from('spend_profiles').select('theme,lock_hash').eq('user_id', userId).single();
+  const { data, error } = await admin.from('spend_profiles').select('theme,lock_hash,default_account_id').eq('user_id', userId).single();
   if (error) throw error;
-  return { theme: data.theme, lockEnabled: data.lock_hash !== null };
+  return { theme: data.theme, lockEnabled: data.lock_hash !== null, defaultAccountId: data.default_account_id };
 }
 
 /**

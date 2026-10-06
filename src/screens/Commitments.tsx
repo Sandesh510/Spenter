@@ -5,6 +5,8 @@ import { Card } from '../components/ui/Card';
 import { Field, Input } from '../components/ui/Field';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { BUCKET_LABEL } from '../lib/categories';
 import { currentMonth, monthTitle, todayIST } from '../lib/dates';
 import { haptic } from '../lib/haptics';
@@ -208,7 +210,8 @@ function AddForm({ token, kind, accounts, categories, onCancel, onSaved }: {
   const [amount, setAmount] = useState('');
   const [day, setDay] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [accountId, setAccountId] = useState<string | null>(accounts[0]?.id ?? null);
+  const defaultAccountId = useDefaultAccountId(token);
+  const [accountId, setAccountId] = useState<string | null>(pickAccount(accounts, defaultAccountId));
   const [loanIsNew, setLoanIsNew] = useState(false);
   const [outstanding, setOutstanding] = useState('');
   const [rate, setRate] = useState('');

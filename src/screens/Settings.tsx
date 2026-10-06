@@ -4,6 +4,7 @@ import { Input } from '../components/ui/Field';
 import { useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { cache } from '../lib/cache';
 import { haptic } from '../lib/haptics';
 import { getFontSize, getHaptics, setFontSize, setHaptics, type FontSize } from '../lib/prefs';
 import { BUCKET_LABEL } from '../lib/categories';
@@ -67,6 +68,20 @@ export function Settings({
     } catch (err) {
       haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
+    }
+  }
+
+  async function setDefaultAccount(defaultAccountId: string | null) {
+    try {
+      await api('profile', { method: 'PATCH', token, body: { defaultAccountId } });
+      const next = { ...profile, defaultAccountId };
+      onProfile(next);
+      // Add screens read the default from the cached profile.
+      cache.set('profile', { ...(cache.get('profile') as Profile | undefined), ...next });
+      haptic('tap');
+      onToast(defaultAccountId ? 'Default account set' : 'Default account cleared');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not set default account');
     }
   }
 
@@ -170,6 +185,28 @@ export function Settings({
           <button className="link" onClick={onSignOut} style={{ padding: 0 }}>Sign out</button>
         </div>
       </Group>
+
+      <SectionTitle>Entries</SectionTitle>
+      <Card variant="compact" as="section" aria-label="Default account">
+        <fieldset className="fieldset-reset grid gap-6">
+          <legend className="fs-14">Default account</legend>
+          <p className="fs-12 c-sec m-0">Every new entry starts with this account. You can still change it on each entry.</p>
+          <div className="chiprow mt-4" style={{ margin: 0, padding: 0 }}>
+            {(accounts.data?.items ?? []).map(a => (
+              <button
+                type="button"
+                key={a.id}
+                aria-pressed={profile.defaultAccountId === a.id}
+                className={`chip ${profile.defaultAccountId === a.id ? 'chip--on' : ''}`}
+                onClick={() => setDefaultAccount(profile.defaultAccountId === a.id ? null : a.id)}
+              >
+                {a.nickname}
+              </button>
+            ))}
+          </div>
+          {!profile.defaultAccountId && <p className="fs-12 c-mut m-0">None set: entries start with the first account.</p>}
+        </fieldset>
+      </Card>
 
       <SectionTitle>Help</SectionTitle>
       <Group>

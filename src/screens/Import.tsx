@@ -5,6 +5,8 @@ import { Card } from '../components/ui/Card';
 import { Field, Input, TextArea } from '../components/ui/Field';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { refreshAll } from '../lib/cache';
 import { BUCKET_LABEL } from '../lib/categories';
 import { currentMonth, todayIST } from '../lib/dates';
@@ -136,7 +138,10 @@ function ReviewItem({
   const [description, setDescription] = useState(item.description);
   const [date, setDate] = useState(item.date ?? '');
   const [kind, setKind] = useState<'spend' | 'credit'>(item.kind);
-  const [accountId, setAccountId] = useState<string | null>(matchAccount(item.accountHint, accounts) ?? null);
+  const defaultAccountId = useDefaultAccountId(token);
+  // The named account, or the default account when the line names none. An unknown name is left for the user to pick.
+  const initialAccount = () => (item.accountHint.trim() ? matchAccount(item.accountHint, accounts) : pickAccount(accounts, defaultAccountId));
+  const [accountId, setAccountId] = useState<string | null>(initialAccount);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [creditType, setCreditType] = useState<CreditType>('others');
   const [busy, setBusy] = useState(false);
@@ -145,8 +150,8 @@ function ReviewItem({
 
   // Accounts can arrive after the first render: match the pasted account once they do.
   useEffect(() => {
-    if (!accountId && accounts.length > 0) setAccountId(matchAccount(item.accountHint, accounts));
-  }, [accounts, accountId, item.accountHint]);
+    if (!accountId && accounts.length > 0) setAccountId(initialAccount());
+  }, [accounts, accountId, item.accountHint, defaultAccountId]);
 
   // Warn (do not block) when the same date, amount and account is already in the Log.
   useEffect(() => {

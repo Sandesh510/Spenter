@@ -50,7 +50,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
 
   if (event.httpMethod === 'PATCH') {
     const id = reqId(b, 'id');
-    const fields = await parseTxn(admin, userId, b);
+    const fields = await parseTxn(admin, userId, b, id);
     const { error, count } = await admin
       .from('spend_transactions')
       .update({ ...fields, updated_at: new Date().toISOString() }, { count: 'exact' })
@@ -74,7 +74,8 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
 });
 
 /** Validates a spend, credit or transfer and returns the row fields. Shared by POST and PATCH. */
-async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string, unknown>) {
+/** editingId is the transaction being edited, so its own amount is not counted against a loan. */
+async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string, unknown>, editingId?: string) {
   const typeRaw = reqStr(b, 'type', 10);
   if (!(TYPES as readonly string[]).includes(typeRaw)) throw new HttpError(400, 'type must be spend, credit or transfer');
   const type = typeRaw as TxnType;
@@ -116,12 +117,30 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
   if (lentLoanId) {
     const { data: loan, error: loanErr } = await admin
       .from('spend_lent_loans')
-      .select('id')
+      .select('id,amount_paise,settled_at')
       .eq('user_id', userId)
       .eq('id', lentLoanId)
       .maybeSingle();
     if (loanErr) throw loanErr;
     if (!loan) throw new HttpError(400, 'Unknown loan');
+
+    // A Got back cannot be more than is still owed on the loan. Checked here, not only on the screen,
+    // so a second device or an old screen cannot over-record a repayment.
+    let backQuery = admin
+      .from('spend_transactions')
+      .select('amount_paise')
+      .eq('user_id', userId)
+      .eq('lent_loan_id', lentLoanId)
+      .eq('credit_category', 'gone_back')
+      .is('deleted_at', null);
+    if (editingId) backQuery = backQuery.neq('id', editingId);
+    const { data: backs, error: backErr } = await backQuery;
+    if (backErr) throw backErr;
+    const returned = (backs ?? []).reduce((sum, r) => sum + r.amount_paise, 0);
+    const owed = loan.settled_at ? 0 : Math.max(0, loan.amount_paise - returned);
+    if (amountPaise > owed) {
+      throw new HttpError(400, owed === 0 ? 'Nothing is still owed on this loan' : `More than the ₹${(owed / 100).toFixed(2)} still owed on this loan`);
+    }
   }
 
   await assertOwned(admin, userId, 'spend_categories', categoryId ? [categoryId] : []);

@@ -4,6 +4,8 @@ import { Field, Input } from '../components/ui/Field';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { haptic } from '../lib/haptics';
 import { formatINR } from '../lib/money';
 import { todayIST } from '../lib/dates';
@@ -60,10 +62,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
   const totalOwed = outstanding.reduce((s, p) => s + p.owed, 0);
   const previousNames = [...new Set(loans.map(l => l.person_name))];
   const accountItems = accounts.data?.items ?? [];
+  const defaultAccountId = useDefaultAccountId(token);
 
   function openNew(prefillName = '') {
     setErr(null);
-    setForm({ name: prefillName, amount: '', note: '', lentOn: todayIST(), accountId: accountItems[0]?.id ?? null });
+    setForm({ name: prefillName, amount: '', note: '', lentOn: todayIST(), accountId: pickAccount(accountItems, defaultAccountId) });
     setDialog('new');
   }
 
@@ -100,7 +103,7 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
   /** Records each loan's outstanding amount as a Got back credit into the first account. */
   async function gotBack(list: Loan[], done: string) {
     // A Got back goes into the account the loan was lent from; otherwise the first account.
-    const accountId = list[0]?.debit_account_id ?? accountItems[0]?.id;
+    const accountId = list[0]?.debit_account_id ?? pickAccount(accountItems, defaultAccountId);
     if (!accountId) return setErr('Add an account in Settings first');
     setErr(null);
     setBusy(true);

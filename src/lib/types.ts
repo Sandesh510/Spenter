@@ -154,6 +154,8 @@ export interface CommitmentsData {
 export interface Profile {
   theme: 'dark' | 'light';
   lockEnabled: boolean;
+  /** The account new entries start with. Missing in profiles cached by older versions. */
+  defaultAccountId?: string | null;
 }
 
 export interface InsurancePolicy {

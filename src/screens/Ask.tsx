@@ -5,6 +5,8 @@ import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
+import { pickAccount } from '../lib/defaultAccount';
+import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { haptic } from '../lib/haptics';
 import { BUCKET_LABEL, BUCKET_TAG } from '../lib/categories';
 import { currentMonth } from '../lib/dates';
@@ -34,12 +36,15 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
     }
   }, [amount]);
 
+  const defaultAccountId = useDefaultAccountId(token);
+
   async function decide(decision: 'bought' | 'skipped' | 'delayed') {
     setError(null);
     if (!item.trim()) return setError('Name the item first');
     if (!amountPaise) return setError('Enter the amount');
     if (!selected) return setError('Choose a category');
-    const account = accounts.data?.items[0];
+    const accountList = accounts.data?.items ?? [];
+    const account = accountList.find(a => a.id === pickAccount(accountList, defaultAccountId));
     if (decision === 'bought' && !account) return setError('Add an account in Settings first');
 
     setBusy(true);
