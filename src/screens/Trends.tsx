@@ -44,7 +44,7 @@ export function Trends({ token }: { token: string }) {
 
       <MoneyFlow moneyIn={data.moneyIn} moneyOut={data.moneyOut} />
 
-      <Card className="flex ai-c gap-18" as="section" style={{ padding: 18 }}>
+      <Card className="flex ai-c gap-18 mt-16" as="section" style={{ padding: 18 }}>
         <div className="rel flex-none" style={{ width: 120, height: 120 }}>
           <div
             style={{
