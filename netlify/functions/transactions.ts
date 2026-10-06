@@ -95,7 +95,8 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
     throw new HttpError(400, 'creditCategory must be salary, gone_back or others');
   }
   const reference = type === 'credit' ? optStr(b, 'reference', 120) : null;
-  const lentLoanId = creditCategory === 'gone_back' ? reqId(b, 'lentLoanId') : null;
+  const lentLoanId = creditCategory === 'gone_back' ? optStr(b, 'lentLoanId', 60) : null;
+  if (lentLoanId) reqId({ lentLoanId }, 'lentLoanId');
   const accountId = optStr(b, 'accountId', 60);
   const toAccountId = optStr(b, 'toAccountId', 60);
   const external = b.external === true;

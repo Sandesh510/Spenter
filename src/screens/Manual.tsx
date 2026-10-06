@@ -75,8 +75,7 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
     if (isTransfer && !external && (!to || to === from)) return setError('Choose two different accounts');
 
     const linkedLoan = openLoans.find(l => l.id === lentLoanId) ?? (editing?.lent_loan_id ? (lent.data?.items ?? []).find(l => l.id === editing.lent_loan_id) : undefined);
-    if (isCredit && creditCategory === 'gone_back') {
-      if (!lentLoanId) return setError('Choose the loan this repays');
+    if (isCredit && creditCategory === 'gone_back' && lentLoanId) {
       // The loan's outstanding amount already excludes this credit when editing it, so add it back.
       const available = (linkedLoan?.outstanding_paise ?? 0) + (editing?.lent_loan_id === lentLoanId ? (editing?.amount_paise ?? 0) : 0);
       if (paise > available) return setError(`More than the ${formatINR(available)} still owed`);
@@ -96,6 +95,8 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
       } else {
         await api('transactions', { token, body });
       }
+      // Log, Home and Lent read from the cache, so a saved entry must refresh it.
+      await refreshAll(token).catch(() => {});
       haptic('success');
       onToast(editing ? 'Transaction updated' : `Saved ${formatINR(paise)}`);
       go('log');
@@ -173,13 +174,13 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
           </div>
           {creditCategory === 'gone_back' && (
             <>
-              <div className="kicker" style={{ margin: '16px 0 7px' }}>Which loan</div>
+              <div className="kicker" style={{ margin: '16px 0 7px' }}>Which loan (optional)</div>
               {openLoans.length === 0 ? (
-                <p className="fs-13 c-sec" style={{ margin: 0 }}>No open loans. Record one in Money lent first.</p>
+                <p className="fs-13 c-sec" style={{ margin: 0 }}>No open loans. Just record the reference, e.g. the person's name.</p>
               ) : (
                 <div className="chiprow">
                   {openLoans.map(l => (
-                    <button key={l.id} className={`chip ${lentLoanId === l.id ? 'chip--on' : ''}`} onClick={() => setLentLoanId(l.id)}>
+                    <button key={l.id} aria-pressed={lentLoanId === l.id} className={`chip ${lentLoanId === l.id ? 'chip--on' : ''}`} onClick={() => { setLentLoanId(l.id); if (!reference.trim()) setReference(l.person_name); }}>
                       {l.person_name} · {formatINR(l.outstanding_paise)}
                     </button>
                   ))}

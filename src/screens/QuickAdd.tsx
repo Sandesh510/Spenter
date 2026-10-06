@@ -7,6 +7,7 @@ import { MAX_ACCOUNTS } from '../lib/limits';
 import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
+import { refreshAll } from '../lib/cache';
 import { haptic } from '../lib/haptics';
 import { iconFor } from '../lib/categories';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
@@ -66,6 +67,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
         body: { type: 'spend', amount, categoryId: category.id, accountId, description: desc.trim() || null },
       });
       haptic('success');
+      await refreshAll(token).catch(() => {});
       onToast(`Added ${formatINR(amountPaise)} · ${category.name}`);
       go('log');
     } catch (err) {
