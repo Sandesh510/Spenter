@@ -25,6 +25,10 @@ const FRESH_MS = 30_000;
 
 let data: Record<string, unknown> = {};
 let lastRefreshed = 0;
+/** Keys whose data may be out of date. Their screens keep showing it while it is fetched again. */
+const stale = new Set<string>();
+/** Bumped when keys go stale, so mounted screens know to fetch again. */
+let version = 0;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -36,8 +40,12 @@ export const cache = {
   has: (key: string): boolean => key in data,
   set(key: string, value: unknown) {
     data = { ...data, [key]: value };
+    stale.delete(key);
     emit();
   },
+  /** True when the key has no data yet, or its data went stale after a change. */
+  needsFetch: (key: string): boolean => !(key in data) || stale.has(key),
+  version: (): number => version,
   prime(values: Record<string, unknown>) {
     data = { ...data, ...values };
     emit();
@@ -91,6 +99,9 @@ export interface Bootstrap {
 export async function refreshAll(token: string): Promise<Bootstrap> {
   const boot = await api<Bootstrap>('bootstrap', { token });
   const { profile, ...rest } = boot.data;
+  // Anything bootstrap does not carry (commitments, insurance, savings, older months) may have changed too.
+  for (const key of Object.keys(data)) if (!(key in rest)) stale.add(key);
+  version += 1;
   cache.prime(rest);
   lastRefreshed = Date.now();
   writeSnapshot({ user: boot.user, profile, data: rest, savedAt: lastRefreshed });

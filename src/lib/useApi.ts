@@ -4,7 +4,8 @@ import { cache, refreshAll } from './cache';
 
 /**
  * Reads a cached endpoint. Data comes from the bootstrap cache when present, so screens render at once.
- * A key not in the cache is fetched on its own. reload() refreshes everything in one request.
+ * A key not in the cache is fetched on its own. reload() refreshes everything in one request and
+ * marks other keys stale, so screens showing them fetch fresh data.
  */
 export function useApi<T>(path: string | null, token: string) {
   const data = useSyncExternalStore(
@@ -12,10 +13,12 @@ export function useApi<T>(path: string | null, token: string) {
     () => (path ? (cache.get(path) as T | undefined) : undefined),
     () => undefined,
   );
+  const version = useSyncExternalStore(cache.subscribe, cache.version, cache.version);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch a key bootstrap does not carry, and fetch it again after a change marks it stale.
   useEffect(() => {
-    if (!path || cache.has(path)) return;
+    if (!path || !cache.needsFetch(path)) return;
     let cancelled = false;
     api<T>(path, { token })
       .then(d => {
@@ -27,7 +30,7 @@ export function useApi<T>(path: string | null, token: string) {
     return () => {
       cancelled = true;
     };
-  }, [path, token]);
+  }, [path, token, version]);
 
   const reload = useCallback(() => {
     setError(null);
