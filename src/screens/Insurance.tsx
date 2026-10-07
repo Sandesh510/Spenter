@@ -34,6 +34,8 @@ export function InsuranceSection({
 }) {
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** The policy whose category is being changed. */
+  const [recategorising, setRecategorising] = useState<string | null>(null);
 
   async function call(body: Record<string, unknown>, method: 'PATCH' | 'DELETE', done: string, query = '') {
     setBusy(true);
@@ -75,11 +77,42 @@ export function InsuranceSection({
                 <dl className="grid gap-4 m-0 mt-8 fs-12">
                   <div className="flex jc-sb"><dt className="c-sec">Premium</dt><dd className="m-0 num">{formatINR(p.premium_paise)} · {FREQUENCY_LABEL[p.frequency as Frequency] ?? p.frequency}</dd></div>
                   <div className="flex jc-sb">
+                    <dt className="c-sec">Category</dt>
+                    <dd className="m-0">
+                      {categories.find(c => c.id === p.category_id)?.name ?? '—'}{' '}
+                      <button className="link" disabled={busy} onClick={() => setRecategorising(recategorising === p.id ? null : p.id)}>
+                        {recategorising === p.id ? 'Cancel' : 'Change'}
+                      </button>
+                    </dd>
+                  </div>
+                  <div className="flex jc-sb">
                     <dt className="c-sec">Next due</dt>
                     <dd className="m-0 num">{p.next_due_on} · {!p.active ? 'paused' : days < 0 ? `${-days} days overdue` : days === 0 ? 'today' : `in ${days} days`}</dd>
                   </div>
                   {p.sum_assured_paise !== null && <div className="flex jc-sb"><dt className="c-sec">Sum assured</dt><dd className="m-0 num">{formatINR(p.sum_assured_paise)}</dd></div>}
                 </dl>
+                {recategorising === p.id && (
+                  <fieldset className="fieldset-reset grid gap-6 mt-8">
+                    <legend className="kicker kicker--spaced">File under (past premiums move too)</legend>
+                    <div className="chiprow chiprow--wrap">
+                      {categories.map(c => (
+                        <button
+                          type="button"
+                          key={c.id}
+                          aria-pressed={p.category_id === c.id}
+                          className={`chip ${p.category_id === c.id ? 'chip--on' : ''}`}
+                          onClick={async () => {
+                            if (c.id === p.category_id) return setRecategorising(null);
+                            await call({ id: p.id, categoryId: c.id }, 'PATCH', `${p.name} filed under ${c.name}`);
+                            setRecategorising(null);
+                          }}
+                        >
+                          {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
                 <div className="flex gap-14 mt-8">
                   {!p.auto_debit && p.active && (
                     <button className="link" disabled={busy} onClick={() => call({ id: p.id, action: 'paid' }, 'PATCH', `${p.name} premium marked paid`)}>Mark paid</button>

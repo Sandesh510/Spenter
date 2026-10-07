@@ -1,15 +1,12 @@
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { authed } from './_lib/handler';
 import { assertOwned, readJson, reqId, reqStr } from './_lib/input';
 import { HttpError, json } from './_lib/response';
+import { hashPin, verifyPin } from './_lib/pin';
 
 const PIN = /^\d{4}$/;
 const MAX_PIN_FAILURES = 5;
 const LOCK_MINUTES = 15;
-
-function hashPin(salt: string, pin: string): string {
-  return createHash('sha256').update(`${salt}:${pin}`).digest('hex');
-}
 
 /**
  * GET   /profile                    → theme and whether the passcode lock is on
@@ -49,14 +46,14 @@ export const handler = authed(['GET', 'PATCH', 'POST'], async ({ admin, userId, 
       throw new HttpError(429, `Too many wrong passcodes. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`);
     }
 
-    const given = Buffer.from(hashPin(data.lock_salt, pin), 'hex');
-    const stored = Buffer.from(data.lock_hash, 'hex');
-    const ok = given.length === stored.length && timingSafeEqual(given, stored);
+    const { ok, needsUpgrade } = verifyPin(data.lock_salt, data.lock_hash, pin);
 
     if (ok) {
       if (data.pin_failures || data.pin_locked_until) {
         await admin.from('spend_profiles').update({ pin_failures: 0, pin_locked_until: null }).eq('user_id', userId);
       }
+      // A passcode saved with the old fast hash is stored again with the slow one.
+      if (needsUpgrade) await admin.from('spend_profiles').update({ lock_hash: hashPin(data.lock_salt, pin) }).eq('user_id', userId);
       return json(200, { ok: true });
     }
 

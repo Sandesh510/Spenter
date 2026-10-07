@@ -90,7 +90,7 @@ const GROUPS: RuleGroup[] = [
       'Premiums due within 7 days, and overdue ones, show on Home.',
       'Auto-debit policies post the premium on the due date. "Remind me" policies need Mark paid.',
       'A premium is recorded once per due date. A manual payment and an auto-debit can never both count.',
-      'Premiums go to the Insurance category unless you choose another one.',
+      "Premiums go to the Insurance category unless you choose another one. Changing a policy's category also moves its past premiums.",
       'A premium due on the 29th, 30th or 31st moves to the last day of shorter months and goes back to its day afterwards.',
     ],
   },
@@ -110,6 +110,7 @@ const GROUPS: RuleGroup[] = [
     icon: 'wallet',
     rules: [
       'Amounts are rupees with up to 2 decimals and must be more than zero.',
+      "A credit card can have a limit (Settings, Accounts). The card shows what is owed and how much credit is left.",
       'Every new entry starts with your default account (Settings, Entries). You can change it on each entry.',
       'Quick Add always uses today. Use Manual entry for back-dated entries.',
       'Paste entries reads lines of date, account, amount (and an optional description). Each one is saved only when you tap Save; a possible duplicate is flagged but not blocked.',

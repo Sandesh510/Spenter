@@ -7,7 +7,7 @@ import { HttpError, json } from './_lib/response';
 import { MAX_ACCOUNTS } from '../../src/lib/limits';
 import { isAccountKind } from '../../src/lib/accountTypes';
 import { openingForActual } from '../../src/lib/accountBalance';
-import { parseBalanceToPaise } from '../../src/lib/money';
+import { parseBalanceToPaise, parseRupeesToPaise } from '../../src/lib/money';
 
 /**
  * GET   /accounts                       → the user's accounts (max 10), each with balance_paise (null when no opening balance)
@@ -107,6 +107,19 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     if (!isAccountKind(kind)) throw new HttpError(400, 'Choose an account type');
     patch.kind = kind;
   }
+  if ('creditLimit' in b) {
+    const raw = optStr(b, 'creditLimit', 20);
+    if (raw === null) patch.credit_limit_paise = null;
+    else {
+      try {
+        patch.credit_limit_paise = parseRupeesToPaise(raw);
+      } catch (err) {
+        throw new HttpError(400, err instanceof Error ? err.message : 'Invalid credit limit');
+      }
+    }
+  }
+  // A limit only means something on a credit card.
+  if (patch.kind !== undefined && patch.kind !== 'credit_card') patch.credit_limit_paise = null;
   if ('openingBalance' in b) {
     const raw = optStr(b, 'openingBalance', 20);
     if (raw === null) {

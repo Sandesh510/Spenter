@@ -82,7 +82,7 @@ describe('accountBalance', () => {
     ];
     const balance = accountBalance(card, txns, []);
     expect(balance).toBe(-1_200_000 - 300_000 + 1_000_000);
-    expect(cardView('credit_card', balance)).toEqual({ outstandingPaise: 500_000 });
+    expect(cardView('credit_card', balance)).toEqual({ outstandingPaise: 500_000, availablePaise: null });
   });
 });
 
@@ -130,11 +130,11 @@ describe('cardView', () => {
   });
 
   it('reads older free-text card kinds', () => {
-    expect(cardView('Credit card', -2_500)).toEqual({ outstandingPaise: 2_500 });
+    expect(cardView('Credit card', -2_500)).toEqual({ outstandingPaise: 2_500, availablePaise: null });
   });
 
   it('owes nothing when the card is paid ahead', () => {
-    expect(cardView('credit_card', 10_000)).toEqual({ outstandingPaise: 0 });
+    expect(cardView('credit_card', 10_000)).toEqual({ outstandingPaise: 0, availablePaise: null });
   });
 });
 
@@ -149,5 +149,21 @@ describe('flipCardSign', () => {
   it('leaves other accounts as typed', () => {
     expect(flipCardSign('-2500', false)).toBe('-2500');
     expect(flipCardSign('2500', false)).toBe('2500');
+  });
+});
+
+describe('card limit', () => {
+  it('available credit is the limit less what is owed', async () => {
+    const { cardView } = await import('./accountBalance');
+    expect(cardView('credit_card', -18_649_00, 100_000_00)).toEqual({ outstandingPaise: 18_649_00, availablePaise: 81_351_00 });
+  });
+  it('is null without a limit, and negative when over it', async () => {
+    const { cardView } = await import('./accountBalance');
+    expect(cardView('credit_card', -18_649_00)?.availablePaise).toBeNull();
+    expect(cardView('credit_card', -120_000_00, 100_000_00)?.availablePaise).toBe(-20_000_00);
+  });
+  it('is nothing for other account kinds', async () => {
+    const { cardView } = await import('./accountBalance');
+    expect(cardView('savings', 5_000_00, 100_000_00)).toBeNull();
   });
 });

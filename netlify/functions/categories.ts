@@ -2,6 +2,7 @@ import { authed } from './_lib/handler';
 import { assertOwned, optStr, readJson, reqId, reqStr } from './_lib/input';
 import { HttpError, json } from './_lib/response';
 import { CATEGORY_ICON_CHOICES } from '../../src/lib/categoryIcons';
+import { reorder } from '../../src/lib/reorder';
 
 const BUCKETS = ['need', 'want', 'save'];
 
@@ -74,19 +75,20 @@ export const handler = authed(['POST', 'PATCH', 'DELETE'], async ({ admin, userI
     if (direction !== 'up' && direction !== 'down') throw new HttpError(400, 'Invalid move');
     const { data: all, error: listErr } = await admin
       .from('spend_categories')
-      .select('id')
+      .select('id,name,bucket,sort_order')
       .eq('user_id', userId)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
     if (listErr) throw listErr;
-    // Rewrite the whole order, so gaps and duplicates from older data are cleared.
-    const ids = (all ?? []).map(c => c.id);
-    const i = ids.indexOf(id);
-    if (i < 0) throw new HttpError(404, 'Category not found');
-    const j = direction === 'up' ? i - 1 : i + 1;
-    if (j >= 0 && j < ids.length) [ids[i], ids[j]] = [ids[j], ids[i]];
-    for (const [position, catId] of ids.entries()) {
-      const { error } = await admin.from('spend_categories').update({ sort_order: position }).eq('id', catId).eq('user_id', userId);
+    const changed = reorder(all ?? [], id, direction);
+    if (changed === null) throw new HttpError(404, 'Category not found');
+    // One request for every row that moved (usually two), not one per category.
+    if (changed.length > 0) {
+      const byId = new Map((all ?? []).map(c => [c.id, c]));
+      const { error } = await admin.from('spend_categories').upsert(
+        changed.map(r => ({ id: r.id, user_id: userId, name: byId.get(r.id)!.name, bucket: byId.get(r.id)!.bucket, sort_order: r.sort_order })),
+        { onConflict: 'id' },
+      );
       if (error) throw error;
     }
     return json(200, { ok: true });

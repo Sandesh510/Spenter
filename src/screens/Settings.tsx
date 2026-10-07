@@ -298,11 +298,20 @@ const rowButton = { display: 'flex', alignItems: 'center', gap: 11, width: '100%
 function AccountBalance({ a }: { a: Account }) {
   const balance = a.balance_paise ?? null;
   if (balance === null) return null;
-  const card = cardView(a.kind, balance);
+  const card = cardView(a.kind, balance, a.credit_limit_paise ?? null);
   if (card) {
-    return card.outstandingPaise > 0
-      ? <span className="num fs-13 nowrap c-danger">Owed {formatINR(card.outstandingPaise)}</span>
-      : <span className="num fs-13 nowrap c-sec">Nothing owed</span>;
+    return (
+      <span className="grid ta-r">
+        {card.outstandingPaise > 0
+          ? <span className="num fs-13 nowrap c-danger">Owed {formatINR(card.outstandingPaise)}</span>
+          : <span className="num fs-13 nowrap c-sec">Nothing owed</span>}
+        {card.availablePaise !== null && (
+          <span className={`num fs-11 nowrap ${card.availablePaise < 0 ? 'c-danger' : 'c-mut'}`}>
+            {card.availablePaise < 0 ? `${formatINR(-card.availablePaise)} over limit` : `${formatINR(card.availablePaise)} available`}
+          </span>
+        )}
+      </span>
+    );
   }
   return <span className={`num fs-13 nowrap ${balance < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(balance)}</span>;
 }
@@ -322,6 +331,7 @@ function AccountRow({ a, token, onChanged, onError, onToast }: { a: Account; tok
   const [kind, setKind] = useState<AccountKind>(normaliseAccountKind(a.kind) ?? 'bank');
   const [opening, setOpening] = useState(() => openingText(a));
   const [openingOn, setOpeningOn] = useState(a.opening_balance_on ?? todayIST());
+  const [limit, setLimit] = useState(a.credit_limit_paise ? paiseToPlain(a.credit_limit_paise).replace(/\.00$/, '') : '');
   const [actual, setActual] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [matchError, setMatchError] = useState<string | null>(null);
@@ -349,7 +359,7 @@ function AccountRow({ a, token, onChanged, onError, onToast }: { a: Account; tok
       await api('accounts', {
         method: 'PATCH',
         token,
-        body: { id: a.id, nickname: name, bank, kind, openingBalance, ...(openingBalance !== '' ? { openingBalanceOn: openingOn } : {}) },
+        body: { id: a.id, nickname: name, bank, kind, openingBalance, creditLimit: isCard ? limit.trim() : '', ...(openingBalance !== '' ? { openingBalanceOn: openingOn } : {}) },
       });
       haptic('success');
       setEditing(false);
@@ -436,6 +446,11 @@ function AccountRow({ a, token, onChanged, onError, onToast }: { a: Account; tok
                 <Input className="fs-15" type="date" value={openingOn} max={todayIST()} onChange={e => setOpeningOn(e.target.value)} disabled={opening.trim() === ''} />
               </Field>
             </div>
+            {isCard && (
+              <Field label="Credit limit (optional)" hint="Shows how much credit is left on the card.">
+                <Input className="fs-15" numeric inputMode="decimal" placeholder="e.g. 100000" value={limit} onChange={e => setLimit(e.target.value)} maxLength={16} />
+              </Field>
+            )}
             {formError && <p className="c-danger fs-13 m-0" role="alert">{formError}</p>}
             <Button type="submit">Save account</Button>
           </form>

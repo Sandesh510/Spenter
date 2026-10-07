@@ -23,6 +23,7 @@ function optPaise(b: Record<string, unknown>, key: string): number | null {
  *                     nextDueOn, sumAssured?, accountId, categoryId, autoDebit }
  * PATCH  /insurance { id, action: 'paid', paidOn? }  → record this premium as paid (manual policies only)
  * PATCH  /insurance { id, active }                   → pause or resume
+ * PATCH  /insurance { id, categoryId }               → file the policy and its past premiums under another category
  * DELETE /insurance?id=…                             → remove; past premiums stay in the Log
  * A premium is recorded once per due date, so a manual payment and an auto-debit cannot both count.
  */
@@ -92,6 +93,26 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
         .eq('id', id)
         .eq('user_id', userId);
       if (updErr) throw updErr;
+      return json(200, { ok: true });
+    }
+
+    if (b.categoryId !== undefined) {
+      const categoryId = reqId(b, 'categoryId');
+      await assertOwned(admin, userId, 'spend_categories', [categoryId]);
+      const { error, count } = await admin
+        .from('spend_insurance_policies')
+        .update({ category_id: categoryId, updated_at: new Date().toISOString() }, { count: 'exact' })
+        .eq('id', id)
+        .eq('user_id', userId);
+      if (error) throw error;
+      if (!count) throw new HttpError(404, 'Policy not found');
+      // Premiums already recorded for this policy move too, so the old category's spend is corrected.
+      const { error: moveErr } = await admin
+        .from('spend_transactions')
+        .update({ category_id: categoryId })
+        .eq('user_id', userId)
+        .eq('policy_id', id);
+      if (moveErr) throw moveErr;
       return json(200, { ok: true });
     }
 

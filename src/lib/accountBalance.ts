@@ -108,12 +108,15 @@ export function openingForActual(accountId: string, actualPaise: number, today: 
 export interface CardView {
   /** What is owed on the card: max(0, −balance). */
   outstandingPaise: number;
+  /** Limit − owed, or null when no limit is set. Negative when the card is over its limit. */
+  availablePaise: number | null;
 }
 
-/** For a credit card, the amount owed. Null for other kinds or when no balance is set. */
-export function cardView(kind: unknown, balancePaise: number | null): CardView | null {
+/** For a credit card, the amount owed and the credit left. Null for other kinds or when no balance is set. */
+export function cardView(kind: unknown, balancePaise: number | null, limitPaise: number | null = null): CardView | null {
   if (!isCreditCard(kind) || balancePaise === null) return null;
-  return { outstandingPaise: Math.max(0, -balancePaise) };
+  const outstandingPaise = Math.max(0, -balancePaise);
+  return { outstandingPaise, availablePaise: limitPaise === null ? null : limitPaise - outstandingPaise };
 }
 
 /**

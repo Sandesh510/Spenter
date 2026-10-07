@@ -1,5 +1,5 @@
 import { Button } from '../components/ui/Button';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
@@ -7,6 +7,7 @@ import { BUCKET_LABEL, BUCKET_TINT, categoryIcon } from '../lib/categories';
 import { currentMonth, dayLabel, monthTitle } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
+import { releaseSavedLogFilter, saveLogFilter, takeSavedLogFilter } from '../lib/logFilter';
 import type { Account, Bucket, Category, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
@@ -20,10 +21,16 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
   initialBucket?: Bucket;
   initialMonth?: string;
 }) {
-  const [month, setMonth] = useState(initialMonth ?? currentMonth());
-  const [categoryId, setCategoryId] = useState(initialCategoryId ?? '');
-  const [bucket, setBucket] = useState<Bucket | ''>(initialBucket ?? '');
-  const [accountId, setAccountId] = useState('');
+  // After a reload the filters come back; a filter chosen from Home wins over them.
+  const [saved] = useState(() => (initialCategoryId || initialBucket || initialMonth ? null : takeSavedLogFilter()));
+  const [month, setMonth] = useState(initialMonth ?? saved?.month ?? currentMonth());
+  const [categoryId, setCategoryId] = useState(initialCategoryId ?? saved?.categoryId ?? '');
+  const [bucket, setBucket] = useState<Bucket | ''>((initialBucket ?? saved?.bucket ?? '') as Bucket | '');
+  const [accountId, setAccountId] = useState(saved?.accountId ?? '');
+  useEffect(() => {
+    releaseSavedLogFilter();
+    saveLogFilter({ month, categoryId, bucket, accountId });
+  }, [month, categoryId, bucket, accountId]);
   const [selected, setSelected] = useState<TxnRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 

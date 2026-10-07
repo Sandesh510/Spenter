@@ -85,7 +85,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
   accounts: () => ({
     items: [
       { id: 'acc1', nickname: 'Salary', bank: 'HDFC Bank', kind: 'Debit', icon: 'wallet', position: 0, opening_balance_paise: 8_500_000, opening_balance_on: '2026-10-01', balance_paise: 6_412_550 },
-      { id: 'acc2', nickname: 'Rewards', bank: 'ICICI', kind: 'Credit card', icon: 'credit-card', position: 1, opening_balance_paise: -1_200_000, opening_balance_on: '2026-10-01', balance_paise: -1_864_900 },
+      { id: 'acc2', nickname: 'Rewards', bank: 'ICICI', kind: 'Credit card', icon: 'credit-card', position: 1, opening_balance_paise: -1_200_000, opening_balance_on: '2026-10-01', balance_paise: -1_864_900, credit_limit_paise: 10_000_000 },
       { id: 'acc3', nickname: 'Cash', bank: 'Wallet', kind: 'Cash', icon: 'banknote', position: 2, opening_balance_paise: null, opening_balance_on: null, balance_paise: null },
       { id: 'acc4', nickname: 'Paytm', bank: 'Paytm', kind: 'UPI wallet', icon: 'smartphone', position: 3, opening_balance_paise: 50_000, opening_balance_on: '2026-10-05', balance_paise: -12_000 },
     ],
@@ -105,6 +105,11 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     return { from, to, items };
   },
   transactions: () => ({ items: [] }),
+  insurance: () => ({
+    items: [
+      { id: 'pol1', name: 'Family health cover', insurer: 'Star Health', policy_number: 'SH-4471', policy_type: 'health', premium_paise: 1_200_000, frequency: 'yearly', next_due_on: '2026-10-25', sum_assured_paise: 50_000_000, account_id: 'acc1', category_id: 'c0', auto_debit: false, active: true, due_day: 25 },
+    ],
+  }),
   commitments: () => ({
     month: '2026-10',
     items: [

@@ -24,6 +24,8 @@ export interface Account {
   opening_balance_on?: string | null;
   /** Balance now, derived from the opening balance and entries since. Null when no opening balance is set. */
   balance_paise?: number | null;
+  /** Credit cards only: the card limit. Null when not set. */
+  credit_limit_paise?: number | null;
 }
 
 export interface HomeBucket {

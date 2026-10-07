@@ -43,6 +43,7 @@ Apply these to every new or changed screen.
 - Totals are derived from transactions, never stored (`src/lib/ledger.ts` is the source of truth).
 - A savings plan's saved amount is derived: `opening_paise` + live spend transactions with its `plan_id` (rules in `src/lib/savings.ts`). Contributions are spends in a Save-bucket category.
 - Per-account balances are derived too: opening balance (`spend_accounts.opening_balance_paise` at the start of `opening_balance_on`; negative for card dues) plus live entries and loans since that date (`src/lib/accountBalance.ts`). Never store a running balance.
+- Passcodes are hashed with scrypt (`netlify/functions/_lib/pin.ts`); older SHA-256 hashes still verify and are upgraded on the next correct entry.
 - Every Netlify Function scopes queries by the verified `user_id`. The service-role key stays server-side.
 - Sessions: the device keeps the access and refresh tokens (`src/lib/session.ts`). `api()` renews the access token before it expires and retries a 401 once after a refresh; only a rejected refresh token signs the user out. Never call Netlify Functions with a raw stored token.
 - New tables get RLS with the owner policy, in a numbered migration under `supabase/migrations/`.

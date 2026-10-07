@@ -199,6 +199,7 @@ interface AccountRow {
   position: number;
   opening_balance_paise: number | null;
   opening_balance_on: string | null;
+  credit_limit_paise?: number | string | null;
 }
 
 /**
@@ -209,7 +210,8 @@ interface AccountRow {
 export async function loadAccounts(admin: SupabaseClient, userId: string) {
   const { data, error } = await admin
     .from('spend_accounts')
-    .select('id,nickname,bank,kind,icon,position,opening_balance_paise,opening_balance_on')
+    // Every column, so a database that has not had migration 0013 yet (no credit_limit_paise) still works.
+    .select('*')
     .eq('user_id', userId)
     .order('position', { ascending: true });
   if (error) throw error;
@@ -217,6 +219,7 @@ export async function loadAccounts(admin: SupabaseClient, userId: string) {
   const rows = ((data as AccountRow[] | null) ?? []).map(a => ({
     ...a,
     opening_balance_paise: a.opening_balance_paise === null ? null : Number(a.opening_balance_paise),
+    credit_limit_paise: a.credit_limit_paise == null ? null : Number(a.credit_limit_paise),
   }));
 
   const withOpening = rows.filter(a => a.opening_balance_paise !== null && a.opening_balance_on !== null);
