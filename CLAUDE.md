@@ -44,6 +44,7 @@ Apply these to every new or changed screen.
 - A savings plan's saved amount is derived: `opening_paise` + live spend transactions with its `plan_id` (rules in `src/lib/savings.ts`). Contributions are spends in a Save-bucket category.
 - Per-account balances are derived too: opening balance (`spend_accounts.opening_balance_paise` at the start of `opening_balance_on`; negative for card dues) plus live entries and loans since that date (`src/lib/accountBalance.ts`). Never store a running balance.
 - Every Netlify Function scopes queries by the verified `user_id`. The service-role key stays server-side.
+- Sessions: the device keeps the access and refresh tokens (`src/lib/session.ts`). `api()` renews the access token before it expires and retries a 401 once after a refresh; only a rejected refresh token signs the user out. Never call Netlify Functions with a raw stored token.
 - New tables get RLS with the owner policy, in a numbered migration under `supabase/migrations/`.
 - Limits shared by client and server live in `src/lib/limits.ts` (for example `MAX_ACCOUNTS = 10`).
 - Balance = opening + income + got back + borrowed − spend − savings − outside transfers − money lent. Only Salary and Others are income; `gone_back` and `borrowed` credits never count as income.

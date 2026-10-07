@@ -5,6 +5,7 @@ import { BottomNav, type Tab } from './components/BottomNav';
 import { Icon } from './components/Icon';
 import { IDLE_LOCK_MS, isStillActive, touchActive, getLastActive } from './lib/prefs';
 import { api, ApiError } from './lib/api';
+import { readSession, writeSession, type Session } from './lib/session';
 import { cache, isStale, refreshAll, restoreSnapshot, type Bootstrap, type User } from './lib/cache';
 import type { Bucket, Profile, TxnRow } from './lib/types';
 import { Ask } from './screens/Ask';
@@ -41,23 +42,16 @@ function initialRoute(): Route {
 }
 
 
-const TOKEN_KEY = 'spendcheck.accessToken';
 const NAV_TABS: Tab[] = ['home', 'log', 'trends', 'settings'];
 
+/** The access token to start with: the saved session's, or a token saved by an older version. */
 function readToken(): string | null {
+  const s = readSession();
+  if (s) return s.access_token;
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem('spendcheck.accessToken');
   } catch {
     return null;
-  }
-}
-
-function writeToken(token: string | null) {
-  try {
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    /* storage unavailable: the user signs in again next visit */
   }
 }
 
@@ -168,8 +162,9 @@ export function App() {
     setUnlocked(prev => prev || !boot.data.profile.lockEnabled || isStillActive());
   }
 
-  function signedIn(t: string, u: User) {
-    writeToken(t);
+  function signedIn(session: Session, u: User) {
+    writeSession(session);
+    const t = session.access_token;
     setToken(t);
     setUser(u);
     routeRef.current = 'home';
@@ -182,7 +177,7 @@ export function App() {
 
   function signOutLocally() {
     cache.clear();
-    writeToken(null);
+    writeSession(null);
     setToken(null);
     setUser(null);
     setProfile(null);
@@ -256,7 +251,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   return <div className="phone">{children}</div>;
 }
 
-function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => void }) {
+function SignIn({ onSignedIn }: { onSignedIn: (session: Session, user: User) => void }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -277,8 +272,8 @@ function SignIn({ onSignedIn }: { onSignedIn: (token: string, user: User) => voi
         setMode('login');
         setPassword('');
       } else {
-        const res = await api<{ access_token: string; user: User }>('auth-login', { body });
-        onSignedIn(res.access_token, res.user);
+        const res = await api<Session & { user: User }>('auth-login', { body });
+        onSignedIn({ access_token: res.access_token, refresh_token: res.refresh_token, expires_at: res.expires_at }, res.user);
       }
     } catch (err) {
       setError(err instanceof ApiError || err instanceof Error ? err.message : 'Something went wrong');
