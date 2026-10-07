@@ -50,6 +50,22 @@ export function emiSplit({ outstandingPaise, rateBps, emiPaise }: { outstandingP
   return { interestPaise, principalPaise };
 }
 
+/**
+ * Estimates the principal a past EMI paid off, from what is owed after it. Used only for EMIs posted before
+ * each posting kept its own principal. The forward split is solved backwards: interest depends on the balance
+ * before the EMI, which is the balance after plus that principal.
+ */
+export function reverseEmiSplit({ outstandingAfterPaise, rateBps, emiPaise }: { outstandingAfterPaise: number; rateBps: number; emiPaise: number }): number {
+  let principal = emiPaise;
+  for (let i = 0; i < 30; i++) {
+    const interest = Math.round(((outstandingAfterPaise + principal) * rateBps) / (12 * 10_000));
+    const next = Math.max(0, emiPaise - interest);
+    if (next === principal) break;
+    principal = next;
+  }
+  return principal;
+}
+
 /** Annual rate typed as a percentage ("10.5") to basis points (1050). Throws on anything outside 0–60%. */
 export function rateToBps(percent: string): number {
   const n = Number(percent);

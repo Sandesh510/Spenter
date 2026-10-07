@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { advanceDue, type Frequency } from '../../../src/lib/insurance';
+import { advanceDue, dayOf, type Frequency } from '../../../src/lib/insurance';
 
 export interface PolicyRow {
   id: string;
@@ -11,10 +11,15 @@ export interface PolicyRow {
   category_id: string;
   auto_debit: boolean;
   active: boolean;
+  /** The day of the month the premium is due on. Null before migration 0012. */
+  due_day?: number | null;
 }
 
-export const POLICY_COLUMNS =
-  'id,name,premium_paise,frequency,next_due_on,account_id,category_id,auto_debit,active';
+/** Every column, so a database that has not had migration 0012 yet still works (due_day is then absent). */
+export const POLICY_COLUMNS = '*';
+
+/** The anchor day for stepping due dates: the saved due day, else the day of the current due date. */
+export const anchorOf = (p: Pick<PolicyRow, 'due_day' | 'next_due_on'>): number => p.due_day ?? dayOf(p.next_due_on);
 
 /** Largest number of catch-up premiums posted in one run. Stops a bad date from looping forever. */
 const MAX_CATCH_UP = 60;
@@ -54,7 +59,7 @@ export async function postInsurance(admin: SupabaseClient, userId: string, today
           { onConflict: 'policy_id,policy_due_on', ignoreDuplicates: true },
         );
       if (insErr) throw insErr;
-      due = advanceDue(due, p.frequency);
+      due = advanceDue(due, p.frequency, anchorOf(p));
     }
     if (due !== p.next_due_on) {
       const { error: updErr } = await admin

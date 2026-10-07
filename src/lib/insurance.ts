@@ -19,9 +19,19 @@ function parts(iso: string): [number, number, number] {
   return [y, m, d];
 }
 
-/** Adds whole months to a YYYY-MM-DD date, keeping the day. A day past the month's end moves to the last day. */
-export function addMonthsIso(iso: string, months: number): string {
-  const [y, m, d] = parts(iso);
+/** The day of the month in a YYYY-MM-DD date. */
+export function dayOf(iso: string): number {
+  return parts(iso)[2];
+}
+
+/**
+ * Adds whole months to a YYYY-MM-DD date. A day past the month's end moves to the last day of that month.
+ * anchorDay is the day the premium is really due on (31, say), so a short month does not pull later months
+ * down to 28: 31 Jan -> 28 Feb -> 31 Mar when anchored on 31.
+ */
+export function addMonthsIso(iso: string, months: number, anchorDay?: number): string {
+  const [y, m, d0] = parts(iso);
+  const d = anchorDay ?? d0;
   const target = m - 1 + months;
   const year = y + Math.floor(target / 12);
   const month = ((target % 12) + 12) % 12;
@@ -31,14 +41,14 @@ export function addMonthsIso(iso: string, months: number): string {
 }
 
 /** The next due date after a premium falls due. */
-export function advanceDue(iso: string, frequency: Frequency): string {
-  return addMonthsIso(iso, FREQUENCY_MONTHS[frequency]);
+export function advanceDue(iso: string, frequency: Frequency, anchorDay?: number): string {
+  return addMonthsIso(iso, FREQUENCY_MONTHS[frequency], anchorDay);
 }
 
 /** The first due date on or after today, stepping from a past due date by the frequency. */
-export function nextDueFrom(iso: string, frequency: Frequency, today: string): string {
+export function nextDueFrom(iso: string, frequency: Frequency, today: string, anchorDay?: number): string {
   let due = iso;
-  for (let i = 0; due < today && i < 600; i++) due = advanceDue(due, frequency);
+  for (let i = 0; due < today && i < 600; i++) due = advanceDue(due, frequency, anchorDay);
   return due;
 }
 

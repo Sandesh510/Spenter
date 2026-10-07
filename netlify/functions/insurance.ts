@@ -1,8 +1,8 @@
 import { parseRupeesToPaise } from '../../src/lib/money';
-import { POLICY_TYPES, FREQUENCIES, advanceDue, nextDueFrom, type Frequency } from '../../src/lib/insurance';
+import { POLICY_TYPES, FREQUENCIES, advanceDue, dayOf, nextDueFrom, type Frequency } from '../../src/lib/insurance';
 import { authed } from './_lib/handler';
 import { assertOwned, optStr, readJson, reqId, reqStr, todayIST } from './_lib/input';
-import { postInsurance, POLICY_COLUMNS, type PolicyRow } from './_lib/insurance';
+import { anchorOf, postInsurance, POLICY_COLUMNS, type PolicyRow } from './_lib/insurance';
 import { HttpError, json } from './_lib/response';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -33,7 +33,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     await postInsurance(admin, userId, today);
     const { data, error } = await admin
       .from('spend_insurance_policies')
-      .select(`${POLICY_COLUMNS},insurer,policy_number,policy_type,sum_assured_paise`)
+      .select(POLICY_COLUMNS)
       .eq('user_id', userId)
       .order('next_due_on', { ascending: true });
     if (error) throw error;
@@ -88,7 +88,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
       }
       const { error: updErr } = await admin
         .from('spend_insurance_policies')
-        .update({ next_due_on: advanceDue(p.next_due_on, p.frequency as Frequency), updated_at: new Date().toISOString() })
+        .update({ next_due_on: advanceDue(p.next_due_on, p.frequency as Frequency, anchorOf(p)), updated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('user_id', userId);
       if (updErr) throw updErr;
@@ -107,7 +107,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     const p = current as PolicyRow;
     const patch: Record<string, unknown> = { active: b.active, updated_at: new Date().toISOString() };
     // Resuming moves the due date to the next one from today, so premiums due while paused are not posted.
-    if (b.active && !p.active) patch.next_due_on = nextDueFrom(p.next_due_on, p.frequency, today);
+    if (b.active && !p.active) patch.next_due_on = nextDueFrom(p.next_due_on, p.frequency, today, anchorOf(p));
     const { error } = await admin.from('spend_insurance_policies').update(patch).eq('id', id).eq('user_id', userId);
     if (error) throw error;
     return json(200, { ok: true });
@@ -140,6 +140,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
       insurer: optStr(b, 'insurer', 60),
       policy_number: optStr(b, 'policyNumber', 40),
       policy_type: policyType,
+      due_day: dayOf(nextDueOn),
       premium_paise: premium,
       frequency,
       next_due_on: nextDueOn,

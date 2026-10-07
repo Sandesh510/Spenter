@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { dueDate, dueMonths, emiSplit } from '../../../src/lib/commitments';
+import { dueDate, dueMonths, emiSplit, reverseEmiSplit } from '../../../src/lib/commitments';
 import { shiftMonth } from '../../../src/lib/dates';
 
 export interface CommitmentRow {
@@ -77,6 +77,10 @@ async function postCommitment(admin: SupabaseClient, userId: string, c: Commitme
 
     if (isLoan) {
       const { principalPaise } = emiSplit({ outstandingPaise: outstanding, rateBps: c.rate_bps ?? 0, emiPaise: c.amount_paise });
+      // Keep the principal on the entry, so deleting it later gives exactly this back. A database without
+      // migration 0012 has no such column: the loan still updates, and a later delete is estimated.
+      const { error: pErr } = await admin.from('spend_transactions').update({ principal_paise: principalPaise }).eq('id', data[0].id).eq('user_id', userId);
+      if (pErr && !/principal_paise/.test(pErr.message ?? '')) throw pErr;
       outstanding -= principalPaise;
       tenure -= 1;
       const { error: updErr } = await admin
@@ -101,4 +105,43 @@ async function postCommitment(admin: SupabaseClient, userId: string, c: Commitme
       .eq('user_id', userId);
     if (markErr) throw markErr;
   }
+}
+
+/**
+ * A loan EMI entry was deleted: give its principal and one instalment back to the loan, so the outstanding
+ * amount and the remaining instalments match the entries that are left. Does nothing for other entries.
+ * The entry itself stays as a deleted row, so the same month is not posted again.
+ */
+export async function restoreLoanAfterEmiDelete(
+  admin: SupabaseClient,
+  userId: string,
+  txn: { commitment_id: string | null; amount_paise: number; principal_paise?: number | null },
+): Promise<void> {
+  if (!txn.commitment_id) return;
+  const { data: c, error } = await admin
+    .from('spend_commitments')
+    .select('kind,outstanding_paise,tenure_remaining,rate_bps,active')
+    .eq('id', txn.commitment_id)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!c || c.kind !== 'loan') return;
+
+  const outstanding = c.outstanding_paise ?? 0;
+  const tenure = c.tenure_remaining ?? 0;
+  const principal =
+    txn.principal_paise ?? reverseEmiSplit({ outstandingAfterPaise: outstanding, rateBps: c.rate_bps ?? 0, emiPaise: txn.amount_paise });
+  const wasFinished = outstanding <= 0 || tenure <= 0;
+  const { error: updErr } = await admin
+    .from('spend_commitments')
+    .update({
+      outstanding_paise: outstanding + principal,
+      tenure_remaining: tenure + 1,
+      // A loan that ended on its own comes back to life; one the user paused stays paused.
+      ...(wasFinished ? { active: true } : {}),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', txn.commitment_id)
+    .eq('user_id', userId);
+  if (updErr) throw updErr;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueMonths, emiSplit, nextDue, rateToBps } from './commitments';
+import { dueMonths, emiSplit, nextDue, rateToBps, reverseEmiSplit } from './commitments';
 
 describe('dueMonths', () => {
   it('posts the start month when its day has not passed yet', () => {
@@ -74,5 +74,20 @@ describe('long-running commitments', () => {
     const months = dueMonths({ startsOn: '2026-01-05', day: 5, today: '2028-06-10' });
     expect(months).toHaveLength(24);
     expect(months[months.length - 1]).toBe('2028-06');
+  });
+});
+
+describe('reverseEmiSplit', () => {
+  it('recovers the principal an EMI paid off', () => {
+    const before = 1_000_000_00;
+    const emi = 25_000_00;
+    const rateBps = 1050;
+    const { principalPaise } = emiSplit({ outstandingPaise: before, rateBps, emiPaise: emi });
+    const back = reverseEmiSplit({ outstandingAfterPaise: before - principalPaise, rateBps, emiPaise: emi });
+    expect(Math.abs(back - principalPaise)).toBeLessThanOrEqual(1);
+  });
+
+  it('is the whole EMI on a loan with no interest', () => {
+    expect(reverseEmiSplit({ outstandingAfterPaise: 50_000_00, rateBps: 0, emiPaise: 5_000_00 })).toBe(5_000_00);
   });
 });

@@ -25,7 +25,7 @@ export const handler = authed(['POST', 'PATCH', 'DELETE'], async ({ admin, userI
       .eq('user_id', userId)
       .eq('category_id', id);
     if (planErr) throw planErr;
-    if ((planCount ?? 0) > 0) throw new HttpError(409, 'A savings plan uses this category. Choose another category for the plan first.');
+    if ((planCount ?? 0) > 0) throw new HttpError(409, "A savings plan uses this category, so it has to stay in Savings. Change the plan's category first.");
 
     const { count: txnCount, error: txnErr } = await admin
       .from('spend_transactions')
@@ -118,6 +118,16 @@ export const handler = authed(['POST', 'PATCH', 'DELETE'], async ({ admin, userI
   }
 
   const id = reqId(b, 'id');
+  // Contributions to a savings plan must stay in the Savings budget, so a category a plan uses cannot move out of it.
+  if (bucket !== 'save') {
+    const { count: planCount, error: planErr } = await admin
+      .from('spend_savings_plans')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('category_id', id);
+    if (planErr) throw planErr;
+    if ((planCount ?? 0) > 0) throw new HttpError(409, "A savings plan uses this category, so it has to stay in Savings. Change the plan's category first.");
+  }
   const { error, count } = await admin
     .from('spend_categories')
     .update(write, { count: 'exact' })

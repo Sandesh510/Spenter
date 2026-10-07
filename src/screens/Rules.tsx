@@ -78,6 +78,7 @@ const GROUPS: RuleGroup[] = [
       'Subscriptions, SIPs and EMIs post automatically on their day, once a month, when you open the app.',
       'A month is never posted twice, even if the app is open on two devices.',
       'Pausing stops posting. Resuming starts again from the next due date. Paused months are skipped, not added later.',
+      'Deleting a posted EMI gives its principal and one instalment back to the loan. The month is not posted again.',
       'An existing loan only tracks EMIs. A new loan also records the amount received as Borrowed.',
     ],
   },
@@ -89,6 +90,7 @@ const GROUPS: RuleGroup[] = [
       'Auto-debit policies post the premium on the due date. "Remind me" policies need Mark paid.',
       'A premium is recorded once per due date. A manual payment and an auto-debit can never both count.',
       'Premiums go to the Insurance category unless you choose another one.',
+      'A premium due on the 29th, 30th or 31st moves to the last day of shorter months and goes back to its day afterwards.',
     ],
   },
   {

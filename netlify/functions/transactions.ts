@@ -4,6 +4,7 @@ import { authed } from './_lib/handler';
 import { assertOwned, dateOrToday, optStr, readJson, reqId, reqStr } from './_lib/input';
 import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
+import { restoreLoanAfterEmiDelete } from './_lib/commitments';
 
 const TYPES = ['spend', 'credit', 'transfer'] as const;
 const CREDIT_CATEGORIES = ['salary', 'gone_back', 'others', 'borrowed'] as const;
@@ -35,14 +36,26 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
   if (event.httpMethod === 'DELETE') {
     const id = event.queryStringParameters?.id;
     if (!id) throw new HttpError(400, 'id is required');
+    const txnId = reqId({ id }, 'id');
+    // Read first: an EMI entry gives its principal back to the loan when it is deleted.
+    const { data: before, error: readErr } = await admin
+      .from('spend_transactions')
+      .select('*')
+      .eq('id', txnId)
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (readErr) throw readErr;
     const { error, count } = await admin
       .from('spend_transactions')
       .update({ deleted_at: new Date().toISOString() }, { count: 'exact' })
-      .eq('id', reqId({ id }, 'id'))
+      .eq('id', txnId)
       .eq('user_id', userId)
       .is('deleted_at', null);
     if (error) throw error;
     if (!count) throw new HttpError(404, 'Transaction not found');
+    // Only the request that actually deleted it restores the loan, so a double tap cannot restore twice.
+    if (before?.commitment_id) await restoreLoanAfterEmiDelete(admin, userId, before);
     return json(200, { ok: true });
   }
 

@@ -43,3 +43,30 @@ describe('resuming a paused policy', () => {
     expect(nextDueFrom('2026-11-01', 'quarterly', '2026-10-07')).toBe('2026-11-01');
   });
 });
+
+describe('premiums due on the 29th to 31st', () => {
+  it('returns to the real day after a short month when anchored', () => {
+    const feb = advanceDue('2026-01-31', 'monthly', 31);
+    expect(feb).toBe('2026-02-28');
+    expect(advanceDue(feb, 'monthly', 31)).toBe('2026-03-31');
+    expect(advanceDue('2026-03-31', 'monthly', 31)).toBe('2026-04-30');
+    expect(advanceDue('2026-04-30', 'monthly', 31)).toBe('2026-05-31');
+  });
+
+  it('without an anchor the day stays where it was moved (the old behaviour)', () => {
+    expect(advanceDue('2026-02-28', 'monthly')).toBe('2026-03-28');
+  });
+
+  it('yearly leap-day premiums come back to 29 Feb in leap years', () => {
+    const next = advanceDue('2028-02-29', 'yearly', 29);
+    expect(next).toBe('2029-02-28');
+    expect(advanceDue(next, 'yearly', 29)).toBe('2030-02-28');
+    expect(advanceDue('2031-02-28', 'yearly', 29)).toBe('2032-02-29');
+  });
+
+  it('resuming steps along the anchored day', async () => {
+    const { nextDueFrom, dayOf } = await import('./insurance');
+    expect(dayOf('2026-01-31')).toBe(31);
+    expect(nextDueFrom('2026-01-31', 'monthly', '2026-03-10', 31)).toBe('2026-03-31');
+  });
+});
