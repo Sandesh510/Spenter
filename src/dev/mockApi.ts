@@ -57,7 +57,9 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     return {
       month: '2026-10',
       openingPaise: 9240000,
-      decided: true,
+      // Open /?mock&undecided to see the starting-balance prompt with last month's closing balance suggested.
+      decided: !location.search.includes('undecided'),
+      suggestedOpening: location.search.includes('undecided') ? { month: '2026-09', paise: 2640000 } : null,
       hasOpening: true,
       incomePaise: 0,
       spendPaise: spend,

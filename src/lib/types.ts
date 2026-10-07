@@ -75,6 +75,8 @@ export interface HomeData {
   openingPaise: number;
   /** False until the user decides this month's starting balance (an amount, or none). */
   decided: boolean;
+  /** Last month's closing balance, offered as this month's starting balance. Null when none applies. */
+  suggestedOpening?: { month: string; paise: number } | null;
   hasOpening: boolean;
   incomePaise: number;
   spendPaise: number;

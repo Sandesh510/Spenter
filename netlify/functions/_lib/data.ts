@@ -6,6 +6,8 @@ import { postInsurance } from './insurance';
 import { billsStillDue, safeToSpend } from '../../../src/lib/safeToSpend';
 import { todayIST } from './input';
 import { selectAll } from './paged';
+import { shiftMonth } from '../../../src/lib/dates';
+import { suggestOpening } from '../../../src/lib/openingSuggestion';
 import { accountBalances, type BalanceLoan, type BalanceTxn } from '../../../src/lib/accountBalance';
 
 /**
@@ -64,19 +66,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   const openingPaise = openRes.data?.opening_paise ?? 0;
   const rows = txnRes.data ?? [];
 
-  const txns: Txn[] = rows.map(r => ({
-    id: r.id,
-    type: r.type,
-    amountPaise: r.amount_paise,
-    txnDate: r.txn_date,
-    categoryId: r.category_id ?? undefined,
-    bucket: r.category_id ? bucketOf.get(r.category_id) : undefined,
-    fromAccountId: r.account_id ?? undefined,
-    toAccountId: r.to_account_id ?? undefined,
-    external: r.external,
-    creditKind: r.credit_category === 'gone_back' ? 'returned' : r.credit_category === 'borrowed' ? 'borrowed' : 'income',
-    deletedAt: r.deleted_at,
-  }));
+  const txns: Txn[] = rows.map(r => toLedgerTxn(r, bucketOf));
 
   const totals = monthTotals({ month, openingPaise, txns, lentOutPaise });
 
@@ -158,6 +148,8 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     spendPaise: totals.spendPaise,
     savingsPaise: totals.savingsPaise,
     spendableBalancePaise: totals.spendableBalancePaise,
+    // Offered only while the month still has no starting-balance decision.
+    suggestedOpening: openRes.data === null ? await suggestedOpeningFor(admin, userId, month, bucketOf) : null,
     safeToSpendPaise: safeToSpend(totals.spendableBalancePaise, upcoming),
     upcomingBills: upcoming,
     moneyIn,
@@ -379,4 +371,70 @@ async function carryBudgetsForward(admin: SupabaseClient, userId: string, firstD
     { onConflict: 'user_id,category_id,month', ignoreDuplicates: true },
   );
   if (error) throw error;
+}
+
+type LedgerRow = {
+  id: string;
+  type: 'spend' | 'credit' | 'transfer';
+  amount_paise: number;
+  txn_date: string;
+  category_id: string | null;
+  account_id: string | null;
+  to_account_id: string | null;
+  external: boolean;
+  credit_category: string | null;
+  deleted_at: string | null;
+};
+
+/** One transaction row as the ledger reads it. Shared by Home and the closing-balance suggestion. */
+function toLedgerTxn(r: LedgerRow, bucketOf: Map<string, Bucket>): Txn {
+  return {
+    id: r.id,
+    type: r.type,
+    amountPaise: r.amount_paise,
+    txnDate: r.txn_date,
+    categoryId: r.category_id ?? undefined,
+    bucket: r.category_id ? bucketOf.get(r.category_id) : undefined,
+    fromAccountId: r.account_id ?? undefined,
+    toAccountId: r.to_account_id ?? undefined,
+    external: r.external,
+    creditKind: r.credit_category === 'gone_back' ? 'returned' : r.credit_category === 'borrowed' ? 'borrowed' : 'income',
+    deletedAt: r.deleted_at,
+  };
+}
+
+/**
+ * Last month's closing balance as a suggested starting balance for this month: its balance by the same
+ * rules as Home, offered only when last month had a starting balance and money is left (see suggestOpening).
+ */
+async function suggestedOpeningFor(
+  admin: SupabaseClient,
+  userId: string,
+  month: string,
+  bucketOf: Map<string, Bucket>,
+): Promise<{ month: string; paise: number } | null> {
+  const prev = shiftMonth(month, -1);
+  const { start, end, firstDay } = monthRange(prev);
+  const [openRes, txnRes, lentRes] = await Promise.all([
+    admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
+    admin
+      .from('spend_transactions')
+      .select('id,type,amount_paise,txn_date,category_id,account_id,to_account_id,external,credit_category,deleted_at')
+      .eq('user_id', userId)
+      .gte('txn_date', start)
+      .lt('txn_date', end)
+      .is('deleted_at', null),
+    admin.from('spend_lent_loans').select('amount_paise').eq('user_id', userId).gte('lent_on', start).lt('lent_on', end),
+  ]);
+  for (const r of [openRes, txnRes, lentRes]) if (r.error) throw r.error;
+
+  const hadOpening = openRes.data?.opening_paise != null;
+  const totals = monthTotals({
+    month: prev,
+    openingPaise: openRes.data?.opening_paise ?? 0,
+    txns: (txnRes.data ?? []).map(r => toLedgerTxn(r as LedgerRow, bucketOf)),
+    lentOutPaise: (lentRes.data ?? []).reduce((sum, l) => sum + l.amount_paise, 0),
+  });
+  const paise = suggestOpening({ hadOpening, closingPaise: totals.spendableBalancePaise });
+  return paise === null ? null : { month: prev, paise };
 }

@@ -18,6 +18,7 @@ const GROUPS: RuleGroup[] = [
       'Balance = starting balance + money in − spend − savings − transfers outside your accounts − money lent.',
       'Totals are always worked out from your entries. Edit or delete an entry and every total updates.',
       'Each month starts fresh. Set a starting balance once a month, or choose "none". Nothing carries over by itself.',
+      "When last month had a starting balance and money was left, you are offered that closing balance as the new starting balance. You can use it, type another amount, or choose none.",
       'Safe to spend = balance left to spend − subscriptions, SIPs, EMIs and insurance premiums still due this month. "Should I buy this?" checks against it.',
     ],
   },

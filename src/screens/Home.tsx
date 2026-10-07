@@ -58,7 +58,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
         </button>
       </div>
 
-      {!data.decided && <OpeningDecision token={token} month={month} onDone={reload} />}
+      {!data.decided && <OpeningDecision token={token} month={month} suggested={data.suggestedOpening ?? null} onDone={reload} />}
 
       <Card as="section" className="mt-12">
         <div className="flex ai-c jc-sb">
@@ -124,9 +124,9 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
 
 /**
  * Asked once per month: add a starting balance, or mark the month as having none.
- * Nothing carries over from the previous month, and Settings does not offer this again.
+ * Nothing carries over by itself: last month's closing balance is only offered, and the user chooses it.
  */
-function OpeningDecision({ token, month, onDone }: { token: string; month: string; onDone: () => void }) {
+function OpeningDecision({ token, month, suggested, onDone }: { token: string; month: string; suggested: { month: string; paise: number } | null; onDone: () => void }) {
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,9 +150,14 @@ function OpeningDecision({ token, month, onDone }: { token: string; month: strin
     <Card as="section" className="mt-12">
       <div className="kicker">Starting balance</div>
       <p className="fs-13 c-sec" style={{ margin: '6px 0 12px' }}>
-        Set a starting balance for {monthTitle(month)}, or choose none. Nothing carries over from the previous month.
+        Set a starting balance for {monthTitle(month)}, or choose none. {suggested ? 'Nothing carries over unless you choose it.' : 'Nothing carries over from the previous month.'}
       </p>
-      <form className="flex gap-8" onSubmit={e => { e.preventDefault(); decide({ amount }); }}>
+      {suggested && (
+        <Button block disabled={busy} onClick={() => decide({ amount: (suggested.paise / 100).toFixed(2) })}>
+          Use {formatINR(suggested.paise)} · {monthTitle(suggested.month).split(' ')[0]} closing balance
+        </Button>
+      )}
+      <form className={`flex gap-8${suggested ? ' mt-12' : ''}`} onSubmit={e => { e.preventDefault(); decide({ amount }); }}>
         <Input numeric inputMode="decimal" placeholder="Amount, e.g. 92400" value={amount} onChange={e => setAmount(e.target.value)} required aria-label="Starting balance" />
         <Button type="submit" size="sm" disabled={busy}>Save</Button>
       </form>
