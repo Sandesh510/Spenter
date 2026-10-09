@@ -1,11 +1,13 @@
 import { Button } from '../components/ui/Button';
-import { useEffect, useMemo, useState } from 'react';
+import { Input } from '../components/ui/Field';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { BUCKET_LABEL, BUCKET_TINT, categoryIcon } from '../lib/categories';
 import { currentMonth, dayLabel, monthTitle, shiftMonth } from '../lib/dates';
 import { formatINR } from '../lib/money';
+import { matchesSearch } from '../lib/logSearch';
 import { useApi } from '../lib/useApi';
 import { releaseSavedLogFilter, saveLogFilter, takeSavedLogFilter } from '../lib/logFilter';
 import type { Account, Bucket, Category, HomeData, TxnRow } from '../lib/types';
@@ -32,6 +34,11 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
     saveLogFilter({ month, categoryId, bucket, accountId });
   }, [month, categoryId, bucket, accountId]);
   const [selected, setSelected] = useState<TxnRow | null>(null);
+  const [query, setQuery] = useState('');
+  /** The entry just deleted, kept for a few seconds so the delete can be undone. */
+  const [undo, setUndo] = useState<{ txn: TxnRow; title: string } | null>(null);
+  const undoTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(undoTimer.current), []);
   const [error, setError] = useState<string | null>(null);
 
   const txns = useApi<{ items: TxnRow[] }>(`transactions?month=${month}`, token);
@@ -49,9 +56,10 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
       // A budget filter shows spends in that bucket's categories; credits and transfers have no bucket.
       if (bucket && categoryOf(t.category_id)?.bucket !== bucket) return false;
       if (accountId && t.account_id !== accountId && t.to_account_id !== accountId) return false;
+      if (query.trim() && !matchesSearch(query, { title: titleOf(t), category: categoryOf(t.category_id)?.name ?? '', account: accountName(t.account_id), description: t.description ?? t.reference, amountPaise: t.amount_paise })) return false;
       return true;
     });
-  }, [txns.data, categoryId, accountId, bucket, categories]);
+  }, [txns.data, categoryId, accountId, bucket, categories, query, accounts.data]);
 
   const groups = useMemo(() => {
     const byDate = new Map<string, TxnRow[]>();
@@ -64,15 +72,39 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
   }, [rows]);
 
   async function remove(t: TxnRow) {
-    if (!window.confirm('Delete this transaction? It will be hidden from totals.')) return;
+    // Automatic entries (EMI, SIP, subscription, premium) change a loan or a schedule when deleted and
+    // cannot be brought back, so those still ask first. Everything else is deleted at once with an Undo.
+    const automatic = Boolean(t.commitment_id || t.policy_id);
+    if (automatic && !window.confirm('This entry was posted automatically. Delete it? It will be hidden from totals.')) return;
     try {
       await api(`transactions?id=${t.id}`, { method: 'DELETE', token });
       haptic('warning');
       txns.reload();
       home.reload();
+      if (!automatic) {
+        window.clearTimeout(undoTimer.current);
+        setUndo({ txn: t, title: titleOf(t) });
+        undoTimer.current = window.setTimeout(() => setUndo(null), 7000);
+      }
     } catch (err) {
       haptic('error');
       setError(err instanceof Error ? err.message : 'Could not delete');
+    }
+  }
+
+  async function undoDelete() {
+    if (!undo) return;
+    const { txn } = undo;
+    window.clearTimeout(undoTimer.current);
+    setUndo(null);
+    try {
+      await api('transactions', { token, body: { action: 'restore', id: txn.id } });
+      haptic('success');
+      txns.reload();
+      home.reload();
+    } catch (err) {
+      haptic('error');
+      setError(err instanceof Error ? err.message : 'Could not bring it back');
     }
   }
 
@@ -87,6 +119,10 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
         <button className="iconbtn" onClick={() => go('quickadd')} aria-label="Add transaction">
           <Icon name="plus" size={17} />
         </button>
+      </div>
+
+      <div className="mt-12">
+        <Input type="search" aria-label="Search transactions" placeholder="Search notes, categories, amounts" value={query} onChange={e => setQuery(e.target.value)} />
       </div>
 
       <div className="chiprow" style={{ margin: '14px -18px 0', padding: '0 18px 2px' }}>
@@ -110,7 +146,7 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
       {(txns.error || error) && <p className="c-danger fs-13" role="alert">{txns.error ?? error}</p>}
 
       {groups.length === 0 && !txns.error && (
-        <p className="fs-13 c-sec mt-24">No transactions for this filter.</p>
+        <p className="fs-13 c-sec mt-24">{query.trim() ? `Nothing matches “${query.trim()}” here.` : 'No transactions for this filter.'}</p>
       )}
 
       {groups.map(g => (
@@ -151,6 +187,13 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
           })}
         </section>
       ))}
+
+      {undo && (
+        <div className="undo-bar" role="status">
+          <span className="undo-bar__text">Deleted {undo.title} · {formatINR(undo.txn.amount_paise)}</span>
+          <button className="link" onClick={undoDelete}>Undo</button>
+        </div>
+      )}
 
       {selected && (
         <div

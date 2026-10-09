@@ -113,6 +113,9 @@ export interface TxnRow {
   credit_category: 'salary' | 'gone_back' | 'others' | null;
   reference: string | null;
   lent_loan_id: string | null;
+  /** Set on entries posted automatically (EMI, SIP, subscription, insurance premium). */
+  commitment_id?: string | null;
+  policy_id?: string | null;
 }
 
 export interface Loan {

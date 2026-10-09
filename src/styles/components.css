@@ -545,3 +545,29 @@ li:last-child > .list-row {
 .auth-screen {
   padding: 56px 24px 24px;
 }
+
+/* "Deleted … Undo" bar, stuck above the bottom navigation while the delete can still be undone */
+.undo-bar {
+  position: sticky;
+  bottom: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 13px;
+}
+.undo-bar__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qa-repeat {
+  margin: 0 0 10px;
+}

@@ -6,7 +6,7 @@ import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
 import { restoreLoanAfterEmiDelete } from './_lib/commitments';
 
-const TXN_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id';
+const TXN_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id';
 const TYPES = ['spend', 'credit', 'transfer'] as const;
 const CREDIT_CATEGORIES = ['salary', 'gone_back', 'others', 'borrowed'] as const;
 type TxnType = (typeof TYPES)[number];
@@ -15,6 +15,7 @@ type TxnType = (typeof TYPES)[number];
  * GET    /transactions?month=YYYY-MM   → the month's live transactions
  * POST   /transactions                 → add a spend, money-in (credit) or transfer
  * PATCH  /transactions  { id, …fields } → replace a transaction's details (same rules as POST)
+ * POST   /transactions { action:'restore', id } → undo a delete (not for automatic EMI, SIP, subscription or premium entries)
  * DELETE /transactions?id=…            → soft delete (kept for history, excluded from totals)
  */
 export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin, userId, event }) => {
@@ -73,6 +74,21 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
       .is('deleted_at', null);
     if (error) throw error;
     if (!count) throw new HttpError(404, 'Transaction not found');
+    return json(200, { ok: true });
+  }
+
+  if (b.action === 'restore') {
+    const id = reqId(b, 'id');
+    const { error, count } = await admin
+      .from('spend_transactions')
+      .update({ deleted_at: null, updated_at: new Date().toISOString() }, { count: 'exact' })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .not('deleted_at', 'is', null)
+      .is('commitment_id', null)
+      .is('policy_id', null);
+    if (error) throw error;
+    if (!count) throw new HttpError(404, 'This entry cannot be brought back');
     return json(200, { ok: true });
   }
 

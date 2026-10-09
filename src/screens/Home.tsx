@@ -7,7 +7,8 @@ import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { formatINR } from '../lib/money';
 import { BUCKET_LABEL, categoryIcon } from '../lib/categories';
-import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth } from '../lib/dates';
+import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth, todayIST } from '../lib/dates';
+import { dailyAllowance } from '../lib/dailyAllowance';
 import { useApi } from '../lib/useApi';
 import type { Bucket, Category, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
 import { CategoryTile } from '../components/ui/CategoryTile';
@@ -370,12 +371,14 @@ function CardDue({ card, balancePaise, money, shown }: { card: NonNullable<HomeD
 function SafeToSpend({ safePaise, bills }: { safePaise: number; bills: NonNullable<HomeData['upcomingBills']> }) {
   const [open, setOpen] = useState(false);
   const total = bills.reduce((s, b) => s + b.amountPaise, 0);
+  const perDay = dailyAllowance(safePaise, todayIST());
   return (
     <div className="safe mt-12">
       <div className="flex ai-c jc-sb">
         <span className="fs-13 c-sec">Safe to spend</span>
         <span className={`num fs-18 ${safePaise < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(safePaise)}</span>
       </div>
+      {perDay && <p className="fs-12 c-sec m-0 mt-4">About <span className="num c-text">{formatINR(perDay.perDayPaise)}</span> a day for the {perDay.daysLeft === 1 ? 'last day' : `next ${perDay.daysLeft} days`}</p>}
       {bills.length === 0 ? (
         <p className="fs-12 c-mut m-0 mt-4">No more bills due this month.</p>
       ) : (

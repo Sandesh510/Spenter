@@ -36,7 +36,11 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
       profile: { theme: 'dark', lockEnabled: false },
       accounts: fixtures.accounts(new URLSearchParams()),
       'home?month=2026-10': fixtures.home(new URLSearchParams()),
-      'transactions?month=2026-10': { items: [] },
+      'transactions?month=2026-10': { items: [
+        { id: 't1', type: 'spend', amount_paise: 45_000, txn_date: '2026-10-08', description: 'Groceries', category_id: 'c0', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-10-08T10:00:00Z' },
+        { id: 't2', type: 'spend', amount_paise: 12_000, txn_date: '2026-10-07', description: null, category_id: 'c3', account_id: 'acc2', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-10-07T10:00:00Z' },
+        { id: 't3', type: 'spend', amount_paise: 64_900, txn_date: '2026-10-05', description: 'Netflix', category_id: 'c12', account_id: 'acc2', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-10-05T10:00:00Z', commitment_id: 'k1' },
+      ] },
       lent: { items: [{ id: 'l1', person_name: 'Ravi', amount_paise: 300_000, lent_on: '2026-10-02', note: 'Trip', settled_at: null, created_at: '2026-10-02T00:00:00Z', debit_account_id: 'acc2', outstanding_paise: 300_000 }] },
     },
   }),

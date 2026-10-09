@@ -190,7 +190,7 @@ export async function loadTransactions(admin: SupabaseClient, userId: string, mo
   const { start, end } = monthRange(month);
   const { data, error } = await admin
     .from('spend_transactions')
-    .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id')
+    .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id')
     .eq('user_id', userId)
     .is('deleted_at', null)
     .gte('txn_date', start)

@@ -13,6 +13,7 @@ import { categoryIcon } from '../lib/categories';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { currentMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
+import { recentCategories, repeatables, type Repeatable } from '../lib/recents';
 import type { Account, Bucket, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
@@ -42,6 +43,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
   const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
+  const month = useApi<{ items: TxnRow[] }>(`transactions?month=${currentMonth()}`, token);
   const defaultAccountId = useDefaultAccountId(token);
   // The default account comes first, so it is already selected.
   const firstId = pickAccount(accounts.data?.items ?? [], defaultAccountId);
@@ -55,6 +57,20 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
       return 0;
     }
   })();
+
+  // The latest spends this month: repeat one in a tap, or start from the categories used most recently.
+  const monthItems = month.data?.items ?? [];
+  const repeats = repeatables(monthItems).filter(r => home.data?.categories.some(c => c.id === r.categoryId));
+  const recentIds = recentCategories(monthItems).filter(id => home.data?.categories.some(c => c.id === id));
+
+  /** Fills in a recent entry and goes straight to the last step, so repeating it is two taps. */
+  function repeat(r: Repeatable) {
+    setAmount(String(r.amountPaise / 100));
+    setCategoryId(r.categoryId);
+    setDesc(r.description);
+    if (r.accountId && accounts.data?.items.some(a => a.id === r.accountId)) setAccountId(r.accountId);
+    setStep('details');
+  }
 
   function back() {
     if (step === 'amount') return go('log');
@@ -104,6 +120,21 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
       {step === 'amount' && (
         <>
           <p className="ta-c fs-13 c-sec qa-hint">{amountPaise > 0 ? 'Tap Continue when the amount is right.' : 'Type the amount'}</p>
+          {amountPaise === 0 && repeats.length > 0 && (
+            <fieldset className="chipset qa-repeat">
+              <legend className="kicker">Repeat a recent one</legend>
+              <div className="flex flex-wrap gap-8">
+                {repeats.map(r => {
+                  const name = home.data?.categories.find(c => c.id === r.categoryId)?.name ?? '';
+                  return (
+                    <button key={`${r.categoryId}-${r.amountPaise}-${r.description}`} type="button" className="chip" onClick={() => repeat(r)}>
+                      {formatINR(r.amountPaise)} · {r.description || name}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
           <Keypad fill onKey={k => setAmount(a => applyKey(a, k))} />
           <Button block disabled={amountPaise <= 0} onClick={() => setStep('details')} className="mt-12">
             Continue <Icon name="arrow-right" size={16} />
@@ -122,6 +153,23 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
       {step === 'details' && (
         <>
+          {recentIds.length > 0 && (
+            <fieldset className="chipset mt-12">
+              <legend className="kicker">Recent</legend>
+              <div className="flex flex-wrap gap-8">
+                {recentIds.map(id => {
+                  const c = home.data?.categories.find(x => x.id === id);
+                  if (!c) return null;
+                  return (
+                    <button key={id} type="button" className={`chip ${categoryId === id ? 'chip--on' : ''}`} aria-pressed={categoryId === id} onClick={() => setCategoryId(id)}>
+                      <span className="chip__inner"><Icon name={categoryIcon(c)} size={13} />{c.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
+
           {GROUPS.map(g => {
             const items = home.data?.categories.filter(c => c.bucket === g.bucket) ?? [];
             if (items.length === 0) return null;
