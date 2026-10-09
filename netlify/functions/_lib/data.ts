@@ -8,6 +8,8 @@ import { todayIST } from './input';
 import { selectAll } from './paged';
 import { shiftMonth } from '../../../src/lib/dates';
 import { suggestOpening } from '../../../src/lib/openingSuggestion';
+import { cardSummary } from '../../../src/lib/cardSummary';
+import { isCreditCard } from '../../../src/lib/accountTypes';
 import { accountBalances, type BalanceLoan, type BalanceTxn } from '../../../src/lib/accountBalance';
 
 /**
@@ -30,7 +32,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   await Promise.all([postDue(admin, userId, today), postInsurance(admin, userId, today), carryBudgetsForward(admin, userId, firstDay)]);
   const isCurrentMonth = today.slice(0, 7) === month;
 
-  const [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes] = await Promise.all([
+  const [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes, accountRes] = await Promise.all([
     admin.from('spend_categories').select('id,name,bucket,icon,sort_order').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
     admin.from('spend_budgets').select('category_id,planned_paise').eq('user_id', userId).eq('month', firstDay),
@@ -49,15 +51,16 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(4),
-    admin.from('spend_lent_loans').select('amount_paise').eq('user_id', userId).gte('lent_on', start).lt('lent_on', end),
+    admin.from('spend_lent_loans').select('amount_paise,debit_account_id').eq('user_id', userId).gte('lent_on', start).lt('lent_on', end),
     admin
       .from('spend_commitments')
       .select('name,kind,amount_paise,day_of_month,starts_on,active,outstanding_paise,tenure_remaining')
       .eq('user_id', userId)
       .eq('active', true),
     admin.from('spend_insurance_policies').select('name,premium_paise,next_due_on,active').eq('user_id', userId).eq('active', true),
+    admin.from('spend_accounts').select('id,kind').eq('user_id', userId),
   ]);
-  for (const r of [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes]) if (r.error) throw r.error;
+  for (const r of [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes, accountRes]) if (r.error) throw r.error;
   const lentOutPaise = (lentRes.data ?? []).reduce((s, l) => s + l.amount_paise, 0);
 
   const categories = (catRes.data as CategoryRow[]) ?? [];
@@ -153,6 +156,12 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     upcomingBills: upcoming,
     moneyIn,
     moneyOut,
+    // Credit card use this month, so Home can show what is in the accounts before the card is paid.
+    card: cardSummary(
+      new Set((accountRes.data ?? []).filter(a => isCreditCard(a.kind)).map(a => a.id as string)),
+      rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, toAccountId: r.to_account_id, external: r.external })),
+      (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
+    ),
     categories: categoryRows,
     buckets,
     recent: rows.slice(0, 10).map(r => ({

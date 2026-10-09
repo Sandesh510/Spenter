@@ -55,6 +55,8 @@ const GROUPS: RuleGroup[] = [
     title: 'Transfers and credit cards',
     icon: 'arrow-left-right',
     rules: [
+      'Home shows credit card use for the month: In your accounts = balance left to spend + card bill still to pay. Left after the card bill is the balance itself, because card use is already taken out of it.',
+      'Card bill still to pay = what went on cards this month (spend, savings, money lent) less bill payments made this month. It is never below zero.',
       'A transfer between your own accounts does not change your balance.',
       'A transfer to someone outside your accounts counts as money out.',
       'Card purchases count as spend on the day you buy, against their category.',

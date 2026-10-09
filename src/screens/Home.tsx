@@ -75,6 +75,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
           <span>Started <span className="c-text">{data.hasOpening ? formatINR(data.openingPaise) : 'none'}</span></span>
           <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
         </div>
+        {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} />}
         {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
 
@@ -302,6 +303,25 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
         </ul>
       </Card>
     </section>
+  );
+}
+
+/**
+ * The same money seen from the accounts: what they hold before the card bill, the card bill itself,
+ * and what is left once it is paid. Balance left to spend already has the card use taken out.
+ */
+function CardDue({ card, balancePaise }: { card: NonNullable<HomeData['card']>; balancePaise: number }) {
+  return (
+    <div className="safe mt-12">
+      <h2 className="fs-13 c-sec m-0">Credit card this month</h2>
+      <dl className="num grid gap-4 fs-13 m-0 mt-8">
+        <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{formatINR(balancePaise + card.duePaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">Spent on card{card.paidPaise > 0 ? ` (${formatINR(card.paidPaise)} paid)` : ''}</dt><dd className="m-0">{formatINR(card.spentPaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">Card bill still to pay</dt><dd className="m-0">{formatINR(card.duePaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-text">Left after the card bill</dt><dd className={`m-0 ${balancePaise < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(balancePaise)}</dd></div>
+      </dl>
+      {card.duePaise > 0 && <p className="fs-12 c-mut m-0 mt-8">The bill can be paid from next month’s money. It is already taken out of the balance above.</p>}
+    </div>
   );
 }
 

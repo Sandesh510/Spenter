@@ -72,6 +72,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
       ],
       moneyIn: { totalPaise: 6000000, incomePaise: 6000000, salaryPaise: 6000000, goneBackPaise: 0, borrowedPaise: 0, othersPaise: 0 },
       moneyOut: { totalPaise: spend + savings, spendPaise: spend, savingsPaise: savings, outsidePaise: 0, lentPaise: 0 },
+      card: { spentPaise: 1_200_000, paidPaise: 0, duePaise: 1_200_000 },
       categories: cats,
       buckets: (['need', 'want', 'save'] as const).map(b => ({ bucket: b, plannedPaise: sum(b, 'plannedPaise'), spentPaise: sum(b, 'spentPaise'), hasBudget: true })),
       recent: [],
