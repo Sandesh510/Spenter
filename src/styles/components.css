@@ -629,3 +629,7 @@ li:last-child > .list-row {
   min-width: 0;
   color: var(--color-text-primary);
 }
+
+.nw-total {
+  line-height: 1.05;
+}

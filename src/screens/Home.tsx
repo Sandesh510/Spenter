@@ -9,6 +9,7 @@ import { formatINR } from '../lib/money';
 import { BUCKET_LABEL, categoryIcon } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth, todayIST } from '../lib/dates';
 import { dailyAllowance } from '../lib/dailyAllowance';
+import { useAmountsShown } from '../lib/amountVisibility';
 import { budgetAlerts, type BudgetAlert } from '../lib/budgetAlerts';
 import { dismissAlert, isDismissed } from '../lib/alertDismissals';
 import { useApi } from '../lib/useApi';
@@ -17,14 +18,8 @@ import { CategoryTile } from '../components/ui/CategoryTile';
 import { Badge } from '../components/ui/Badge';
 import { InsuranceReminders } from './Insurance';
 import { SavingsCard } from './Savings';
+import { NetWorthCard } from './NetWorth';
 import type { Route } from '../App';
-
-/**
- * Whether the balance, starting balance and credit card amounts show. Hidden whenever the app opens, so a
- * glance at the screen reveals nothing; the eye button shows them. Spent and Safe to spend always show. Kept here, not in storage, so a reload hides them again.
- */
-let amountsShown = false;
-const HIDDEN = '₹ ••••••';
 
 /**
  * Home, per screens/ScreenHome.dc.html. Bucket colour rules come from the README.
@@ -38,12 +33,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
 }) {
   const today = currentMonth();
   const [month, setMonth] = useState(today);
-  const [shown, setShown] = useState(amountsShown);
-  const money = (paise: number) => (shown ? formatINR(paise) : HIDDEN);
-  const toggleShown = () => {
-    amountsShown = !shown;
-    setShown(amountsShown);
-  };
+  const [shown, toggleShown, money] = useAmountsShown();
   const isCurrent = month === today;
   const { data, error, reload } = useApi<HomeData>(`home?month=${month}`, token);
   const insurance = useApi<{ items: InsurancePolicy[] }>('insurance', token);
@@ -113,6 +103,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
 
       <CommitmentsCard token={token} onOpen={() => go('commitments')} />
       <SavingsCard token={token} onOpen={() => go('savings')} />
+      <NetWorthCard token={token} onOpen={() => go('networth')} />
 
       <InsuranceReminders policies={insurance.data?.items ?? []} onOpen={() => go('commitments')} />
 

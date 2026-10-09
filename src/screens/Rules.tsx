@@ -83,6 +83,17 @@ const GROUPS: RuleGroup[] = [
     ],
   },
   {
+    title: 'Net worth',
+    icon: 'landmark',
+    rules: [
+      'Net worth = what you hold less what you owe. It is hidden until you tap the eye, like the balance.',
+      'Held: account balances above zero, savings plans (the amount saved), and money lent that is still to come back.',
+      'Owed: what credit cards owe, loans you are paying off by EMI (what is left to repay), and any other account below zero.',
+      'Only accounts with an opening balance have a balance to count. Others are listed as not counted until you set one.',
+      'Savings leave the account they are paid from, so a savings plan and that account are never counted twice.',
+    ],
+  },
+  {
     title: 'Commitments',
     icon: 'repeat',
     rules: [
