@@ -37,15 +37,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     admin.from('spend_categories').select('id,name,bucket,icon,sort_order').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
     admin.from('spend_budgets').select('category_id,planned_paise').eq('user_id', userId).eq('month', firstDay),
-    admin
-      .from('spend_transactions')
-      .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,deleted_at,created_at,credit_category,reference,lent_loan_id')
-      .eq('user_id', userId)
-      .gte('txn_date', start)
-      .lt('txn_date', end)
-      .is('deleted_at', null)
-      .order('txn_date', { ascending: false })
-      .order('created_at', { ascending: false }),
+    selectMonthTxns<any>(admin, userId, start, end, 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,deleted_at,created_at,credit_category,reference,lent_loan_id').then(data => ({ data, error: null })),
     admin
       .from('spend_asks')
       .select('id,item,amount_paise,category_id,decision')
@@ -185,21 +177,35 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   };
 }
 
+/**
+ * Every live transaction in [start, end), newest first. Read a page at a time, because the database
+ * returns at most 1000 rows per request and a month cut short would give wrong totals.
+ */
+export function selectMonthTxns<T>(admin: SupabaseClient, userId: string, start: string, end: string, columns: string): Promise<T[]> {
+  return selectAll<T>((from, to) =>
+    admin
+      .from('spend_transactions')
+      .select(columns)
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .gte('txn_date', start)
+      .lt('txn_date', end)
+      .order('txn_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to) as unknown as PromiseLike<{ data: T[] | null; error: unknown }>,
+  );
+}
+
 /** Live transactions for one month, newest first. */
 export async function loadTransactions(admin: SupabaseClient, userId: string, month: string) {
   const { start, end } = monthRange(month);
-  const { data, error } = await admin
-    .from('spend_transactions')
-    .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id')
-    .eq('user_id', userId)
-    .is('deleted_at', null)
-    .gte('txn_date', start)
-    .lt('txn_date', end)
-    .order('txn_date', { ascending: false })
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return { items: data ?? [] };
+  const items = await selectMonthTxns(admin, userId, start, end, TXN_LIST_COLUMNS);
+  return { items };
 }
+
+/** Columns the Log and Quick Add read. */
+export const TXN_LIST_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id';
 
 interface AccountRow {
   id: string;

@@ -5,6 +5,7 @@ import { assertOwned, dateOrToday, optStr, readJson, reqId, reqStr } from './_li
 import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
 import { restoreLoanAfterEmiDelete } from './_lib/commitments';
+import { selectMonthTxns } from './_lib/data';
 
 const TXN_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id';
 const TYPES = ['spend', 'credit', 'transfer'] as const;
@@ -22,17 +23,8 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
   if (event.httpMethod === 'GET') {
     const month = parseMonth(event.queryStringParameters?.month);
     const { start, end } = monthRange(month);
-    const { data, error } = await admin
-      .from('spend_transactions')
-      .select(TXN_COLUMNS)
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .gte('txn_date', start)
-      .lt('txn_date', end)
-      .order('txn_date', { ascending: false })
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    return json(200, { items: data ?? [] });
+    const items = await selectMonthTxns(admin, userId, start, end, TXN_COLUMNS);
+    return json(200, { items });
   }
 
   if (event.httpMethod === 'DELETE') {

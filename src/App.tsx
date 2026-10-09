@@ -6,7 +6,7 @@ import { Icon } from './components/Icon';
 import { IDLE_LOCK_MS, isStillActive, touchActive, getLastActive } from './lib/prefs';
 import { api, ApiError } from './lib/api';
 import { readSession, writeSession, type Session } from './lib/session';
-import { cache, isStale, refreshAll, restoreSnapshot, type Bootstrap, type User } from './lib/cache';
+import { cache, isStale, refreshAll, refreshInBackground, restoreSnapshot, type Bootstrap, type User } from './lib/cache';
 import type { Bucket, Profile, TxnRow } from './lib/types';
 import { Ask } from './screens/Ask';
 import { Home } from './screens/Home';
@@ -15,6 +15,7 @@ import { Commitments } from './screens/Commitments';
 import { Rules } from './screens/Rules';
 import { Savings } from './screens/Savings';
 import { ResetPassword } from './screens/ResetPassword';
+import { useRefreshFailed } from './lib/useApi';
 import { Import } from './screens/Import';
 import { Lock } from './screens/Lock';
 import { Log } from './screens/Log';
@@ -82,6 +83,7 @@ export function App() {
   const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+  const staleTotals = useRefreshFailed();
 
   // Startup: paint the last snapshot at once, then refresh everything in one request.
   // Only a rejected session (401) signs the user out; a network failure keeps the cached data.
@@ -257,6 +259,12 @@ export function App() {
       {route === 'savings' && <Savings token={token} go={go} onToast={showToast} />}
 
       {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}
+      {staleTotals && (
+        <div className="notice-bar" role="status">
+          <span>Totals may be out of date.</span>
+          <button className="link" onClick={() => refreshInBackground(token)}>Retry</button>
+        </div>
+      )}
       {toast && <div className="toast" role="status">{toast}</div>}
     </Frame>
   );

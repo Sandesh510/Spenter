@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { api } from './api';
-import { cache, refreshAll } from './cache';
+import { cache, refreshAll, refreshFailed } from './cache';
 
 /**
  * Reads a cached endpoint. Data comes from the bootstrap cache when present, so screens render at once.
@@ -38,4 +38,9 @@ export function useApi<T>(path: string | null, token: string) {
   }, [token]);
 
   return { data: data ?? null, error, reload };
+}
+
+/** True when totals on screen may be old because a refresh after a save failed. */
+export function useRefreshFailed(): boolean {
+  return useSyncExternalStore(cache.subscribe, refreshFailed, () => false);
 }

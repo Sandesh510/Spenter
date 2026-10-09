@@ -102,6 +102,7 @@ export async function refreshAll(token: string): Promise<Bootstrap> {
   // Anything bootstrap does not carry (commitments, insurance, savings, older months) may have changed too.
   for (const key of Object.keys(data)) if (!(key in rest)) stale.add(key);
   version += 1;
+  refreshFailedFlag = false;
   cache.prime(rest);
   lastRefreshed = Date.now();
   writeSnapshot({ user: boot.user, profile, data: rest, savedAt: lastRefreshed });
@@ -118,6 +119,15 @@ export function restoreSnapshot(): Snapshot | null {
   return snap;
 }
 
+let refreshFailedFlag = false;
+function setRefreshFailed(v: boolean) {
+  if (refreshFailedFlag === v) return;
+  refreshFailedFlag = v;
+  emit();
+}
+/** True when a refresh after a save failed twice, so the totals on screen may be old. */
+export const refreshFailed = (): boolean => refreshFailedFlag;
+
 let background: Promise<unknown> | null = null;
 let again = false;
 
@@ -125,13 +135,17 @@ let again = false;
  * Refreshes everything without making the caller wait: a save shows its result at once and the totals
  * catch up a moment later. Calls made while one is running are folded into one more refresh after it.
  */
-export function refreshInBackground(token: string): void {
+export function refreshInBackground(token: string, retried = false): void {
   if (background) {
     again = true;
     return;
   }
   background = refreshAll(token)
-    .catch(() => {})
+    .catch(() => {
+      // One quiet retry; after that the app says the totals may be out of date.
+      if (!retried) window.setTimeout(() => refreshInBackground(token, true), 4000);
+      else setRefreshFailed(true);
+    })
     .finally(() => {
       background = null;
       if (again) {
