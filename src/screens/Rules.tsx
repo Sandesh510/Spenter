@@ -15,6 +15,7 @@ const GROUPS: RuleGroup[] = [
     title: 'Balance left to spend',
     icon: 'indian-rupee',
     rules: [
+      'Home hides the balance, the starting balance and the credit card amounts whenever the app opens. Tap the eye to show them. Spent and Safe to spend are always shown.',
       'Balance = starting balance + money in − spend − savings − transfers outside your accounts − money lent.',
       'Totals are always worked out from your entries. Edit or delete an entry and every total updates.',
       'Each month starts fresh. Set a starting balance once a month, or choose "none". Nothing carries over by itself.',

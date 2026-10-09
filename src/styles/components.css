@@ -454,3 +454,9 @@ li:last-child > .list-row {
 .chipset > legend {
   padding: 0;
 }
+
+/* A smaller round icon button, for a control inside a card header */
+.iconbtn.iconbtn--sm {
+  width: 30px;
+  height: 30px;
+}

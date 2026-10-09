@@ -17,6 +17,13 @@ import { SavingsCard } from './Savings';
 import type { Route } from '../App';
 
 /**
+ * Whether the balance, starting balance and credit card amounts show. Hidden whenever the app opens, so a
+ * glance at the screen reveals nothing; the eye button shows them. Spent and Safe to spend always show. Kept here, not in storage, so a reload hides them again.
+ */
+let amountsShown = false;
+const HIDDEN = '₹ ••••••';
+
+/**
  * Home, per screens/ScreenHome.dc.html. Bucket colour rules come from the README.
  * The month can be stepped back to earlier months; the current month cannot be passed.
  */
@@ -28,6 +35,12 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
 }) {
   const today = currentMonth();
   const [month, setMonth] = useState(today);
+  const [shown, setShown] = useState(amountsShown);
+  const money = (paise: number) => (shown ? formatINR(paise) : HIDDEN);
+  const toggleShown = () => {
+    amountsShown = !shown;
+    setShown(amountsShown);
+  };
   const isCurrent = month === today;
   const { data, error, reload } = useApi<HomeData>(`home?month=${month}`, token);
   const insurance = useApi<{ items: InsurancePolicy[] }>('insurance', token);
@@ -63,19 +76,21 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
       <Card as="section" className="mt-12">
         <div className="flex ai-c jc-sb">
           <span className="fs-12 c-sec">Balance left to spend</span>
-          <span className="c-mut"><Icon name="info" size={15} /></span>
+          <button className="iconbtn iconbtn--sm" onClick={toggleShown} aria-pressed={shown} aria-label={shown ? 'Hide amounts' : 'Show amounts'}>
+            <Icon name={shown ? 'eye' : 'eye-off'} size={15} />
+          </button>
         </div>
-        <div className="heading num fs-44" style={{ lineHeight: 1, margin: '8px 0 14px', color: data.spendableBalancePaise < 0 ? 'var(--color-danger)' : 'var(--color-text-primary)' }}>
-          {formatINR(data.spendableBalancePaise)}
+        <div className="heading num fs-44" style={{ lineHeight: 1, margin: '8px 0 14px', color: shown && data.spendableBalancePaise < 0 ? 'var(--color-danger)' : 'var(--color-text-primary)' }}>
+          {money(data.spendableBalancePaise)}
         </div>
         <div className="track">
           <div className="fill" style={{ width: `${progress * 100}%` }} />
         </div>
         <div className="num flex jc-sb fs-12 c-sec" style={{ marginTop: 9 }}>
-          <span>Started <span className="c-text">{data.hasOpening ? formatINR(data.openingPaise) : 'none'}</span></span>
+          <span>Started <span className="c-text">{data.hasOpening ? money(data.openingPaise) : 'none'}</span></span>
           <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
         </div>
-        {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} />}
+        {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} />}
         {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
 
@@ -310,15 +325,15 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
  * The same money seen from the accounts: what they hold before the card bill, the card bill itself,
  * and what is left once it is paid. Balance left to spend already has the card use taken out.
  */
-function CardDue({ card, balancePaise }: { card: NonNullable<HomeData['card']>; balancePaise: number }) {
+function CardDue({ card, balancePaise, money, shown }: { card: NonNullable<HomeData['card']>; balancePaise: number; money: (p: number) => string; shown: boolean }) {
   return (
     <div className="safe mt-12">
       <h2 className="fs-13 c-sec m-0">Credit card this month</h2>
       <dl className="num grid gap-4 fs-13 m-0 mt-8">
-        <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{formatINR(balancePaise + card.duePaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-sec">Spent on card{card.paidPaise > 0 ? ` (${formatINR(card.paidPaise)} paid)` : ''}</dt><dd className="m-0">{formatINR(card.spentPaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-sec">Card bill still to pay</dt><dd className="m-0">{formatINR(card.duePaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-text">Left after the card bill</dt><dd className={`m-0 ${balancePaise < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(balancePaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{money(balancePaise + card.duePaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">Spent on card{card.paidPaise > 0 ? ` (${money(card.paidPaise)} paid)` : ''}</dt><dd className="m-0">{money(card.spentPaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">Card bill still to pay</dt><dd className="m-0">{money(card.duePaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-text">Left after the card bill</dt><dd className={`m-0 ${shown && balancePaise < 0 ? 'c-danger' : 'c-text'}`}>{money(balancePaise)}</dd></div>
       </dl>
       {card.duePaise > 0 && <p className="fs-12 c-mut m-0 mt-8">The bill can be paid from next month’s money. It is already taken out of the balance above.</p>}
     </div>
