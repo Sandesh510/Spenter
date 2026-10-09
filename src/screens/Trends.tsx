@@ -45,7 +45,7 @@ export function Trends({ token }: { token: string }) {
 
       <MoneyFlow moneyIn={data.moneyIn} moneyOut={data.moneyOut} />
 
-      {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CreditCardSection card={data.card} categories={data.categories} />}
+      {data.card && (data.card.spentPaise > 0 || data.card.duePaise > 0) && <CreditCardSection card={data.card} categories={data.categories} />}
 
       <Card className="flex ai-c gap-18 mt-16" as="section" style={{ padding: 18 }}>
         <div className="rel flex-none" style={{ width: 120, height: 120 }}>
@@ -223,7 +223,8 @@ function CreditCardSection({ card, categories }: { card: NonNullable<HomeData['c
         <h2 id="card-trend" className="kicker kicker--spaced m-0">Credit card</h2>
         <span className="num fs-18">{formatINR(card.spentPaise)}</span>
       </div>
-      <p className="fs-12 c-sec m-0 mt-2">used on cards this month{card.duePaise !== card.spentPaise ? ` · ${formatINR(card.duePaise)} bill still to pay` : ''}</p>
+      <p className="fs-12 c-sec m-0 mt-2">spent on cards this month{card.duePaise !== card.spentPaise ? ` · ${formatINR(card.duePaise)} bill still to pay` : ''}</p>
+      {(card.otherPaise ?? 0) > 0 && <p className="fs-12 c-mut m-0 mt-2">Not counted: {formatINR(card.otherPaise ?? 0)} lent or moved out of a card. It is on the bill but it is not spending.</p>}
       {rows.length > 0 && (
         <ul className="list-reset grid gap-10 mt-12" aria-label="Top categories on card">
           {rows.map(r => (

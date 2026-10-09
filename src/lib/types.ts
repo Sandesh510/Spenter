@@ -91,7 +91,7 @@ export interface HomeData {
   moneyIn: MoneyIn;
   moneyOut: MoneyOut;
   /** Credit card use this month. Missing in older cached data; null when there is no card account. */
-  card?: { spentPaise: number; paidPaise: number; duePaise: number; byCategoryPaise?: Record<string, number> } | null;
+  card?: { spentPaise: number; otherPaise?: number; paidPaise: number; duePaise: number; byCategoryPaise?: Record<string, number> } | null;
   /** Money out by account this month, largest first. Missing in older cached data. */
   byAccount?: { accountId: string; paise: number }[];
   categories: Category[];

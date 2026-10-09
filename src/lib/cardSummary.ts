@@ -7,6 +7,9 @@
  *
  *   in your accounts = balance left to spend + card still to pay
  *
+ * Spending and borrowing are kept apart. Money lent from a card, or moved out of it to someone, is owed
+ * on the bill but is not spending, so it never counts as card spend (Trends), even after it has come back.
+ *
  * This is worked out for one month at a time: entries on the card this month, less bill payments
  * made this month. It never goes below zero, so paying last month's bill does not add money.
  */
@@ -26,13 +29,15 @@ export interface CardLoan {
 }
 
 export interface CardSummary {
-  /** Put on cards this month: spend, savings, money lent and transfers out. */
+  /** Spent on cards this month: spend and savings entries only. */
   spentPaise: number;
+  /** Owed on the bill but not spending: money lent from a card, and money moved out of a card. */
+  otherPaise: number;
   /** Card bill payments this month (transfers into a card account). */
   paidPaise: number;
-  /** Still to pay: spent less paid, never below zero. */
+  /** Still to pay: spent plus other, less paid, never below zero. */
   duePaise: number;
-  /** Card spend by category id (spend and savings entries only), for Trends. */
+  /** Card spend by category id, for Trends. */
   byCategoryPaise: Record<string, number>;
 }
 
@@ -42,6 +47,7 @@ export function cardSummary(cardIds: Set<string>, txns: CardTxn[], loans: CardLo
   const onCard = (id: string | null) => id !== null && cardIds.has(id);
 
   let spent = 0;
+  let other = 0;
   let paid = 0;
   const byCategory: Record<string, number> = {};
   for (const t of txns) {
@@ -50,11 +56,11 @@ export function cardSummary(cardIds: Set<string>, txns: CardTxn[], loans: CardLo
       if (t.categoryId) byCategory[t.categoryId] = (byCategory[t.categoryId] ?? 0) + t.amountPaise;
     } else if (t.type === 'transfer') {
       if (onCard(t.toAccountId) && !onCard(t.accountId)) paid += t.amountPaise;
-      // Money moved out of a card (a cash advance, or a payment to someone) is owed too.
-      else if (onCard(t.accountId) && !onCard(t.toAccountId)) spent += t.amountPaise;
+      // Money moved out of a card (a cash advance, or a payment to someone) is owed too, but it is not spending.
+      else if (onCard(t.accountId) && !onCard(t.toAccountId)) other += t.amountPaise;
     }
   }
-  for (const l of loans) if (onCard(l.debitAccountId)) spent += l.amountPaise;
+  for (const l of loans) if (onCard(l.debitAccountId)) other += l.amountPaise;
 
-  return { spentPaise: spent, paidPaise: paid, duePaise: Math.max(0, spent - paid), byCategoryPaise: byCategory };
+  return { spentPaise: spent, otherPaise: other, paidPaise: paid, duePaise: Math.max(0, spent + other - paid), byCategoryPaise: byCategory };
 }

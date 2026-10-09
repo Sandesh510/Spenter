@@ -11,11 +11,12 @@ describe('cardSummary', () => {
   });
 
   it('counts card spend and ignores other accounts', () => {
-    expect(cardSummary(card, [spend(1_200_000, 'card'), spend(50_000, 'bank')], [])).toEqual({ spentPaise: 1_200_000, paidPaise: 0, duePaise: 1_200_000, byCategoryPaise: {} });
+    expect(cardSummary(card, [spend(1_200_000, 'card'), spend(50_000, 'bank')], [])).toEqual({ spentPaise: 1_200_000, otherPaise: 0, paidPaise: 0, duePaise: 1_200_000, byCategoryPaise: {} });
   });
 
-  it('counts money lent from the card', () => {
-    expect(cardSummary(card, [], [{ amountPaise: 300_000, debitAccountId: 'card' }, { amountPaise: 90_000, debitAccountId: 'bank' }])?.spentPaise).toBe(300_000);
+  it('money lent from the card is owed on the bill but is not card spend', () => {
+    const s = cardSummary(card, [spend(100_000, 'card')], [{ amountPaise: 8_400_000, debitAccountId: 'card' }, { amountPaise: 90_000, debitAccountId: 'bank' }]);
+    expect(s).toMatchObject({ spentPaise: 100_000, otherPaise: 8_400_000, duePaise: 8_500_000 });
   });
 
   it('groups card spend by category and leaves other accounts out', () => {
@@ -25,7 +26,7 @@ describe('cardSummary', () => {
 
   it('a bill payment reduces what is still to pay', () => {
     const s = cardSummary(card, [spend(1_000_000, 'card'), transfer(400_000, 'bank', 'card')], []);
-    expect(s).toEqual({ spentPaise: 1_000_000, paidPaise: 400_000, duePaise: 600_000, byCategoryPaise: {} });
+    expect(s).toEqual({ spentPaise: 1_000_000, otherPaise: 0, paidPaise: 400_000, duePaise: 600_000, byCategoryPaise: {} });
   });
 
   it('paying more than this month spent never goes below zero', () => {
@@ -33,7 +34,7 @@ describe('cardSummary', () => {
   });
 
   it('money moved out of a card is owed, a card-to-card transfer is not', () => {
-    expect(cardSummary(card, [transfer(200_000, 'card', 'bank'), transfer(50_000, 'card', null, true)], [])?.spentPaise).toBe(250_000);
-    expect(cardSummary(new Set(['card', 'card2']), [transfer(200_000, 'card', 'card2')], [])?.spentPaise).toBe(0);
+    expect(cardSummary(card, [transfer(200_000, 'card', 'bank'), transfer(50_000, 'card', null, true)], [])).toMatchObject({ spentPaise: 0, otherPaise: 250_000, duePaise: 250_000 });
+    expect(cardSummary(new Set(['card', 'card2']), [transfer(200_000, 'card', 'card2')], [])?.duePaise).toBe(0);
   });
 });
