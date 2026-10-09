@@ -26,6 +26,9 @@ export interface Account {
   balance_paise?: number | null;
   /** Credit cards only: the card limit. Null when not set. */
   credit_limit_paise?: number | null;
+  /** Credit cards: the day of the month the statement is generated, and the day its payment is due. */
+  statement_day?: number | null;
+  due_day?: number | null;
 }
 
 export interface HomeBucket {
@@ -173,6 +176,9 @@ export interface Profile {
   lockEnabled: boolean;
   /** The account new entries start with. Missing in profiles cached by older versions. */
   defaultAccountId?: string | null;
+  /** A rough monthly income and the day of the month it arrives, for the cash outlook. */
+  expectedIncomePaise?: number | null;
+  incomeDay?: number | null;
 }
 
 export interface SavingsPlan {

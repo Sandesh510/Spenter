@@ -1,8 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import { authed } from './_lib/handler';
-import { assertOwned, readJson, reqId, reqStr } from './_lib/input';
+import { assertOwned, dayField, readJson, reqId, reqStr } from './_lib/input';
 import { HttpError, json } from './_lib/response';
 import { hashPin, verifyPin } from './_lib/pin';
+import { profileView } from './_lib/data';
+import { parseRupeesToPaise } from '../../src/lib/money';
 
 const PIN = /^\d{4}$/;
 const MAX_PIN_FAILURES = 5;
@@ -12,6 +14,7 @@ const LOCK_MINUTES = 15;
  * GET   /profile                    → theme and whether the passcode lock is on
  * PATCH /profile { theme }          → 'dark' | 'light'
  * PATCH /profile { defaultAccountId } → the account new entries start with; null clears it
+ * PATCH /profile { expectedIncome, incomeDay } → a rough monthly income and the day it arrives; '' clears the income
  * PATCH /profile { pin } | { clearPin: true }
  * POST  /profile { action:'unlock', pin } → { ok } — the PIN hash never leaves the server
  */
@@ -19,11 +22,12 @@ export const handler = authed(['GET', 'PATCH', 'POST'], async ({ admin, userId, 
   if (event.httpMethod === 'GET') {
     const { data, error } = await admin
       .from('spend_profiles')
-      .select('theme,lock_hash,default_account_id')
+      // Every column, so a database that has not had migration 0014 yet still answers.
+      .select('*')
       .eq('user_id', userId)
       .single();
     if (error) throw error;
-    return json(200, { theme: data.theme, lockEnabled: data.lock_hash !== null, defaultAccountId: data.default_account_id });
+    return json(200, profileView(data));
   }
 
   const b = readJson(event.body);
@@ -77,6 +81,25 @@ export const handler = authed(['GET', 'PATCH', 'POST'], async ({ admin, userId, 
     const { error } = await admin.from('spend_profiles').update({ default_account_id: id }).eq('user_id', userId);
     if (error) throw error;
     return json(200, { ok: true, defaultAccountId: id });
+  }
+
+  if (b.expectedIncome !== undefined || b.incomeDay !== undefined) {
+    const patch: Record<string, unknown> = {};
+    if (b.expectedIncome !== undefined) {
+      const raw = typeof b.expectedIncome === 'string' ? b.expectedIncome.trim() : String(b.expectedIncome);
+      if (raw === '') patch.expected_income_paise = null;
+      else {
+        try {
+          patch.expected_income_paise = parseRupeesToPaise(raw);
+        } catch (err) {
+          throw new HttpError(400, err instanceof Error ? err.message : 'Invalid income');
+        }
+      }
+    }
+    if (b.incomeDay !== undefined) patch.income_day = dayField(b.incomeDay, 'incomeDay');
+    const { error } = await admin.from('spend_profiles').update(patch).eq('user_id', userId);
+    if (error) throw error;
+    return json(200, { ok: true });
   }
 
   if (b.theme !== undefined) {

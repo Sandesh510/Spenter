@@ -45,7 +45,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     },
   }),
   me: () => ({ id: 'mock-user', email: 'demo@example.com' }),
-  profile: () => ({ theme: 'dark', lockEnabled: false }),
+  profile: () => ({ theme: 'dark', lockEnabled: false, expectedIncomePaise: 6_000_000, incomeDay: 1 }),
   home: () => {
     const cats = categories.map(([name, bucket, plan, spent], i) => ({
       id: `c${i}`,
@@ -91,7 +91,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
   accounts: () => ({
     items: [
       { id: 'acc1', nickname: 'Salary', bank: 'HDFC Bank', kind: 'Debit', icon: 'wallet', position: 0, opening_balance_paise: 8_500_000, opening_balance_on: '2026-10-01', balance_paise: 6_412_550 },
-      { id: 'acc2', nickname: 'Rewards', bank: 'ICICI', kind: 'Credit card', icon: 'credit-card', position: 1, opening_balance_paise: -1_200_000, opening_balance_on: '2026-10-01', balance_paise: -1_864_900, credit_limit_paise: 10_000_000 },
+      { id: 'acc2', nickname: 'Rewards', bank: 'ICICI', kind: 'Credit card', icon: 'credit-card', position: 1, opening_balance_paise: -1_200_000, opening_balance_on: '2026-10-01', balance_paise: -1_864_900, credit_limit_paise: 10_000_000, statement_day: 5, due_day: 25 },
       { id: 'acc3', nickname: 'Cash', bank: 'Wallet', kind: 'Cash', icon: 'banknote', position: 2, opening_balance_paise: null, opening_balance_on: null, balance_paise: null },
       { id: 'acc4', nickname: 'Paytm', bank: 'Paytm', kind: 'UPI wallet', icon: 'smartphone', position: 3, opening_balance_paise: 50_000, opening_balance_on: '2026-10-05', balance_paise: -12_000 },
     ],

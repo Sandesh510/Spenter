@@ -19,6 +19,7 @@ import { Badge } from '../components/ui/Badge';
 import { InsuranceReminders } from './Insurance';
 import { SavingsCard } from './Savings';
 import { NetWorthCard } from './NetWorth';
+import { OutlookCard } from './Outlook';
 import type { Route } from '../App';
 
 /**
@@ -104,6 +105,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
       <CommitmentsCard token={token} onOpen={() => go('commitments')} />
       <SavingsCard token={token} onOpen={() => go('savings')} />
       <NetWorthCard token={token} onOpen={() => go('networth')} />
+      <OutlookCard token={token} onOpen={() => go('outlook')} />
 
       <InsuranceReminders policies={insurance.data?.items ?? []} onOpen={() => go('commitments')} />
 

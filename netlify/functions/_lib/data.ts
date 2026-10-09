@@ -348,9 +348,21 @@ export async function loadLent(admin: SupabaseClient, userId: string) {
 }
 
 export async function loadProfile(admin: SupabaseClient, userId: string) {
-  const { data, error } = await admin.from('spend_profiles').select('theme,lock_hash,default_account_id').eq('user_id', userId).single();
+  // Every column, so a database that has not had migration 0014 yet still answers.
+  const { data, error } = await admin.from('spend_profiles').select('*').eq('user_id', userId).single();
   if (error) throw error;
-  return { theme: data.theme, lockEnabled: data.lock_hash !== null, defaultAccountId: data.default_account_id };
+  return profileView(data);
+}
+
+/** The profile as the app sees it. The passcode hash never leaves the server. */
+export function profileView(row: Record<string, any>) {
+  return {
+    theme: row.theme,
+    lockEnabled: row.lock_hash !== null,
+    defaultAccountId: row.default_account_id ?? null,
+    expectedIncomePaise: row.expected_income_paise == null ? null : Number(row.expected_income_paise),
+    incomeDay: row.income_day ?? null,
+  };
 }
 
 /**

@@ -68,3 +68,11 @@ export function dateOrToday(value: string | null): string {
   }
   return value;
 }
+
+/** A day of the month, 1 to 31, or null when blank. */
+export function dayField(raw: unknown, name: string): number | null {
+  if (raw === null || raw === undefined || raw === '') return null;
+  const n = typeof raw === 'number' ? raw : Number(String(raw).trim());
+  if (!Number.isInteger(n) || n < 1 || n > 31) throw new HttpError(400, `${name} must be a day from 1 to 31`);
+  return n;
+}

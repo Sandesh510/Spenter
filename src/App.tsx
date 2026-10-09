@@ -16,6 +16,7 @@ import { Rules } from './screens/Rules';
 import { Savings } from './screens/Savings';
 import { ResetPassword } from './screens/ResetPassword';
 import { NetWorth } from './screens/NetWorth';
+import { Outlook } from './screens/Outlook';
 import { useRefreshFailed } from './lib/useApi';
 import { Import } from './screens/Import';
 import { Lock } from './screens/Lock';
@@ -31,9 +32,9 @@ interface LogFilter {
   month: string;
 }
 
-export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules' | 'import' | 'savings' | 'networth';
+export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules' | 'import' | 'savings' | 'networth' | 'outlook';
 
-const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules', 'import', 'savings', 'networth'];
+const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules', 'import', 'savings', 'networth', 'outlook'];
 function isRoute(v: unknown): v is Route {
   return typeof v === 'string' && ROUTE_NAMES.includes(v);
 }
@@ -258,6 +259,7 @@ export function App() {
       {route === 'rules' && <Rules go={go} />}
       {route === 'import' && <Import token={token} go={go} onToast={showToast} />}
       {route === 'networth' && <NetWorth token={token} go={go} />}
+      {route === 'outlook' && <Outlook token={token} go={go} />}
       {route === 'savings' && <Savings token={token} go={go} onToast={showToast} />}
 
       {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}

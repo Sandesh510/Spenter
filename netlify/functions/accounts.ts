@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { authed } from './_lib/handler';
-import { dateOrToday, reqId, reqStr, optStr, readJson, todayIST } from './_lib/input';
+import { dateOrToday, dayField, reqId, reqStr, optStr, readJson, todayIST } from './_lib/input';
 import { loadAccounts, loadBalanceInputs } from './_lib/data';
 import { HttpError, json } from './_lib/response';
 
@@ -15,6 +15,7 @@ import { parseBalanceToPaise, parseRupeesToPaise } from '../../src/lib/money';
  * PATCH  /accounts  { id, nickname, bank?, kind?, openingBalance?, openingBalanceOn? } → edit; bank '' clears it.
  *        openingBalance is rupees (may be negative; a card's amount owed is negative); '' clears it.
  *        openingBalanceOn is YYYY-MM-DD, defaults to today, never in the future.
+ *        statementDay and dueDay (1-31, credit cards only) are the billing cycle: '' clears one.
  * PATCH  /accounts  { id, action: 'reconcile', actual } → Match my bank: the balance shown becomes `actual` from today
  * DELETE /accounts?id=…                 → remove (refused while entries, commitments, policies or plans use it)
  */
@@ -118,8 +119,16 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
       }
     }
   }
-  // A limit only means something on a credit card.
-  if (patch.kind !== undefined && patch.kind !== 'credit_card') patch.credit_limit_paise = null;
+  for (const [field, column] of [['statementDay', 'statement_day'], ['dueDay', 'due_day']] as const) {
+    if (!(field in b)) continue;
+    patch[column] = dayField(b[field], field);
+  }
+  // A limit and a billing cycle only mean something on a credit card.
+  if (patch.kind !== undefined && patch.kind !== 'credit_card') {
+    patch.credit_limit_paise = null;
+    patch.statement_day = null;
+    patch.due_day = null;
+  }
   if ('openingBalance' in b) {
     const raw = optStr(b, 'openingBalance', 20);
     if (raw === null) {

@@ -83,6 +83,17 @@ const GROUPS: RuleGroup[] = [
     ],
   },
   {
+    title: 'Cash outlook',
+    icon: 'calendar',
+    rules: [
+      'A credit card can have a bill day (when the statement is generated) and a due day (when it must be paid). A purchase on or before the bill day goes on that month’s bill; one after it waits for the next.',
+      'Cash outlook: In your accounts (cards left out, savings plans left out) less what the cards owe, less bills still due this month, is what is really yours.',
+      'What you can roll = the smaller of the credit left on your cards and (what is yours + income expected before the earliest date a new purchase would fall due).',
+      'Expected income is a rough monthly figure and the day it usually arrives. It is used only for this estimate and never posted as an entry.',
+      'It is an estimate: only this month’s bills are counted, and a card or account with no opening balance is left out until you set one.',
+    ],
+  },
+  {
     title: 'Net worth',
     icon: 'landmark',
     rules: [
