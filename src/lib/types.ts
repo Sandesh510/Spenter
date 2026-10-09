@@ -91,7 +91,7 @@ export interface HomeData {
   moneyIn: MoneyIn;
   moneyOut: MoneyOut;
   /** Credit card use this month. Missing in older cached data; null when there is no card account. */
-  card?: { spentPaise: number; paidPaise: number; duePaise: number } | null;
+  card?: { spentPaise: number; paidPaise: number; duePaise: number; byCategoryPaise?: Record<string, number> } | null;
   categories: Category[];
   buckets: HomeBucket[];
   recent: RecentTxn[];

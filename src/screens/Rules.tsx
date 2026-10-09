@@ -57,8 +57,8 @@ const GROUPS: RuleGroup[] = [
     title: 'Transfers and credit cards',
     icon: 'arrow-left-right',
     rules: [
-      'Home shows credit card use for the month: In your accounts = balance left to spend + card bill still to pay. Left after the card bill is the balance itself, because card use is already taken out of it.',
-      'Trends has a Credit card section under Planned vs actual: what you used on cards this month and the bill still to pay.',
+      'Home shows the credit card bill in a small row; open it for more. In your accounts = balance left to spend + card bill still to pay. Left after the card bill is the balance itself, because card use is already taken out of it.',
+      'Trends has a Credit card section under Money in and out: the total spent on cards this month and a bar chart of the 5 categories it went to.',
       'Card bill still to pay = what went on cards this month (spend, savings, money lent) less bill payments made this month. It is never below zero.',
       'A transfer between your own accounts does not change your balance.',
       'A transfer to someone outside your accounts counts as money out.',

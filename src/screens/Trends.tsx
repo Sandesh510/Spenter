@@ -44,6 +44,8 @@ export function Trends({ token }: { token: string }) {
 
       <MoneyFlow moneyIn={data.moneyIn} moneyOut={data.moneyOut} />
 
+      {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CreditCardSection card={data.card} categories={data.categories} />}
+
       <Card className="flex ai-c gap-18 mt-16" as="section" style={{ padding: 18 }}>
         <div className="rel flex-none" style={{ width: 120, height: 120 }}>
           <div
@@ -87,8 +89,6 @@ export function Trends({ token }: { token: string }) {
         {bars.length === 0 && <p className="fs-13 c-sec" style={{ margin: 0 }}>Set budgets in Settings to compare plan and spending.</p>}
         {bars.map(c => <PlanBar key={c.id} c={c} max={maxValue} />)}
       </div>
-
-      {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CreditCardSection card={data.card} />}
 
       {patterns.length > 0 && (
         <>
@@ -200,15 +200,40 @@ function FlowRow({ label, paise }: { label: string; paise: number }) {
   );
 }
 
-/** Credit card use this month: how much has been used and what is left to pay on the bill. */
-function CreditCardSection({ card }: { card: NonNullable<HomeData['card']> }) {
+/** Number of categories in the credit card bar chart. */
+const CARD_TOP = 5;
+
+/**
+ * Credit card use this month: the total beside the title, and a bar chart of the categories it went to.
+ * The bill still to pay is mentioned only when it differs from the total, that is, after a bill payment.
+ */
+function CreditCardSection({ card, categories }: { card: NonNullable<HomeData['card']>; categories: Category[] }) {
+  const rows = Object.entries(card.byCategoryPaise ?? {})
+    .map(([id, paise]) => ({ category: categories.find(c => c.id === id), paise }))
+    .filter((r): r is { category: Category; paise: number } => r.category !== undefined)
+    .sort((a, b) => b.paise - a.paise)
+    .slice(0, CARD_TOP);
+  const max = Math.max(1, ...rows.map(r => r.paise));
   return (
-    <Card as="section" aria-labelledby="card-trend" className="mt-24">
-      <h2 id="card-trend" className="kicker kicker--spaced m-0">Credit card</h2>
-      <dl className="num grid gap-8 fs-14 m-0 mt-8">
-        <div className="flex jc-sb"><dt className="c-sec">Used this month</dt><dd className="m-0">{formatINR(card.spentPaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-text">Bill still to pay</dt><dd className={`m-0 ${card.duePaise > 0 ? 'c-text' : 'c-success'}`}>{formatINR(card.duePaise)}</dd></div>
-      </dl>
+    <Card as="section" aria-labelledby="card-trend" className="mt-16">
+      <div className="flex ai-base jc-sb">
+        <h2 id="card-trend" className="kicker kicker--spaced m-0">Credit card</h2>
+        <span className="num fs-18">{formatINR(card.spentPaise)}</span>
+      </div>
+      <p className="fs-12 c-sec m-0 mt-2">spent on cards this month{card.duePaise !== card.spentPaise ? ` · ${formatINR(card.duePaise)} bill still to pay` : ''}</p>
+      {rows.length > 0 && (
+        <ul className="list-reset grid gap-10 mt-12" aria-label="Top categories on card">
+          {rows.map(r => (
+            <li key={r.category.id}>
+              <div className="flex jc-sb fs-13">
+                <span className="flex ai-c gap-6"><Icon name={categoryIcon(r.category)} size={13} /> {r.category.name}</span>
+                <span className="num">{formatINR(r.paise)}</span>
+              </div>
+              <div className="track mt-4"><div className="fill" style={{ width: `${(r.paise / max) * 100}%` }} /></div>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

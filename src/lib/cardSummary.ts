@@ -17,6 +17,7 @@ export interface CardTxn {
   accountId: string | null;
   toAccountId: string | null;
   external: boolean;
+  categoryId?: string | null;
 }
 
 export interface CardLoan {
@@ -31,6 +32,8 @@ export interface CardSummary {
   paidPaise: number;
   /** Still to pay: spent less paid, never below zero. */
   duePaise: number;
+  /** Card spend by category id (spend and savings entries only), for Trends. */
+  byCategoryPaise: Record<string, number>;
 }
 
 /** Null when there are no card accounts, so Home shows nothing extra. */
@@ -40,9 +43,12 @@ export function cardSummary(cardIds: Set<string>, txns: CardTxn[], loans: CardLo
 
   let spent = 0;
   let paid = 0;
+  const byCategory: Record<string, number> = {};
   for (const t of txns) {
-    if (t.type === 'spend' && onCard(t.accountId)) spent += t.amountPaise;
-    else if (t.type === 'transfer') {
+    if (t.type === 'spend' && onCard(t.accountId)) {
+      spent += t.amountPaise;
+      if (t.categoryId) byCategory[t.categoryId] = (byCategory[t.categoryId] ?? 0) + t.amountPaise;
+    } else if (t.type === 'transfer') {
       if (onCard(t.toAccountId) && !onCard(t.accountId)) paid += t.amountPaise;
       // Money moved out of a card (a cash advance, or a payment to someone) is owed too.
       else if (onCard(t.accountId) && !onCard(t.toAccountId)) spent += t.amountPaise;
@@ -50,5 +56,5 @@ export function cardSummary(cardIds: Set<string>, txns: CardTxn[], loans: CardLo
   }
   for (const l of loans) if (onCard(l.debitAccountId)) spent += l.amountPaise;
 
-  return { spentPaise: spent, paidPaise: paid, duePaise: Math.max(0, spent - paid) };
+  return { spentPaise: spent, paidPaise: paid, duePaise: Math.max(0, spent - paid), byCategoryPaise: byCategory };
 }

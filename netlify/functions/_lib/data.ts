@@ -159,7 +159,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     // Credit card use this month, so Home can show what is in the accounts before the card is paid.
     card: cardSummary(
       new Set((accountRes.data ?? []).filter(a => isCreditCard(a.kind)).map(a => a.id as string)),
-      rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, toAccountId: r.to_account_id, external: r.external })),
+      rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, toAccountId: r.to_account_id, external: r.external, categoryId: r.category_id })),
       (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
     ),
     categories: categoryRows,

@@ -336,16 +336,28 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
  * and what is left once it is paid. Balance left to spend already has the card use taken out.
  */
 function CardDue({ card, balancePaise, money, shown }: { card: NonNullable<HomeData['card']>; balancePaise: number; money: (p: number) => string; shown: boolean }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="safe mt-12">
-      <h2 className="fs-13 c-sec m-0">Credit card this month</h2>
-      <dl className="num grid gap-4 fs-13 m-0 mt-8">
-        <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{money(balancePaise + card.duePaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-sec">Spent on card{card.paidPaise > 0 ? ` (${money(card.paidPaise)} paid)` : ''}</dt><dd className="m-0">{money(card.spentPaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-sec">Card bill still to pay</dt><dd className="m-0">{money(card.duePaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-text">Left after the card bill</dt><dd className={`m-0 ${shown && balancePaise < 0 ? 'c-danger' : 'c-text'}`}>{money(balancePaise)}</dd></div>
-      </dl>
-      {card.duePaise > 0 && <p className="fs-12 c-mut m-0 mt-8">The bill can be paid from next month’s money. It is already taken out of the balance above.</p>}
+      <div className="flex ai-c jc-sb">
+        <h2 className="fs-13 c-sec m-0">Credit card bill</h2>
+        <span className="flex ai-c gap-8">
+          <span className="num fs-14">{money(card.duePaise)}</span>
+          <button className="iconbtn iconbtn--sm" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-label={open ? 'Hide credit card details' : 'Show credit card details'}>
+            <Icon name={open ? 'chevron-up' : 'chevron-down'} size={15} />
+          </button>
+        </span>
+      </div>
+      {open && (
+        <>
+          <dl className="num grid gap-4 fs-13 m-0 mt-8">
+            <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{money(balancePaise + card.duePaise)}</dd></div>
+            {card.paidPaise > 0 && <div className="flex jc-sb"><dt className="c-sec">Spent on card ({money(card.paidPaise)} paid)</dt><dd className="m-0">{money(card.spentPaise)}</dd></div>}
+            <div className="flex jc-sb"><dt className="c-text">Left after the card bill</dt><dd className={`m-0 ${shown && balancePaise < 0 ? 'c-danger' : 'c-text'}`}>{money(balancePaise)}</dd></div>
+          </dl>
+          {card.duePaise > 0 && <p className="fs-12 c-mut m-0 mt-8">The bill can be paid from next month’s money. It is already taken out of the balance above.</p>}
+        </>
+      )}
     </div>
   );
 }

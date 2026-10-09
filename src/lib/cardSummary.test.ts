@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cardSummary, type CardTxn } from './cardSummary';
 
 const card = new Set(['card']);
-const spend = (amountPaise: number, accountId: string): CardTxn => ({ type: 'spend', amountPaise, accountId, toAccountId: null, external: false });
+const spend = (amountPaise: number, accountId: string, categoryId?: string): CardTxn => ({ type: 'spend', amountPaise, accountId, toAccountId: null, external: false, categoryId });
 const transfer = (amountPaise: number, accountId: string, toAccountId: string | null, external = false): CardTxn => ({ type: 'transfer', amountPaise, accountId, toAccountId, external });
 
 describe('cardSummary', () => {
@@ -11,16 +11,21 @@ describe('cardSummary', () => {
   });
 
   it('counts card spend and ignores other accounts', () => {
-    expect(cardSummary(card, [spend(1_200_000, 'card'), spend(50_000, 'bank')], [])).toEqual({ spentPaise: 1_200_000, paidPaise: 0, duePaise: 1_200_000 });
+    expect(cardSummary(card, [spend(1_200_000, 'card'), spend(50_000, 'bank')], [])).toEqual({ spentPaise: 1_200_000, paidPaise: 0, duePaise: 1_200_000, byCategoryPaise: {} });
   });
 
   it('counts money lent from the card', () => {
     expect(cardSummary(card, [], [{ amountPaise: 300_000, debitAccountId: 'card' }, { amountPaise: 90_000, debitAccountId: 'bank' }])?.spentPaise).toBe(300_000);
   });
 
+  it('groups card spend by category and leaves other accounts out', () => {
+    const s = cardSummary(card, [spend(100, 'card', 'food'), spend(250, 'card', 'food'), spend(70, 'card', 'fuel'), spend(900, 'bank', 'food')], []);
+    expect(s?.byCategoryPaise).toEqual({ food: 350, fuel: 70 });
+  });
+
   it('a bill payment reduces what is still to pay', () => {
     const s = cardSummary(card, [spend(1_000_000, 'card'), transfer(400_000, 'bank', 'card')], []);
-    expect(s).toEqual({ spentPaise: 1_000_000, paidPaise: 400_000, duePaise: 600_000 });
+    expect(s).toEqual({ spentPaise: 1_000_000, paidPaise: 400_000, duePaise: 600_000, byCategoryPaise: {} });
   });
 
   it('paying more than this month spent never goes below zero', () => {
