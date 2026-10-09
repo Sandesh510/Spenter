@@ -14,10 +14,12 @@ import { haptic } from '../lib/haptics';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { matchAccount, parseLines, type ParsedLine } from '../lib/parseText';
 import { useApi } from '../lib/useApi';
+import { EntryBuilder } from './EntryBuilder';
 import type { Account, Bucket, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 type Stage = 'paste' | 'review' | 'done';
+type Mode = 'calendar' | 'paste';
 type CreditType = 'salary' | 'others' | 'borrowed';
 const CREDIT_TYPES: { id: CreditType; label: string }[] = [
   { id: 'salary', label: 'Salary' },
@@ -33,6 +35,7 @@ const EXAMPLE = '03/10/2026, Savings, 450, Groceries\n04/10/2026, Credit card, 1
  */
 export function Import({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
   const [stage, setStage] = useState<Stage>('paste');
+  const [mode, setMode] = useState<Mode>('calendar');
   const [text, setText] = useState('');
   const [items, setItems] = useState<ParsedLine[]>([]);
   const [index, setIndex] = useState(0);
@@ -69,11 +72,27 @@ export function Import({ token, go, onToast }: { token: string; go: (r: Route) =
     <div className="scroll">
       <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={() => go('quickadd')} aria-label="Back"><Icon name="chevron-left" size={18} /></button>
-        <h1 className="topbar__title">Paste a list</h1>
+        <h1 className="topbar__title">Add many entries</h1>
         <span className="topbar__spacer" aria-hidden="true" />
       </div>
 
       {stage === 'paste' && (
+        <div className="flex gap-8 mt-8" role="tablist" aria-label="How to add entries">
+          <button type="button" role="tab" aria-selected={mode === 'calendar'} className={`chip ${mode === 'calendar' ? 'chip--on' : ''}`} onClick={() => setMode('calendar')}>Pick dates</button>
+          <button type="button" role="tab" aria-selected={mode === 'paste'} className={`chip ${mode === 'paste' ? 'chip--on' : ''}`} onClick={() => setMode('paste')}>Paste a list</button>
+        </div>
+      )}
+
+      {stage === 'paste' && mode === 'calendar' && (
+        <EntryBuilder
+          token={token}
+          accounts={accounts.data?.items ?? []}
+          categories={home.data?.categories ?? []}
+          onDone={n => { setAdded(n); setSkipped(0); setStage('done'); }}
+        />
+      )}
+
+      {stage === 'paste' && mode === 'paste' && (
         <section className="grid gap-12 mt-8" aria-label="Paste entries">
           <p className="fs-13 c-sec m-0">One entry per line: <strong>date, account, amount</strong>, and an optional description. Add “Cr” after the amount for money in.</p>
           <Field label="Entries" error={pasteError}>
@@ -106,7 +125,7 @@ export function Import({ token, go, onToast }: { token: string; go: (r: Route) =
             <div className="flex jc-sb"><dt className="c-sec">Skipped</dt><dd className="m-0 num">{skipped}</dd></div>
           </dl>
           <div className="flex gap-8 mt-16">
-            <Button variant="secondary" block onClick={() => { setText(''); setStage('paste'); }}>Paste more</Button>
+            <Button variant="secondary" block onClick={() => { setText(''); setStage('paste'); }}>Add more</Button>
             <Button block onClick={() => { onToast(`${added} added, ${skipped} skipped`); go('log'); }}>Go to Log</Button>
           </div>
         </Card>

@@ -460,3 +460,72 @@ li:last-child > .list-row {
   width: 30px;
   height: 30px;
 }
+
+/* Bottom sheet over the phone screen */
+.sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.sheet__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: var(--color-scrim);
+  cursor: default;
+}
+.sheet__panel {
+  position: relative;
+  max-height: 88%;
+  overflow-y: auto;
+  padding: 18px 18px 26px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-radius: 18px 18px 0 0;
+}
+
+/* Month calendar for making entries */
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal__dow {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.cal__day {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-numeric);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+.cal__day:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.cal__day--today {
+  border-color: var(--color-accent);
+}
+.cal__day--has {
+  background: var(--color-accent-tint);
+  color: var(--color-accent-text);
+}
+.cal__count {
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  font-size: 11px;
+  color: var(--color-accent-text);
+}

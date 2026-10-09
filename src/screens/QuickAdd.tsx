@@ -8,8 +8,6 @@ import { api } from '../lib/api';
 import { addTransactionToCache, refreshInBackground } from '../lib/cache';
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
-import { AddAnotherPrompt } from '../components/ui/AddAnotherPrompt';
-import { todayIST } from '../lib/dates';
 import { haptic } from '../lib/haptics';
 import { categoryIcon } from '../lib/categories';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
@@ -41,8 +39,6 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
   const [desc, setDesc] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  /** Set after an entry is saved, so the user can add another for today. */
-  const [savedNew, setSavedNew] = useState(false);
 
   const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
@@ -65,16 +61,6 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
     setStep('amount');
   }
 
-  /** Yes: start again at the amount. Quick Add always uses today's date, and the account stays. */
-  function addAnother() {
-    setAmount('');
-    setCategoryId(null);
-    setDesc('');
-    setError(null);
-    setStep('amount');
-    setSavedNew(false);
-  }
-
   async function save() {
     if (!category || !paidFrom) return;
     setSaving(true);
@@ -89,7 +75,7 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
       if (res.item) addTransactionToCache(res.item);
       refreshInBackground(token);
       onToast(`Added ${formatINR(amountPaise)} · ${category.name}`);
-      setSavedNew(true);
+      go('log');
     } catch (err) {
       haptic('error');
       setError(err instanceof Error ? err.message : 'Could not save');
@@ -100,7 +86,6 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
 
   return (
     <div className={step === 'amount' ? 'scroll scroll--stack' : 'scroll'}>
-      {savedNew && <AddAnotherPrompt date={todayIST()} onYes={addAnother} onNo={() => go('log')} />}
       <div className="topbar topbar--inset">
         <button className="iconbtn" onClick={back} aria-label={step === 'amount' ? 'Close' : 'Back'}>
           <Icon name={step === 'amount' ? 'x' : 'chevron-left'} size={18} />
