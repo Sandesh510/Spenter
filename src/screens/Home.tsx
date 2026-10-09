@@ -9,6 +9,8 @@ import { formatINR } from '../lib/money';
 import { BUCKET_LABEL, categoryIcon } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth, todayIST } from '../lib/dates';
 import { dailyAllowance } from '../lib/dailyAllowance';
+import { budgetAlerts, type BudgetAlert } from '../lib/budgetAlerts';
+import { dismissAlert, isDismissed } from '../lib/alertDismissals';
 import { useApi } from '../lib/useApi';
 import type { Bucket, Category, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
 import { CategoryTile } from '../components/ui/CategoryTile';
@@ -94,6 +96,8 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
         {data.card && (data.card.duePaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} />}
         {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
+
+      {isCurrent && <BudgetAlerts categories={data.categories} onOpen={id => onOpenCategory(id, month)} />}
 
       <Card
         as="button"
@@ -400,5 +404,43 @@ function SafeToSpend({ safePaise, bills }: { safePaise: number; bills: NonNullab
         </>
       )}
     </div>
+  );
+}
+
+/** At most this many alerts show at once; the rest are one tap away in the category list. */
+const MAX_ALERTS = 3;
+
+/**
+ * Categories at 80% of their plan or over it. Each can be dismissed for the month (it comes back if the
+ * category goes from nearly there to over). Tapping one opens the Log filtered to that category.
+ */
+function BudgetAlerts({ categories, onOpen }: { categories: Category[]; onOpen: (categoryId: string) => void }) {
+  const [, redraw] = useState(0);
+  const alerts = budgetAlerts(categories).filter(a => !isDismissed(a.categoryId, a.level));
+  if (alerts.length === 0) return null;
+  const shown = alerts.slice(0, MAX_ALERTS);
+
+  function text(a: BudgetAlert): string {
+    return a.level === 'over' ? `${a.name} is ${formatINR(a.overPaise)} over its plan` : `${a.name} is at ${a.pct}% of its plan`;
+  }
+
+  return (
+    <section aria-label="Budget alerts" className="mt-12">
+      <ul className="list-reset grid gap-8">
+        {shown.map(a => (
+          <li key={`${a.categoryId}:${a.level}`} className={`alert-row alert-row--${a.level}`}>
+            <button className="alert-row__main" onClick={() => onOpen(a.categoryId)} aria-label={`${text(a)}. Show transactions`}>
+              <Icon name="alert-triangle" size={16} />
+              <span className="alert-row__text">{text(a)}</span>
+              <span className="num fs-12 c-sec">{formatINR(a.spentPaise)} of {formatINR(a.plannedPaise)}</span>
+            </button>
+            <button className="iconbtn iconbtn--sm" onClick={() => { dismissAlert(a.categoryId, a.level); redraw(n => n + 1); }} aria-label={`Dismiss ${a.name} alert`}>
+              <Icon name="x" size={14} />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {alerts.length > shown.length && <p className="fs-12 c-mut m-0 mt-6">and {alerts.length - shown.length} more in the category list</p>}
+    </section>
   );
 }

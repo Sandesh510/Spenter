@@ -13,6 +13,7 @@ import { categoryIcon } from '../lib/categories';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { currentMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
+import { alertAfterSpend } from '../lib/budgetAlerts';
 import { recentCategories, repeatables, type Repeatable } from '../lib/recents';
 import type { Account, Bucket, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
@@ -90,7 +91,10 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
       // Show the result now; the totals catch up in the background.
       if (res.item) addTransactionToCache(res.item);
       refreshInBackground(token);
-      onToast(`Added ${formatINR(amountPaise)} · ${category.name}`);
+      // Say so when this entry takes the category to 80% of its plan, or over it.
+      const crossed = alertAfterSpend(category, amountPaise);
+      const warning = crossed ? (crossed.level === 'over' ? ` · now ${formatINR(crossed.overPaise)} over plan` : ` · now at ${crossed.pct}% of plan`) : '';
+      onToast(`Added ${formatINR(amountPaise)} · ${category.name}${warning}`);
       go('log');
     } catch (err) {
       haptic('error');

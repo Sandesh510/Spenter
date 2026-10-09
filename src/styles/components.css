@@ -589,3 +589,43 @@ li:last-child > .list-row {
   border-radius: 12px;
   font-size: 13px;
 }
+
+/* Budget alerts on Home: one row per category at 80% of its plan or over it */
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.alert-row--warn {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+.alert-row--over {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+.alert-row__main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--font-body);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.alert-row__text {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-primary);
+}
