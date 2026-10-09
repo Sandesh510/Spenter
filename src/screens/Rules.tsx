@@ -50,6 +50,7 @@ const GROUPS: RuleGroup[] = [
       'Every spend needs a category. Its bucket (Needs, Wants or Savings) decides which budget it counts against.',
       'Savings (such as SIPs) leave your balance but count towards your savings goal, not your spending.',
       "Budgets are set per month and category. A new month starts with the previous month's budgets; a change applies from that month on.",
+      'Trends compares this month with the same days of last month (spend outside Savings categories only), and lists the categories that changed most. Comparing the same days keeps the start of a month fair.',
       'Home lists the 5 categories with the most spending (over-budget ones first). Tap Show all to see the rest.',
       'A bar is marked tight above 90% of plan and turns red when over.',
       'Deleting a category that has entries asks you to move them to another category first.',

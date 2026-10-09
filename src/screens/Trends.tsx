@@ -1,10 +1,11 @@
 import { Card } from '../components/ui/Card';
 import { Icon } from '../components/Icon';
 import { categoryIcon } from '../lib/categories';
-import { currentMonth, monthTitle } from '../lib/dates';
+import { currentMonth, monthTitle, shiftMonth, todayIST } from '../lib/dates';
+import { monthRecap } from '../lib/monthRecap';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
-import type { Account, Bucket, Category, HomeData, MoneyIn, MoneyOut } from '../lib/types';
+import type { Account, Bucket, Category, HomeData, MoneyIn, MoneyOut, TxnRow } from '../lib/types';
 
 const TARGET: Record<Bucket, number> = { need: 50, want: 30, save: 20 };
 const LABEL: Record<Bucket, string> = { need: 'Needs', want: 'Wants', save: 'Savings' };
@@ -15,6 +16,8 @@ export function Trends({ token }: { token: string }) {
   const month = currentMonth();
   const { data, error } = useApi<HomeData>(`home?month=${month}`, token);
   const accounts = useApi<{ items: Account[] }>('accounts', token);
+  const thisTxns = useApi<{ items: TxnRow[] }>(`transactions?month=${month}`, token);
+  const lastTxns = useApi<{ items: TxnRow[] }>(`transactions?month=${shiftMonth(month, -1)}`, token);
 
   if (error) return <div className="scroll c-danger" role="alert">{error}</div>;
   if (!data) return <div className="scroll c-sec">Loading…</div>;
@@ -78,6 +81,13 @@ export function Trends({ token }: { token: string }) {
         </div>
       </Card>
       <div className="ta-c fs-12 c-sec" style={{ margin: '9px 0 0' }}>{caption}</div>
+
+      {thisTxns.data && lastTxns.data && (
+        <MonthCompare
+          recap={monthRecap({ today: todayIST(), thisMonth: thisTxns.data.items, lastMonth: lastTxns.data.items, categories: data.categories })}
+          lastMonthName={monthTitle(shiftMonth(month, -1)).split(' ')[0]}
+        />
+      )}
 
       {(data.byAccount?.length ?? 0) > 0 && <AccountChart rows={data.byAccount ?? []} accounts={accounts.data?.items ?? []} />}
 
@@ -267,6 +277,52 @@ function AccountChart({ rows, accounts }: { rows: { accountId: string; paise: nu
           );
         })}
       </ul>
+    </Card>
+  );
+}
+
+/**
+ * This month so far against the same days of last month. A rise in spending is shown in red and a fall
+ * in green; the biggest category moves are listed so the cause is visible.
+ */
+function MonthCompare({ recap, lastMonthName }: { recap: ReturnType<typeof monthRecap>; lastMonthName: string }) {
+  if (!recap) return null;
+  const up = recap.thisPaise > recap.lastSamePaise;
+  const flat = recap.thisPaise === recap.lastSamePaise;
+  return (
+    <Card as="section" aria-labelledby="month-compare" className="mt-16">
+      <h2 id="month-compare" className="kicker kicker--spaced m-0">Compared with {lastMonthName}</h2>
+      <div className="flex ai-base jc-sb mt-8">
+        <span className="num fs-22">{formatINR(recap.thisPaise)}</span>
+        {recap.changePct !== null && !flat && (
+          <span className={`num fs-14 ${up ? 'c-danger' : 'c-success'}`}>{up ? '▲' : '▼'} {Math.abs(recap.changePct)}%</span>
+        )}
+        {recap.changePct !== null && flat && <span className="fs-13 c-sec">same</span>}
+      </div>
+      <p className="fs-12 c-sec m-0 mt-2">
+        spent in the first {recap.day} {recap.day === 1 ? 'day' : 'days'}, against <span className="num">{formatINR(recap.lastSamePaise)}</span> in the same days of {lastMonthName}
+      </p>
+      <dl className="num grid gap-4 fs-13 m-0 mt-12">
+        <div className="flex jc-sb"><dt className="c-sec">A day, this month</dt><dd className="m-0">{formatINR(recap.perDayThisPaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">A day, all of {lastMonthName}</dt><dd className="m-0">{formatINR(recap.perDayLastPaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">{lastMonthName} in total</dt><dd className="m-0">{formatINR(recap.lastFullPaise)}</dd></div>
+      </dl>
+      {recap.changes.length > 0 && (
+        <>
+          <h3 className="fs-12 c-sec m-0 mt-14">Biggest changes</h3>
+          <ul className="list-reset grid gap-8 mt-8">
+            {recap.changes.map(c => (
+              <li key={c.categoryId} className="flex jc-sb ai-c fs-13">
+                <span>{c.name}</span>
+                <span className="num">
+                  <span className="c-mut fs-11">{formatINR(c.lastPaise)} → {formatINR(c.thisPaise)} </span>
+                  <span className={c.diffPaise > 0 ? 'c-danger' : 'c-success'}>{c.diffPaise > 0 ? '+' : '−'}{formatINR(Math.abs(c.diffPaise))}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </Card>
   );
 }

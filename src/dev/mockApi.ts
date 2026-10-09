@@ -110,7 +110,15 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     }
     return { from, to, items };
   },
-  transactions: () => ({ items: [] }),
+  transactions: q => ({
+    items: q.get('month') === '2026-09'
+      ? [
+          { id: 'p1', type: 'spend', amount_paise: 30_000, txn_date: '2026-09-04', description: null, category_id: 'c0', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-09-04T10:00:00Z' },
+          { id: 'p2', type: 'spend', amount_paise: 90_000, txn_date: '2026-09-07', description: null, category_id: 'c12', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-09-07T10:00:00Z' },
+          { id: 'p3', type: 'spend', amount_paise: 250_000, txn_date: '2026-09-22', description: null, category_id: 'c0', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-09-22T10:00:00Z' },
+        ]
+      : [],
+  }),
   insurance: () => ({
     items: [
       { id: 'pol1', name: 'Family health cover', insurer: 'Star Health', policy_number: 'SH-4471', policy_type: 'health', premium_paise: 1_200_000, frequency: 'yearly', next_due_on: '2026-10-25', sum_assured_paise: 50_000_000, account_id: 'acc1', category_id: 'c0', auto_debit: false, active: true, due_day: 25 },
