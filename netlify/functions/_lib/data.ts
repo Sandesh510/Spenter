@@ -8,6 +8,7 @@ import { todayIST } from './input';
 import { selectAll } from './paged';
 import { shiftMonth } from '../../../src/lib/dates';
 import { suggestOpening } from '../../../src/lib/openingSuggestion';
+import { spendByAccount } from '../../../src/lib/spendByAccount';
 import { cardSummary } from '../../../src/lib/cardSummary';
 import { isCreditCard } from '../../../src/lib/accountTypes';
 import { accountBalances, type BalanceLoan, type BalanceTxn } from '../../../src/lib/accountBalance';
@@ -160,6 +161,11 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
     card: cardSummary(
       new Set((accountRes.data ?? []).filter(a => isCreditCard(a.kind)).map(a => a.id as string)),
       rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, toAccountId: r.to_account_id, external: r.external, categoryId: r.category_id })),
+      (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
+    ),
+    // Money out by account this month, for the Trends chart.
+    byAccount: spendByAccount(
+      rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, external: r.external })),
       (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
     ),
     categories: categoryRows,

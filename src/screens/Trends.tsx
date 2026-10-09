@@ -4,7 +4,7 @@ import { categoryIcon } from '../lib/categories';
 import { currentMonth, monthTitle } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
-import type { Bucket, Category, HomeData, MoneyIn, MoneyOut } from '../lib/types';
+import type { Account, Bucket, Category, HomeData, MoneyIn, MoneyOut } from '../lib/types';
 
 const TARGET: Record<Bucket, number> = { need: 50, want: 30, save: 20 };
 const LABEL: Record<Bucket, string> = { need: 'Needs', want: 'Wants', save: 'Savings' };
@@ -14,6 +14,7 @@ const COLOUR: Record<Bucket, string> = { need: 'var(--color-need)', want: 'var(-
 export function Trends({ token }: { token: string }) {
   const month = currentMonth();
   const { data, error } = useApi<HomeData>(`home?month=${month}`, token);
+  const accounts = useApi<{ items: Account[] }>('accounts', token);
 
   if (error) return <div className="scroll c-danger" role="alert">{error}</div>;
   if (!data) return <div className="scroll c-sec">Loading…</div>;
@@ -77,6 +78,8 @@ export function Trends({ token }: { token: string }) {
         </div>
       </Card>
       <div className="ta-c fs-12 c-sec" style={{ margin: '9px 0 0' }}>{caption}</div>
+
+      {(data.byAccount?.length ?? 0) > 0 && <AccountChart rows={data.byAccount ?? []} accounts={accounts.data?.items ?? []} />}
 
       <div className="flex jc-sb ai-c" style={{ margin: '24px 2px 14px' }}>
         <span className="kicker">Planned vs actual</span>
@@ -234,6 +237,35 @@ function CreditCardSection({ card, categories }: { card: NonNullable<HomeData['c
           ))}
         </ul>
       )}
+    </Card>
+  );
+}
+
+/** Money out of each account this month, as bars. Transfers between your own accounts are not counted. */
+function AccountChart({ rows, accounts }: { rows: { accountId: string; paise: number }[]; accounts: Account[] }) {
+  const total = rows.reduce((s, r) => s + r.paise, 0);
+  const max = Math.max(1, ...rows.map(r => r.paise));
+  return (
+    <Card as="section" aria-labelledby="account-trend" className="mt-16">
+      <div className="flex ai-base jc-sb">
+        <h2 id="account-trend" className="kicker kicker--spaced m-0">Spend by account</h2>
+        <span className="num fs-18">{formatINR(total)}</span>
+      </div>
+      <p className="fs-12 c-sec m-0 mt-2">went out of your accounts this month</p>
+      <ul className="list-reset grid gap-10 mt-12">
+        {rows.map(r => {
+          const a = accounts.find(x => x.id === r.accountId);
+          return (
+            <li key={r.accountId}>
+              <div className="flex jc-sb fs-13">
+                <span className="flex ai-c gap-6"><Icon name={a?.icon ?? 'wallet'} size={13} /> {a?.nickname ?? 'Account'}</span>
+                <span className="num">{formatINR(r.paise)} <span className="c-mut fs-11">{Math.round((r.paise / total) * 100)}%</span></span>
+              </div>
+              <div className="track mt-4"><div className="fill" style={{ width: `${(r.paise / max) * 100}%` }} /></div>
+            </li>
+          );
+        })}
+      </ul>
     </Card>
   );
 }
