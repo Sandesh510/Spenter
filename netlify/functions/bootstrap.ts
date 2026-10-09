@@ -14,6 +14,7 @@ import { getAdminClient } from './_supabase';
  */
 export const handler: Handler = async event => {
   try {
+    const started = Date.now();
     const admin = getAdminClient();
     const user = await requireUser(admin, event.headers.authorization);
     await ensureSeededOnce(admin, user.id);
@@ -27,7 +28,7 @@ export const handler: Handler = async event => {
       loadLent(admin, user.id),
     ]);
 
-    return json(200, {
+    const res = json(200, {
       user: { id: user.id, email: user.email },
       month,
       data: {
@@ -38,6 +39,8 @@ export const handler: Handler = async event => {
         lent,
       },
     });
+    res.headers['server-timing'] = `total;dur=${Date.now() - started}`;
+    return res;
   } catch (err) {
     return fail(err);
   }
