@@ -48,6 +48,7 @@ const GROUPS: RuleGroup[] = [
       'Every spend needs a category. Its bucket (Needs, Wants or Savings) decides which budget it counts against.',
       'Savings (such as SIPs) leave your balance but count towards your savings goal, not your spending.',
       "Budgets are set per month and category. A new month starts with the previous month's budgets; a change applies from that month on.",
+      'Home lists the 5 categories with the most spending (over-budget ones first). Tap Show all to see the rest.',
       'A bar is marked tight above 90% of plan and turns red when over.',
       'Deleting a category that has entries asks you to move them to another category first.',
     ],
@@ -57,6 +58,7 @@ const GROUPS: RuleGroup[] = [
     icon: 'arrow-left-right',
     rules: [
       'Home shows credit card use for the month: In your accounts = balance left to spend + card bill still to pay. Left after the card bill is the balance itself, because card use is already taken out of it.',
+      'Trends has a Credit card section under Planned vs actual: what you used on cards this month and the bill still to pay.',
       'Card bill still to pay = what went on cards this month (spend, savings, money lent) less bill payments made this month. It is never below zero.',
       'A transfer between your own accounts does not change your balance.',
       'A transfer to someone outside your accounts counts as money out.',

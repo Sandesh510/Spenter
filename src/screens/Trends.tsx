@@ -88,6 +88,8 @@ export function Trends({ token }: { token: string }) {
         {bars.map(c => <PlanBar key={c.id} c={c} max={maxValue} />)}
       </div>
 
+      {data.card && (data.card.spentPaise > 0 || data.card.paidPaise > 0) && <CreditCardSection card={data.card} />}
+
       {patterns.length > 0 && (
         <>
           <div className="kicker" style={{ margin: '26px 2px 12px' }}>Patterns</div>
@@ -195,5 +197,18 @@ function FlowRow({ label, paise }: { label: string; paise: number }) {
       <dt>{label}</dt>
       <dd className="num m-0">{formatINR(paise)}</dd>
     </div>
+  );
+}
+
+/** Credit card use this month: how much has been used and what is left to pay on the bill. */
+function CreditCardSection({ card }: { card: NonNullable<HomeData['card']> }) {
+  return (
+    <Card as="section" aria-labelledby="card-trend" className="mt-24">
+      <h2 id="card-trend" className="kicker kicker--spaced m-0">Credit card</h2>
+      <dl className="num grid gap-8 fs-14 m-0 mt-8">
+        <div className="flex jc-sb"><dt className="c-sec">Used this month</dt><dd className="m-0">{formatINR(card.spentPaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-text">Bill still to pay</dt><dd className={`m-0 ${card.duePaise > 0 ? 'c-text' : 'c-success'}`}>{formatINR(card.duePaise)}</dd></div>
+      </dl>
+    </Card>
   );
 }

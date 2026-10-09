@@ -277,11 +277,15 @@ function LentTotal({ token }: { token: string }) {
   return <span>{formatINR(total)}</span>;
 }
 
+/** Categories listed before "Show all", so the rest of Home stays within reach. */
+const TOP_CATEGORIES = 5;
+
 /**
- * This month's categories with spending or a plan. Over-budget categories come first and are marked.
+ * This month's categories with spending or a plan. Over-budget categories come first and are marked; only the top 5 show until "Show all".
  * Tapping one opens the Log filtered to that category and month.
  */
 function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen: (categoryId: string) => void }) {
+  const [all, setAll] = useState(false);
   // Savings above plan means the goal is met, so only Needs and Wants can be over budget.
   const over = (c: Category) => c.bucket !== 'save' && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise > c.plannedPaise;
   const shown = categories
@@ -289,6 +293,7 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
     .sort((a, b) => Number(over(b)) - Number(over(a)) || b.spentPaise - a.spentPaise);
   if (shown.length === 0) return null;
   const overCount = shown.filter(over).length;
+  const visible = all ? shown : shown.slice(0, TOP_CATEGORIES);
 
   return (
     <section aria-labelledby="home-categories">
@@ -298,7 +303,7 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
       </div>
       <Card variant="group">
         <ul className="list-reset">
-          {shown.map(c => (
+          {visible.map(c => (
             <li key={c.id}>
               <button className="list-row" onClick={() => onOpen(c.id)} aria-label={`${c.name}: show transactions`}>
                 <CategoryTile icon={categoryIcon(c)} bucket={c.bucket} />
@@ -317,6 +322,11 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
           ))}
         </ul>
       </Card>
+      {shown.length > TOP_CATEGORIES && (
+        <button className="link link--block mt-8" onClick={() => setAll(a => !a)} aria-expanded={all}>
+          {all ? 'Show top 5 only' : `Show all ${shown.length} categories`}
+        </button>
+      )}
     </section>
   );
 }
