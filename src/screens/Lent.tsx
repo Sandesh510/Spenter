@@ -2,12 +2,14 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Field, Input } from '../components/ui/Field';
 import { useMemo, useState, type FormEvent } from 'react';
+import { Sheet } from '../components/ui/Sheet';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { isCreditCard } from '../lib/accountTypes';
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { haptic } from '../lib/haptics';
-import { formatINR } from '../lib/money';
+import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { todayIST } from '../lib/dates';
 import { useApi } from '../lib/useApi';
 import type { Loan } from '../lib/types';
@@ -33,7 +35,9 @@ interface LoanForm {
  */
 export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
   const { data, error, reload } = useApi<{ items: Loan[] }>('lent', token);
-  const accounts = useApi<{ items: { id: string; nickname: string }[] }>('accounts', token);
+  const accounts = useApi<{ items: { id: string; nickname: string; kind: string | null }[] }>('accounts', token);
+  /** Set while the user is choosing which account received money that came back. */
+  const [receipt, setReceipt] = useState<{ loans: Loan[]; done: string; accountId: string | null; amount: string } | null>(null);
   const accountName = (id: string | null) => accounts.data?.items.find(a => a.id === id)?.nickname ?? '';
   const [open, setOpen] = useState<string | null>(null);
   /** null = dialog closed; 'new' = recording a loan; a loan = editing that loan. */
@@ -100,23 +104,43 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
     }
   }
 
-  /** Records each loan's outstanding amount as a Got back credit into the first account. */
-  async function gotBack(list: Loan[], done: string) {
-    // A Got back goes into the account the loan was lent from; otherwise the first account.
-    const accountId = list[0]?.debit_account_id ?? pickAccount(accountItems, defaultAccountId);
-    if (!accountId) return setErr('Add an account in Settings first');
+  /**
+   * Asks which account the money came back into. It starts on the account the loan was lent from, unless
+   * that was a credit card (money rarely comes back onto a card), then on the default account.
+   */
+  function askGotBack(list: Loan[], done: string) {
+    setErr(null);
+    const lentFrom = accountItems.find(a => a.id === list[0]?.debit_account_id);
+    const accountId = lentFrom && !isCreditCard(lentFrom.kind) ? lentFrom.id : pickAccount(accountItems, defaultAccountId);
+    const amount = list.length === 1 ? String(list[0].outstanding_paise / 100) : '';
+    setReceipt({ loans: list, done, accountId, amount });
+  }
+
+  /** Records a Got back credit into the chosen account: the typed amount for one loan, or each loan's balance. */
+  async function gotBack() {
+    if (!receipt) return;
+    const { loans: list, done, accountId, amount } = receipt;
+    if (!accountId) return setErr('Choose the account it came into');
     setErr(null);
     setBusy(true);
     try {
       for (const l of list) {
         await api('transactions', {
           token,
-          body: { type: 'credit', amount: String(l.outstanding_paise / 100), date: todayIST(), accountId, creditCategory: 'gone_back', lentLoanId: l.id },
+          body: {
+            type: 'credit',
+            amount: list.length === 1 ? amount : String(l.outstanding_paise / 100),
+            date: todayIST(),
+            accountId,
+            creditCategory: 'gone_back',
+            lentLoanId: l.id,
+          },
         });
       }
       haptic('success');
+      setReceipt(null);
       reload();
-      onToast(done);
+      onToast(list.length === 1 ? `${list[0].person_name} got back ${formatINR(parseRupeesToPaise(amount))}` : done);
     } catch (e) {
       haptic('error');
       setErr(e instanceof Error ? e.message : 'Could not save');
@@ -177,11 +201,11 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
                       <div className="fs-12 c-sec">{l.note ?? 'No note'} · {l.lent_on}{l.debit_account_id ? ` · from ${accountName(l.debit_account_id)}` : ' · no account'}</div>
                     </div>
                     <button className="link" disabled={busy} onClick={() => openEdit(l)}>Edit</button>
-                    <button className="link" disabled={busy} onClick={() => gotBack([l], `${p.name} got back ${formatINR(l.outstanding_paise)}`)}>Got back</button>
+                    <button className="link" disabled={busy} onClick={() => askGotBack([l], `${p.name} got back ${formatINR(l.outstanding_paise)}`)}>Got back</button>
                   </div>
                 ))}
                 <div className="flex gap-14 mt-4">
-                  <button className="link" disabled={busy} onClick={() => gotBack(p.open, `${p.name} has got back everything`)}>All got back</button>
+                  <button className="link" disabled={busy} onClick={() => askGotBack(p.open, `${p.name} has got back everything`)}>All got back</button>
                   <button className="link" onClick={() => openNew(p.name)}>Lend more</button>
                 </div>
               </div>
@@ -213,6 +237,30 @@ export function Lent({ token, go, onToast }: { token: string; go: (r: Route) => 
           <Icon name="plus" size={17} /> Record money lent
         </Button>
       </div>
+
+      {receipt && (
+        <Sheet label="Money came back" onClose={() => setReceipt(null)}>
+          <h2 className="fs-18 m-0">Which account did it come into?</h2>
+          <p className="fs-13 c-sec m-0 mt-4">{receipt.loans.length === 1 ? receipt.loans[0].person_name : `Everything ${receipt.loans[0]?.person_name ?? ''} owes`} paid you back. The money is added to the account you choose.</p>
+          <fieldset className="chipset mt-14">
+            <legend className="kicker">Received into</legend>
+            <div className="flex flex-wrap gap-8">
+              {accountItems.map(a => (
+                <button key={a.id} type="button" className={`chip ${receipt.accountId === a.id ? 'chip--on' : ''}`} aria-pressed={receipt.accountId === a.id} onClick={() => setReceipt(r => r && { ...r, accountId: a.id })}>{a.nickname}</button>
+              ))}
+            </div>
+          </fieldset>
+          {receipt.loans.length === 1 && (
+            <div className="mt-14">
+              <Field label="Amount (₹)" hint={`Up to ${formatINR(receipt.loans[0].outstanding_paise)} is still owed. Enter less if only part came back.`}>
+                <Input numeric inputMode="decimal" value={receipt.amount} onChange={e => setReceipt(r => r && { ...r, amount: e.target.value })} />
+              </Field>
+            </div>
+          )}
+          {err && <p className="c-danger fs-13 m-0 mt-8" role="alert">{err}</p>}
+          <Button block className="mt-14" onClick={gotBack} disabled={busy}>{busy ? 'Saving…' : 'Save'}</Button>
+        </Sheet>
+      )}
 
       {dialog !== null && (
         <div className="abs inset-0 flex" role="dialog" aria-modal="true" aria-label={editing ? 'Edit money lent' : 'Record money lent'} style={{ zIndex: 30, flexDirection: 'column', justifyContent: 'flex-end' }}>

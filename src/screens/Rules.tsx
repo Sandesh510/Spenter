@@ -38,6 +38,7 @@ const GROUPS: RuleGroup[] = [
     rules: [
       'Lending takes the money out of your balance in the month you lend it. It is not spend and does not touch any budget.',
       'Record repayments as Got back, linked to the loan. The amount still owed is the loan less what has come back.',
+      'When money comes back you choose the account it came into, and it is added to that account. A loan lent from a credit card is owed on the card until you pay the bill; the money returned lands where you received it.',
       "A loan's amount can't be set below what has already come back.",
     ],
   },
@@ -58,8 +59,8 @@ const GROUPS: RuleGroup[] = [
     icon: 'arrow-left-right',
     rules: [
       'Home shows the credit card bill in a small row; open it for more. In your accounts = balance left to spend + card bill still to pay. Left after the card bill is the balance itself, because card use is already taken out of it.',
-      'Trends has a Spend by account chart: money that went out of each account this month (spend, savings, money lent and transfers to outside). Transfers between your own accounts are not counted.',
-      'Trends has a Credit card section under Money in and out: the total spent on cards this month and a bar chart of the 5 categories it went to.',
+      'Trends has a Spend by account chart: what you spent from each account this month (spend and savings entries). Money lent and transfers are not spending, but they still change the account balance.',
+      'Trends has a Credit card section under Money in and out: the total used on cards this month (including money lent from a card) and a bar chart of the 5 categories it went to.',
       'Card bill still to pay = what went on cards this month (spend, savings, money lent) less bill payments made this month. It is never below zero.',
       'A transfer between your own accounts does not change your balance.',
       'A transfer to someone outside your accounts counts as money out.',

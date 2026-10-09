@@ -14,6 +14,7 @@ import { Lent } from './screens/Lent';
 import { Commitments } from './screens/Commitments';
 import { Rules } from './screens/Rules';
 import { Savings } from './screens/Savings';
+import { ResetPassword } from './screens/ResetPassword';
 import { Import } from './screens/Import';
 import { Lock } from './screens/Lock';
 import { Log } from './screens/Log';
@@ -55,7 +56,21 @@ function readToken(): string | null {
   }
 }
 
+/** The access token in a password reset link (it arrives in the address after the #), or null. */
+function readRecoveryToken(): string | null {
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  return params.get('type') === 'recovery' ? params.get('access_token') : null;
+}
+
+/**
+ * Read once when the page loads, not inside the component: React may run a state initializer twice,
+ * and the token is taken out of the address bar (and history) as soon as it is read.
+ */
+const RECOVERY_TOKEN = readRecoveryToken();
+if (RECOVERY_TOKEN) window.history.replaceState(window.history.state, '', window.location.pathname);
+
 export function App() {
+  const [recoveryToken, setRecoveryToken] = useState<string | null>(RECOVERY_TOKEN);
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -184,6 +199,7 @@ export function App() {
     setUnlocked(false);
   }
 
+  if (recoveryToken) return <ResetPassword accessToken={recoveryToken} onDone={() => setRecoveryToken(null)} />;
   if (checking) return <Frame><p className="c-sec" style={{ padding: 24 }}>Loading…</p></Frame>;
   if (!user || !token) return <SignIn onSignedIn={signedIn} />;
   if (profile?.lockEnabled && !unlocked) {
@@ -252,7 +268,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 }
 
 function SignIn({ onSignedIn }: { onSignedIn: (session: Session, user: User) => void }) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -266,7 +282,11 @@ function SignIn({ onSignedIn }: { onSignedIn: (session: Session, user: User) => 
     setBusy(true);
     try {
       const body = { email: email.trim(), password };
-      if (mode === 'signup') {
+      if (mode === 'reset') {
+        await api('auth-reset', { body: { email: email.trim() } });
+        setNotice('If that email has an account, a reset link is on its way. Open it on this device.');
+        setMode('login');
+      } else if (mode === 'signup') {
         const res = await api<{ needsConfirmation: boolean }>('auth-signup', { body });
         setNotice(res.needsConfirmation ? 'Account created. Confirm your email, then sign in.' : 'Account created. Sign in to continue.');
         setMode('login');
@@ -289,32 +309,37 @@ function SignIn({ onSignedIn }: { onSignedIn: (session: Session, user: User) => 
           <Icon name="wallet" size={26} />
         </div>
         <div className="heading fs-24 mt-14">SpendCheck</div>
-        <div className="fs-13 c-sec mt-4">{mode === 'login' ? 'Sign in to continue' : 'Create your account'}</div>
+        <div className="fs-13 c-sec mt-4">{mode === 'login' ? 'Sign in to continue' : mode === 'reset' ? 'Reset your password' : 'Create your account'}</div>
       </div>
 
       <form className="grid gap-12" onSubmit={submit} >
         <Input  type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-        <Input
-          
-          type="password"
-          placeholder={mode === 'signup' ? 'Password (min 8 characters)' : 'Password'}
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          minLength={mode === 'signup' ? 8 : undefined}
-          autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-        />
+        {mode !== 'reset' && (
+          <Input
+            type="password"
+            placeholder={mode === 'signup' ? 'Password (min 8 characters)' : 'Password'}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            minLength={mode === 'signup' ? 8 : undefined}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+          />
+        )}
         <Button className="mt-6" type="submit" disabled={busy} >
-          {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+          {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : mode === 'reset' ? 'Send reset link' : 'Create account'}
         </Button>
       </form>
 
       {error && <p className="c-danger fs-13" role="alert">{error}</p>}
       {notice && <p className="c-success fs-13">{notice}</p>}
 
+      {mode === 'login' && (
+        <button className="link link--block mt-16" onClick={() => { setMode('reset'); setError(null); setNotice(null); }}>
+          Forgot your password?
+        </button>
+      )}
       <button
-        className="link"
-        style={{ display: 'block', margin: '18px auto 0' }}
+        className="link link--block mt-12"
         onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setNotice(null); }}
       >
         {mode === 'login' ? 'New here? Create an account' : 'Have an account? Sign in'}

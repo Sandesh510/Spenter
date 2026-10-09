@@ -529,3 +529,19 @@ li:last-child > .list-row {
   font-size: 11px;
   color: var(--color-accent-text);
 }
+
+/* Shown by the error boundary when a screen cannot be drawn */
+.error-screen {
+  justify-content: center;
+  gap: 14px;
+  padding: 0 24px;
+  text-align: center;
+}
+.error-screen > button {
+  align-self: center;
+}
+
+/* Sign-in style screens: content starts near the top of the phone */
+.auth-screen {
+  padding: 56px 24px 24px;
+}

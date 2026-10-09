@@ -1,19 +1,14 @@
 /**
- * Money that went out of each account this month: spend and savings entries, transfers to someone
- * outside your accounts, and money lent from the account. Transfers between your own accounts are
- * not spending, so they are left out.
+ * What was spent from each account this month: spend and savings entries only.
+ * Money lent and transfers to someone outside your accounts are not spending (they have their own lines
+ * in Money in and out and still change the account's balance), and transfers between your own accounts
+ * move money without spending it.
  */
 
 export interface OutflowTxn {
   type: 'spend' | 'credit' | 'transfer';
   amountPaise: number;
   accountId: string | null;
-  external: boolean;
-}
-
-export interface OutflowLoan {
-  amountPaise: number;
-  debitAccountId: string | null;
 }
 
 export interface AccountSpend {
@@ -21,15 +16,11 @@ export interface AccountSpend {
   paise: number;
 }
 
-/** Accounts with money out, largest first. */
-export function spendByAccount(txns: OutflowTxn[], loans: OutflowLoan[]): AccountSpend[] {
+/** Accounts with spending, largest first. */
+export function spendByAccount(txns: OutflowTxn[]): AccountSpend[] {
   const totals = new Map<string, number>();
-  const add = (id: string | null, paise: number) => {
-    if (id) totals.set(id, (totals.get(id) ?? 0) + paise);
-  };
   for (const t of txns) {
-    if (t.type === 'spend' || (t.type === 'transfer' && t.external)) add(t.accountId, t.amountPaise);
+    if (t.type === 'spend' && t.accountId) totals.set(t.accountId, (totals.get(t.accountId) ?? 0) + t.amountPaise);
   }
-  for (const l of loans) add(l.debitAccountId, l.amountPaise);
   return [...totals.entries()].map(([accountId, paise]) => ({ accountId, paise })).filter(a => a.paise > 0).sort((a, b) => b.paise - a.paise);
 }

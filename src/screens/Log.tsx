@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
 import { BUCKET_LABEL, BUCKET_TINT, categoryIcon } from '../lib/categories';
-import { currentMonth, dayLabel, monthTitle } from '../lib/dates';
+import { currentMonth, dayLabel, monthTitle, shiftMonth } from '../lib/dates';
 import { formatINR } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import { releaseSavedLogFilter, saveLogFilter, takeSavedLogFilter } from '../lib/logFilter';
@@ -223,11 +223,11 @@ function FilterSelect({
 
 function recentMonths(n: number): { value: string; label: string }[] {
   const out: { value: string; label: string }[] = [];
-  const now = new Date();
+  // The current month in India, not UTC: just after midnight on the 1st UTC is still last month.
+  const thisMonth = currentMonth();
   for (let i = 0; i < n; i++) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-    const value = d.toISOString().slice(0, 7);
-    out.push({ value, label: d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' }) });
+    const value = shiftMonth(thisMonth, -i);
+    out.push({ value, label: monthTitle(value) });
   }
   return out;
 }

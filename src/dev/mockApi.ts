@@ -37,7 +37,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
       accounts: fixtures.accounts(new URLSearchParams()),
       'home?month=2026-10': fixtures.home(new URLSearchParams()),
       'transactions?month=2026-10': { items: [] },
-      lent: { items: [] },
+      lent: { items: [{ id: 'l1', person_name: 'Ravi', amount_paise: 300_000, lent_on: '2026-10-02', note: 'Trip', settled_at: null, created_at: '2026-10-02T00:00:00Z', debit_account_id: 'acc2', outstanding_paise: 300_000 }] },
     },
   }),
   me: () => ({ id: 'mock-user', email: 'demo@example.com' }),
@@ -121,7 +121,7 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     ],
     totals: { subscriptionsPaise: 64900, investmentsPaise: 1000000, emisPaise: 2000000 },
   }),
-  lent: () => ({ items: [] }),
+  lent: () => ({ items: [{ id: 'l1', person_name: 'Ravi', amount_paise: 300_000, lent_on: '2026-10-02', note: 'Trip', settled_at: null, created_at: '2026-10-02T00:00:00Z', debit_account_id: 'acc2', outstanding_paise: 300_000 }] }),
   asks: () => ({ items: [] }),
   savings: () => ({
     averageMonthlySpendPaise: 4500000,

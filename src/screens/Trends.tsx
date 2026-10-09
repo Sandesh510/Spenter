@@ -223,7 +223,7 @@ function CreditCardSection({ card, categories }: { card: NonNullable<HomeData['c
         <h2 id="card-trend" className="kicker kicker--spaced m-0">Credit card</h2>
         <span className="num fs-18">{formatINR(card.spentPaise)}</span>
       </div>
-      <p className="fs-12 c-sec m-0 mt-2">spent on cards this month{card.duePaise !== card.spentPaise ? ` · ${formatINR(card.duePaise)} bill still to pay` : ''}</p>
+      <p className="fs-12 c-sec m-0 mt-2">used on cards this month{card.duePaise !== card.spentPaise ? ` · ${formatINR(card.duePaise)} bill still to pay` : ''}</p>
       {rows.length > 0 && (
         <ul className="list-reset grid gap-10 mt-12" aria-label="Top categories on card">
           {rows.map(r => (
@@ -251,7 +251,7 @@ function AccountChart({ rows, accounts }: { rows: { accountId: string; paise: nu
         <h2 id="account-trend" className="kicker kicker--spaced m-0">Spend by account</h2>
         <span className="num fs-18">{formatINR(total)}</span>
       </div>
-      <p className="fs-12 c-sec m-0 mt-2">went out of your accounts this month</p>
+      <p className="fs-12 c-sec m-0 mt-2">spent from your accounts this month</p>
       <ul className="list-reset grid gap-10 mt-12">
         {rows.map(r => {
           const a = accounts.find(x => x.id === r.accountId);

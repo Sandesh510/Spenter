@@ -164,10 +164,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
       (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
     ),
     // Money out by account this month, for the Trends chart.
-    byAccount: spendByAccount(
-      rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, external: r.external })),
-      (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
-    ),
+    byAccount: spendByAccount(rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id }))),
     categories: categoryRows,
     buckets,
     recent: rows.slice(0, 10).map(r => ({
