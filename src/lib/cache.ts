@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Profile } from './types';
+import type { Profile, TxnRow } from './types';
 
 /**
  * In-memory cache for the signed-in app, filled by one `bootstrap` request.
@@ -116,4 +116,42 @@ export function restoreSnapshot(): Snapshot | null {
     emit();
   }
   return snap;
+}
+
+let background: Promise<unknown> | null = null;
+let again = false;
+
+/**
+ * Refreshes everything without making the caller wait: a save shows its result at once and the totals
+ * catch up a moment later. Calls made while one is running are folded into one more refresh after it.
+ */
+export function refreshInBackground(token: string): void {
+  if (background) {
+    again = true;
+    return;
+  }
+  background = refreshAll(token)
+    .catch(() => {})
+    .finally(() => {
+      background = null;
+      if (again) {
+        again = false;
+        refreshInBackground(token);
+      }
+    });
+}
+
+/**
+ * Puts a just-saved entry into the cached list for its month, newest first, so Log shows it before the
+ * full refresh finishes. Months that are not cached are left alone: they load fresh when opened.
+ */
+export function addTransactionToCache(row: TxnRow): void {
+  const key = `transactions?month=${row.txn_date.slice(0, 7)}`;
+  const current = data[key] as { items: TxnRow[] } | undefined;
+  if (!current || current.items.some(t => t.id === row.id)) return;
+  const at = current.items.findIndex(t => t.txn_date <= row.txn_date);
+  const items = [...current.items];
+  items.splice(at === -1 ? items.length : at, 0, row);
+  data = { ...data, [key]: { ...current, items } };
+  emit();
 }

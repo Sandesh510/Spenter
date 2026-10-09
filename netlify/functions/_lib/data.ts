@@ -25,10 +25,9 @@ interface CategoryRow {
 export async function loadHome(admin: SupabaseClient, userId: string, month: string) {
   const { start, end, firstDay } = monthRange(month);
   // Due commitments are posted before reading, so Home always shows this month's SIPs, EMIs and subscriptions.
-  await postDue(admin, userId, todayIST());
-  await postInsurance(admin, userId, todayIST());
-  await carryBudgetsForward(admin, userId, firstDay);
   const today = todayIST();
+  // Independent of each other, so they run together rather than one after another.
+  await Promise.all([postDue(admin, userId, today), postInsurance(admin, userId, today), carryBudgetsForward(admin, userId, firstDay)]);
   const isCurrentMonth = today.slice(0, 7) === month;
 
   const [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes] = await Promise.all([

@@ -391,3 +391,66 @@ li:last-child > .list-row {
   resize: vertical;
   font-family: var(--font-body);
 }
+
+/* Quick Add: amount readout, bucket headings and the one-screen details step */
+.qa-amount {
+  padding: 14px 0 10px;
+}
+.qa-amount--big {
+  padding: 18px 0 12px;
+}
+.qa-amount__sign {
+  font-size: 24px;
+}
+.qa-amount--big .qa-amount__sign {
+  font-size: 34px;
+}
+.qa-amount__figure {
+  font-size: 34px;
+  line-height: 1;
+}
+.qa-amount--big .qa-amount__figure {
+  font-size: 44px;
+}
+.qa-amount__caret {
+  height: 40px;
+}
+.qa-hint {
+  margin: 4px 0 12px;
+}
+.qa-bucket {
+  padding: 0;
+  margin-bottom: 8px;
+}
+.qa-bucket--need {
+  color: var(--color-need);
+}
+.qa-bucket--want {
+  color: var(--color-accent-text);
+}
+.qa-bucket--save {
+  color: var(--color-success);
+}
+.chipset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.chip__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.link--block {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Keeps the topbar balanced on the first step, where the second close button is not needed */
+.iconbtn--hidden {
+  visibility: hidden;
+}
+.chipset > legend {
+  padding: 0;
+}

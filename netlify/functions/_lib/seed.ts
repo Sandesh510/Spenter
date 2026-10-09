@@ -37,6 +37,16 @@ export const DEFAULT_ACCOUNTS = [
   { nickname: 'Paytm', bank: 'Paytm', kind: 'UPI wallet', icon: 'smartphone' },
 ] as const;
 
+/** Users already seeded by this warm function instance. Seeding is idempotent, so a cold start just re-checks. */
+const seeded = new Set<string>();
+
+/** ensureSeeded, skipped when this instance has already done it for the user. */
+export async function ensureSeededOnce(admin: SupabaseClient, userId: string): Promise<void> {
+  if (seeded.has(userId)) return;
+  await ensureSeeded(admin, userId);
+  seeded.add(userId);
+}
+
 /**
  * Creates the user's SpendCheck profile, default categories and starter accounts on first use.
  * Idempotent: safe to call on every sign-in or request. Concurrent calls are harmless

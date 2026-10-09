@@ -8,7 +8,7 @@ import { haptic } from '../lib/haptics';
 import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
-import { refreshAll } from '../lib/cache';
+import { addTransactionToCache, refreshAll, refreshInBackground } from '../lib/cache';
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { isCreditCard } from '../lib/accountTypes';
@@ -101,12 +101,14 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
     try {
       if (editing) {
         await api('transactions', { method: 'PATCH', token, body: { id: editing.id, ...body } });
+        // An edit goes straight back to the Log, which must not show the old row, so wait for the refresh once.
         await refreshAll(token).catch(() => {});
       } else {
-        await api('transactions', { token, body });
+        const res = await api<{ id: string; item?: TxnRow }>('transactions', { token, body });
+        if (res.item) addTransactionToCache(res.item);
+        // Log, Home and Lent read from the cache; they catch up in the background so saving never waits on it.
+        refreshInBackground(token);
       }
-      // Log, Home and Lent read from the cache, so a saved entry must refresh it.
-      await refreshAll(token).catch(() => {});
       haptic('success');
       if (editing) {
         onToast('Transaction updated');

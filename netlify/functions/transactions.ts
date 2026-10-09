@@ -6,6 +6,7 @@ import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
 import { restoreLoanAfterEmiDelete } from './_lib/commitments';
 
+const TXN_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id';
 const TYPES = ['spend', 'credit', 'transfer'] as const;
 const CREDIT_CATEGORIES = ['salary', 'gone_back', 'others', 'borrowed'] as const;
 type TxnType = (typeof TYPES)[number];
@@ -22,7 +23,7 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     const { start, end } = monthRange(month);
     const { data, error } = await admin
       .from('spend_transactions')
-      .select('id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id')
+      .select(TXN_COLUMNS)
       .eq('user_id', userId)
       .is('deleted_at', null)
       .gte('txn_date', start)
@@ -79,11 +80,12 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
   const { data, error } = await admin
     .from('spend_transactions')
     .insert({ user_id: userId, ...(await parseTxn(admin, userId, b)) })
-    .select('id')
+    .select(TXN_COLUMNS)
     .single();
   if (error) throw error;
 
-  return json(201, { id: data.id });
+  // The saved row comes back whole, so the app can show it at once without waiting for a full refresh.
+  return json(201, { id: data.id, item: data });
 });
 
 /** Validates a spend, credit or transfer and returns the row fields. Shared by POST and PATCH. */
@@ -127,37 +129,12 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
     if (toAccountId === accountId) throw new HttpError(400, 'Source and destination must differ');
   }
 
-  if (lentLoanId) {
-    const { data: loan, error: loanErr } = await admin
-      .from('spend_lent_loans')
-      .select('id,amount_paise,settled_at')
-      .eq('user_id', userId)
-      .eq('id', lentLoanId)
-      .maybeSingle();
-    if (loanErr) throw loanErr;
-    if (!loan) throw new HttpError(400, 'Unknown loan');
-
-    // A Got back cannot be more than is still owed on the loan. Checked here, not only on the screen,
-    // so a second device or an old screen cannot over-record a repayment.
-    let backQuery = admin
-      .from('spend_transactions')
-      .select('amount_paise')
-      .eq('user_id', userId)
-      .eq('lent_loan_id', lentLoanId)
-      .eq('credit_category', 'gone_back')
-      .is('deleted_at', null);
-    if (editingId) backQuery = backQuery.neq('id', editingId);
-    const { data: backs, error: backErr } = await backQuery;
-    if (backErr) throw backErr;
-    const returned = (backs ?? []).reduce((sum, r) => sum + r.amount_paise, 0);
-    const owed = loan.settled_at ? 0 : Math.max(0, loan.amount_paise - returned);
-    if (amountPaise > owed) {
-      throw new HttpError(400, owed === 0 ? 'Nothing is still owed on this loan' : `More than the ₹${(owed / 100).toFixed(2)} still owed on this loan`);
-    }
-  }
-
-  await assertOwned(admin, userId, 'spend_categories', categoryId ? [categoryId] : []);
-  await assertOwned(admin, userId, 'spend_accounts', [accountId, ...(toAccountId ? [toAccountId] : [])]);
+  // Ownership checks and the loan check do not depend on each other, so they run together.
+  await Promise.all([
+    assertOwned(admin, userId, 'spend_categories', categoryId ? [categoryId] : []),
+    assertOwned(admin, userId, 'spend_accounts', [accountId, ...(toAccountId ? [toAccountId] : [])]),
+    lentLoanId ? checkLoanRepayment(admin, userId, lentLoanId, amountPaise, editingId) : Promise.resolve(),
+  ]);
 
   return {
     type,
@@ -172,4 +149,29 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
     to_account_id: type === 'transfer' && !external ? toAccountId : null,
     external: type === 'transfer' && external,
   };
+}
+
+/** A Got back cannot be more than is still owed on the loan. Checked here, not only on the screen,
+ * so a second device or an old screen cannot over-record a repayment. */
+async function checkLoanRepayment(admin: SupabaseClient, userId: string, lentLoanId: string, amountPaise: number, editingId?: string) {
+  let backQuery = admin
+    .from('spend_transactions')
+    .select('amount_paise')
+    .eq('user_id', userId)
+    .eq('lent_loan_id', lentLoanId)
+    .eq('credit_category', 'gone_back')
+    .is('deleted_at', null);
+  if (editingId) backQuery = backQuery.neq('id', editingId);
+  const [loanRes, backRes] = await Promise.all([
+    admin.from('spend_lent_loans').select('id,amount_paise,settled_at').eq('user_id', userId).eq('id', lentLoanId).maybeSingle(),
+    backQuery,
+  ]);
+  if (loanRes.error) throw loanRes.error;
+  if (!loanRes.data) throw new HttpError(400, 'Unknown loan');
+  if (backRes.error) throw backRes.error;
+  const returned = (backRes.data ?? []).reduce((sum, r) => sum + r.amount_paise, 0);
+  const owed = loanRes.data.settled_at ? 0 : Math.max(0, loanRes.data.amount_paise - returned);
+  if (amountPaise > owed) {
+    throw new HttpError(400, owed === 0 ? 'Nothing is still owed on this loan' : `More than the ₹${(owed / 100).toFixed(2)} still owed on this loan`);
+  }
 }

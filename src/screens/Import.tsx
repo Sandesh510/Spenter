@@ -7,7 +7,7 @@ import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
-import { refreshAll } from '../lib/cache';
+import { refreshInBackground } from '../lib/cache';
 import { BUCKET_LABEL } from '../lib/categories';
 import { currentMonth, todayIST } from '../lib/dates';
 import { haptic } from '../lib/haptics';
@@ -61,7 +61,7 @@ export function Import({ token, go, onToast }: { token: string; go: (r: Route) =
       setIndex(i => i + 1);
     } else {
       setStage('done');
-      if (saved || added > 0) await refreshAll(token).catch(() => {});
+      if (saved || added > 0) refreshInBackground(token);
     }
   }
 

@@ -3,7 +3,7 @@ import { requireUser } from './_lib/auth';
 import { fail, json } from './_lib/response';
 import { currentMonthIST } from './_lib/month';
 import { loadAccounts, loadHome, loadLent, loadProfile, loadTransactions } from './_lib/data';
-import { ensureSeeded } from './_lib/seed';
+import { ensureSeededOnce } from './_lib/seed';
 import { getAdminClient } from './_supabase';
 
 /**
@@ -16,7 +16,7 @@ export const handler: Handler = async event => {
   try {
     const admin = getAdminClient();
     const user = await requireUser(admin, event.headers.authorization);
-    await ensureSeeded(admin, user.id);
+    await ensureSeededOnce(admin, user.id);
 
     const month = currentMonthIST();
     const [profile, accounts, home, transactions, lent] = await Promise.all([
