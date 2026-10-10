@@ -17,7 +17,7 @@ import type { Account, HomeData, Loan, Profile, TxnRow } from '../lib/types';
 import type { Route } from '../App';
 
 /** Builds the cash outlook from what is already tracked. Null until everything has loaded. */
-function useOutlook(token: string): { outlook: OutlookResult; profile: Profile } | null {
+export function useOutlook(token: string): { outlook: OutlookResult; profile: Profile } | null {
   const month = currentMonth();
   const accounts = useApi<{ items: Account[] }>('accounts', token);
   const profile = useApi<Profile>('profile', token);
@@ -95,7 +95,7 @@ function inDays(from: string, to: string): string {
   return n === 0 ? 'today' : n > 0 ? `in ${n} ${n === 1 ? 'day' : 'days'}` : `${-n} ${n === -1 ? 'day' : 'days'} ago`;
 }
 
-export function Outlook({ token, go }: { token: string; go: (r: Route) => void }) {
+export function Outlook({ token, go, onPayCard }: { token: string; go: (r: Route) => void; onPayCard: (cardId: string) => void }) {
   const result = useOutlook(token);
   const [shown, toggleShown, money] = useAmountsShown();
   const today = todayIST();
@@ -141,6 +141,7 @@ export function Outlook({ token, go }: { token: string; go: (r: Route) => void }
                     <h3 className="fs-15 m-0">{c.nickname}</h3>
                     <span className="num fs-13">{c.owedPaise === null ? 'no balance set' : `Owed ${money(c.owedPaise)}`}</span>
                   </div>
+                  <button className="link" onClick={() => onPayCard(c.id)}>Pay bill</button>
                   {c.limitPaise !== null && c.usedPct !== null && (
                     <>
                       <div className="track mt-8"><div className="fill" style={{ width: `${Math.min(100, Math.max(0, c.usedPct))}%` }} /></div>

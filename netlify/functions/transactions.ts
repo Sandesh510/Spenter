@@ -6,6 +6,7 @@ import { monthRange, parseMonth } from './_lib/month';
 import { HttpError, json } from './_lib/response';
 import { restoreLoanAfterEmiDelete } from './_lib/commitments';
 import { selectMonthTxns } from './_lib/data';
+import { CARD_PAYMENT_MESSAGE, looksLikeCardPayment } from '../../src/lib/cardPayment';
 
 const TXN_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id';
 const TYPES = ['spend', 'credit', 'transfer'] as const;
@@ -142,6 +143,9 @@ async function parseTxn(admin: SupabaseClient, userId: string, b: Record<string,
     assertOwned(admin, userId, 'spend_categories', categoryId ? [categoryId] : []),
     assertOwned(admin, userId, 'spend_accounts', [accountId, ...(toAccountId ? [toAccountId] : [])]),
     lentLoanId ? checkLoanRepayment(admin, userId, lentLoanId, amountPaise, editingId) : Promise.resolve(),
+    // A new spend in a card-payment category is refused: it belongs to the card as a transfer. Editing an
+    // entry that already exists is left alone, so an old one can still be fixed.
+    type === 'spend' && categoryId && !editingId ? refuseCardPaymentCategory(admin, userId, categoryId) : Promise.resolve(),
   ]);
 
   return {
@@ -182,4 +186,11 @@ async function checkLoanRepayment(admin: SupabaseClient, userId: string, lentLoa
   if (amountPaise > owed) {
     throw new HttpError(400, owed === 0 ? 'Nothing is still owed on this loan' : `More than the ₹${(owed / 100).toFixed(2)} still owed on this loan`);
   }
+}
+
+/** Throws when the category is named like a card bill payment (see src/lib/cardPayment.ts). */
+async function refuseCardPaymentCategory(admin: SupabaseClient, userId: string, categoryId: string) {
+  const { data, error } = await admin.from('spend_categories').select('name').eq('id', categoryId).eq('user_id', userId).maybeSingle();
+  if (error) throw error;
+  if (looksLikeCardPayment(data?.name)) throw new HttpError(400, CARD_PAYMENT_MESSAGE);
 }

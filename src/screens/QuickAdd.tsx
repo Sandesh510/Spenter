@@ -14,6 +14,7 @@ import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { currentMonth } from '../lib/dates';
 import { useApi } from '../lib/useApi';
 import { alertAfterSpend } from '../lib/budgetAlerts';
+import { looksLikeCardPayment } from '../lib/cardPayment';
 import { recentCategories, repeatables, type Repeatable } from '../lib/recents';
 import type { Account, Bucket, HomeData, TxnRow } from '../lib/types';
 import type { Route } from '../App';
@@ -32,7 +33,7 @@ const GROUPS: { bucket: Bucket; label: string }[] = [
  * Quick Add: two steps. Type the amount, then pick the category on one screen where the account
  * (your default one first) and an optional note are already in place, and save.
  */
-export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route) => void; onToast: (m: string) => void }) {
+export function QuickAdd({ token, go, onToast, onPayCard }: { token: string; go: (r: Route) => void; onToast: (m: string) => void; onPayCard: (prefill?: { amount?: string }) => void }) {
   const [step, setStep] = useState<Step>('amount');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -51,6 +52,8 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
   const orderedAccounts = [...(accounts.data?.items ?? [])].sort((a, b) => Number(b.id === firstId) - Number(a.id === firstId));
   const paidFrom = accountId ?? firstId;
   const category = home.data?.categories.find(c => c.id === categoryId) ?? null;
+  // A category named like a card bill payment is a transfer to the card, not a spend.
+  const isCardPayment = looksLikeCardPayment(category?.name);
   const amountPaise = (() => {
     try {
       return amount ? parseRupeesToPaise(amount) : 0;
@@ -233,9 +236,18 @@ export function QuickAdd({ token, go, onToast }: { token: string; go: (r: Route)
           </div>
 
           {error && <p className="c-danger fs-13 mt-12" role="alert">{error}</p>}
-          <Button block className="mt-16" disabled={!category || !paidFrom || saving} onClick={save}>
-            {saving ? 'Saving…' : category ? `Save ${formatINR(amountPaise)} · ${category.name}` : 'Choose a category'}
-          </Button>
+          {isCardPayment && (
+            <p className="fs-13 c-sec m-0 mt-12">
+              <Icon name="credit-card" size={13} /> Paying a card bill is a transfer to the card, not a spend, so the card owes less and the money is not counted twice.
+            </p>
+          )}
+          {isCardPayment ? (
+            <Button block className="mt-16" onClick={() => onPayCard({ amount })}>Pay card bill instead</Button>
+          ) : (
+            <Button block className="mt-16" disabled={!category || !paidFrom || saving} onClick={save}>
+              {saving ? 'Saving…' : category ? `Save ${formatINR(amountPaise)} · ${category.name}` : 'Choose a category'}
+            </Button>
+          )}
         </>
       )}
     </div>

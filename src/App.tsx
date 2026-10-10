@@ -17,6 +17,7 @@ import { Savings } from './screens/Savings';
 import { ResetPassword } from './screens/ResetPassword';
 import { NetWorth } from './screens/NetWorth';
 import { Outlook } from './screens/Outlook';
+import { PayCard, type PayCardPrefill } from './screens/PayCard';
 import { useRefreshFailed } from './lib/useApi';
 import { Import } from './screens/Import';
 import { Lock } from './screens/Lock';
@@ -32,9 +33,9 @@ interface LogFilter {
   month: string;
 }
 
-export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules' | 'import' | 'savings' | 'networth' | 'outlook';
+export type Route = Tab | 'ask' | 'quickadd' | 'manual' | 'lent' | 'commitments' | 'rules' | 'import' | 'savings' | 'networth' | 'outlook' | 'paycard';
 
-const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules', 'import', 'savings', 'networth', 'outlook'];
+const ROUTE_NAMES: readonly string[] = ['home', 'log', 'trends', 'settings', 'ask', 'quickadd', 'manual', 'lent', 'commitments', 'rules', 'import', 'savings', 'networth', 'outlook', 'paycard'];
 function isRoute(v: unknown): v is Route {
   return typeof v === 'string' && ROUTE_NAMES.includes(v);
 }
@@ -83,6 +84,8 @@ export function App() {
   // Mirrors `route` for event handlers, which would otherwise see a stale value.
   const routeRef = useRef<Route>(route);
   const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
+  /** Which card and amount Pay card bill starts with, set by the screen that opened it. */
+  const [payPrefill, setPayPrefill] = useState<PayCardPrefill | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const staleTotals = useRefreshFailed();
@@ -230,6 +233,11 @@ export function App() {
     go('manual');
   };
   const showToast = (m: string) => setToast(m);
+  /** Opens Pay card bill, optionally for one card and an amount. */
+  const payCard = (prefill?: PayCardPrefill) => {
+    setPayPrefill(prefill ?? null);
+    go('paycard');
+  };
   /** Opens the Log already filtered to one category and month (from Home's category list). */
   const openCategory = (categoryId: string, month: string) => {
     go('log');
@@ -243,7 +251,7 @@ export function App() {
 
   return (
     <Frame>
-      {route === 'home' && <Home token={token} go={go} onOpenCategory={openCategory} onOpenBucket={openBucket} />}
+      {route === 'home' && <Home token={token} go={go} onOpenCategory={openCategory} onOpenBucket={openBucket} onPayCard={() => payCard()} />}
       {route === 'log' && (
         <Log key={logFilter ? `${logFilter.categoryId ?? ''}:${logFilter.bucket ?? ''}:${logFilter.month}` : 'all'} token={token} go={go} onEdit={edit} initialCategoryId={logFilter?.categoryId} initialBucket={logFilter?.bucket} initialMonth={logFilter?.month} />
       )}
@@ -252,14 +260,15 @@ export function App() {
       {route === 'settings' && profile && (
         <Settings token={token} onToast={showToast} profile={profile} onProfile={setProfile} onSignOut={signOutLocally} onLockNow={() => { setUnlocked(false); }} email={user.email} onOpenRules={() => go('rules')} />
       )}
-      {route === 'quickadd' && <QuickAdd token={token} go={go} onToast={showToast} />}
-      {route === 'manual' && <Manual token={token} go={go} onToast={showToast} editing={editTxn} />}
+      {route === 'quickadd' && <QuickAdd token={token} go={go} onToast={showToast} onPayCard={payCard} />}
+      {route === 'manual' && <Manual token={token} go={go} onToast={showToast} editing={editTxn} onPayCard={payCard} />}
       {route === 'lent' && <Lent token={token} go={go} onToast={showToast} />}
       {route === 'commitments' && <Commitments token={token} go={go} onToast={showToast} />}
       {route === 'rules' && <Rules go={go} />}
       {route === 'import' && <Import token={token} go={go} onToast={showToast} />}
       {route === 'networth' && <NetWorth token={token} go={go} />}
-      {route === 'outlook' && <Outlook token={token} go={go} />}
+      {route === 'outlook' && <Outlook token={token} go={go} onPayCard={cardId => payCard({ cardId })} />}
+      {route === 'paycard' && <PayCard token={token} go={go} onToast={showToast} prefill={payPrefill} />}
       {route === 'savings' && <Savings token={token} go={go} onToast={showToast} />}
 
       {tab && <BottomNav active={tab} onGo={go} onAdd={() => go('quickadd')} />}

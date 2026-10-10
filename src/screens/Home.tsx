@@ -26,11 +26,12 @@ import type { Route } from '../App';
  * Home, per screens/ScreenHome.dc.html. Bucket colour rules come from the README.
  * The month can be stepped back to earlier months; the current month cannot be passed.
  */
-export function Home({ token, go, onOpenCategory, onOpenBucket }: {
+export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
   token: string;
   go: (r: Route) => void;
   onOpenCategory: (categoryId: string, month: string) => void;
   onOpenBucket: (bucket: Bucket, month: string) => void;
+  onPayCard: () => void;
 }) {
   const today = currentMonth();
   const [month, setMonth] = useState(today);
@@ -84,7 +85,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket }: {
           <span>Started <span className="c-text">{data.hasOpening ? money(data.openingPaise) : 'none'}</span></span>
           <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
         </div>
-        {data.card && (data.card.duePaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} />}
+        {data.card && (data.card.duePaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} onPay={onPayCard} />}
         {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
 
@@ -333,7 +334,7 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
  * The same money seen from the accounts: what they hold before the card bill, the card bill itself,
  * and what is left once it is paid. Balance left to spend already has the card use taken out.
  */
-function CardDue({ card, balancePaise, money, shown }: { card: NonNullable<HomeData['card']>; balancePaise: number; money: (p: number) => string; shown: boolean }) {
+function CardDue({ card, balancePaise, money, shown, onPay }: { card: NonNullable<HomeData['card']>; balancePaise: number; money: (p: number) => string; shown: boolean; onPay: () => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="safe mt-12">
@@ -341,6 +342,7 @@ function CardDue({ card, balancePaise, money, shown }: { card: NonNullable<HomeD
         <h2 className="fs-13 c-sec m-0">Credit card bill</h2>
         <span className="flex ai-c gap-8">
           <span className="num fs-14">{money(card.duePaise)}</span>
+          <button className="link fs-13" onClick={onPay}>Pay</button>
           <button className="iconbtn iconbtn--sm" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-label={open ? 'Hide credit card details' : 'Show credit card details'}>
             <Icon name={open ? 'chevron-up' : 'chevron-down'} size={15} />
           </button>

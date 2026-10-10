@@ -12,6 +12,7 @@ import { addTransactionToCache, refreshAll, refreshInBackground } from '../lib/c
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
 import { isCreditCard } from '../lib/accountTypes';
+import { looksLikeCardPayment } from '../lib/cardPayment';
 import { AddAnotherPrompt } from '../components/ui/AddAnotherPrompt';
 import type { Account, HomeData, Loan, TxnRow } from '../lib/types';
 import type { Route } from '../App';
@@ -37,7 +38,7 @@ const CREDIT_SECTIONS: { id: CreditCategory; label: string }[] = [
  * Manual entry: older or non-spend transactions. Layout from screens/ScreenAdd.dc.html.
  * With `editing`, the same form opens filled in and saves changes to that transaction.
  */
-export function Manual({ token, go, onToast, editing }: { token: string; go: (r: Route) => void; onToast: (m: string) => void; editing: TxnRow | null }) {
+export function Manual({ token, go, onToast, editing, onPayCard }: { token: string; go: (r: Route) => void; onToast: (m: string) => void; editing: TxnRow | null; onPayCard: (prefill?: { amount?: string }) => void }) {
   const [kind, setKind] = useState<Kind>(editing ? (editing.type === 'credit' ? 'credit' : editing.type === 'transfer' ? 'transfer' : 'spend') : 'spend');
   const [amount, setAmount] = useState(editing ? String(editing.amount_paise / 100) : '');
   const [desc, setDesc] = useState(editing?.description ?? '');
@@ -68,6 +69,9 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
   const to = toAccountId ?? accountList.find(a => a.id !== from)?.id ?? null;
   // Paying a card bill is a transfer into the card account, so it is never counted as spend.
   const toIsCard = isCreditCard(accountList.find(a => a.id === to)?.kind);
+  // A new spend in a category named like a card payment would be counted twice; offer the transfer instead.
+  const chosenCategory = categories.find(c => c.id === categoryId);
+  const isCardPayment = kind === 'spend' && !editing && looksLikeCardPayment(chosenCategory?.name);
   // A credit has one note, the reference. Spend and transfers use the description.
   const note = isCredit ? reference : desc;
   const setNote = isCredit ? setReference : setDesc;
@@ -196,6 +200,13 @@ export function Manual({ token, go, onToast, editing }: { token: string; go: (r:
             ))}
           </div>
         </>
+      )}
+
+      {isCardPayment && (
+        <div className="mt-10">
+          <p className="fs-13 c-sec m-0"><Icon name="credit-card" size={13} /> Paying a card bill is a transfer to the card, not a spend, so the card owes less and the money is not counted twice.</p>
+          <Button variant="secondary" block className="mt-8" onClick={() => onPayCard({ amount })}>Pay card bill instead</Button>
+        </div>
       )}
 
       {isCredit && (
