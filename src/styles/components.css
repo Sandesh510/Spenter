@@ -633,3 +633,19 @@ li:last-child > .list-row {
 .nw-total {
   line-height: 1.05;
 }
+
+/* A row in Fix card repayments: a checkbox and the entry */
+.pay-row {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.pay-row--off {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.d-block {
+  display: block;
+}

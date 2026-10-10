@@ -110,7 +110,13 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
     }
     return { from, to, items };
   },
-  transactions: q => ({
+  transactions: q => q.get('cardRepayments') ? ({
+    categories: [{ id: 'c-cc', name: 'Credit card repayment' }],
+    items: [
+      { id: 'r1', type: 'spend', amount_paise: 1_500_000, txn_date: '2026-09-25', description: 'HDFC bill', category_id: 'c-cc', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-09-25T10:00:00Z' },
+      { id: 'r2', type: 'spend', amount_paise: 800_000, txn_date: '2026-08-26', description: null, category_id: 'c-cc', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-08-26T10:00:00Z' },
+    ],
+  }) : ({
     items: q.get('month') === '2026-09'
       ? [
           { id: 'p1', type: 'spend', amount_paise: 30_000, txn_date: '2026-09-04', description: null, category_id: 'c0', account_id: 'acc1', to_account_id: null, external: false, credit_category: null, reference: null, lent_loan_id: null, created_at: '2026-09-04T10:00:00Z' },

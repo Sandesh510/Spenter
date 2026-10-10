@@ -157,6 +157,7 @@ export function PayCard({ token, go, onToast, prefill }: {
           </Field>
 
           {error && <p className="c-danger fs-13 m-0" role="alert">{error}</p>}
+          <button type="button" className="link link--block" onClick={() => go('fixcards')}>Paid a bill earlier and saved it as spend? Fix it →</button>
           <Button type="submit" size="lg" block disabled={busy || !card || !from || paise <= 0}>
             {busy ? 'Saving…' : paise > 0 && card ? `Pay ${money(paise)} to ${card.nickname}` : 'Pay card bill'}
           </Button>

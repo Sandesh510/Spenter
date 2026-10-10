@@ -67,7 +67,7 @@ const GROUPS: RuleGroup[] = [
       'Card bill still to pay = what went on cards this month (spend, savings, money lent) less bill payments made this month. It is never below zero.',
       'A transfer between your own accounts does not change your balance.',
       'A transfer to someone outside your accounts counts as money out.',
-      'To pay a card bill use Pay card bill (Home, or Pay bill on a card in Cash outlook). It is a transfer from one of your accounts to the card, so the card owes less and it is never counted as spend. A new spend in a category named like a card payment (such as Credit card repayment) is not accepted: the app offers Pay card bill instead.',
+      'To pay a card bill use Pay card bill (Home, or Pay bill on a card in Cash outlook). It is a transfer from one of your accounts to the card, so the card owes less and it is never counted as spend. A new spend in a category named like a card payment (such as Credit card repayment) is not accepted: the app offers Pay card bill instead. Earlier ones can be moved to the card in Settings, Fix card repayments: the card then owes less and the balance is no longer counted down twice.',
       'Card purchases count as spend on the day you buy, against their category.',
       'Paying the card bill is a transfer from your bank account to the card account, never a spend. Recording it as spend counts the money twice.',
     ],

@@ -7,6 +7,8 @@ import { HttpError, json } from './_lib/response';
 import { restoreLoanAfterEmiDelete } from './_lib/commitments';
 import { selectMonthTxns } from './_lib/data';
 import { CARD_PAYMENT_MESSAGE, looksLikeCardPayment } from '../../src/lib/cardPayment';
+import { isCreditCard } from '../../src/lib/accountTypes';
+import { selectAll } from './_lib/paged';
 
 const TXN_COLUMNS = 'id,type,amount_paise,txn_date,description,category_id,account_id,to_account_id,external,created_at,credit_category,reference,lent_loan_id,commitment_id,policy_id';
 const TYPES = ['spend', 'credit', 'transfer'] as const;
@@ -17,10 +19,36 @@ type TxnType = (typeof TYPES)[number];
  * GET    /transactions?month=YYYY-MM   → the month's live transactions
  * POST   /transactions                 → add a spend, money-in (credit) or transfer
  * PATCH  /transactions  { id, …fields } → replace a transaction's details (same rules as POST)
+ * GET    /transactions?cardRepayments=1 → spends in card-payment categories (recorded as spend, not as a card transfer)
+ * POST   /transactions { action:'convert_card_payments', ids, cardId } → turn those spends into transfers to the card
  * POST   /transactions { action:'restore', id } → undo a delete (not for automatic EMI, SIP, subscription or premium entries)
  * DELETE /transactions?id=…            → soft delete (kept for history, excluded from totals)
  */
 export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin, userId, event }) => {
+  if (event.httpMethod === 'GET' && event.queryStringParameters?.cardRepayments === '1') {
+    // Entries recorded as spend in a category named like a card payment, across every month.
+    const { data: cats, error: catErr } = await admin.from('spend_categories').select('id,name').eq('user_id', userId);
+    if (catErr) throw catErr;
+    const matching = (cats ?? []).filter(c => looksLikeCardPayment(c.name));
+    if (matching.length === 0) return json(200, { items: [], categories: [] });
+    const ids = matching.map(c => c.id as string);
+    const items = await selectAll<Record<string, unknown>>((from, to) =>
+      admin
+        .from('spend_transactions')
+        .select(TXN_COLUMNS)
+        .eq('user_id', userId)
+        .eq('type', 'spend')
+        .is('deleted_at', null)
+        .is('commitment_id', null)
+        .is('policy_id', null)
+        .in('category_id', ids)
+        .order('txn_date', { ascending: false })
+        .order('id', { ascending: false })
+        .range(from, to) as unknown as PromiseLike<{ data: Record<string, unknown>[] | null; error: unknown }>,
+    );
+    return json(200, { items, categories: matching });
+  }
+
   if (event.httpMethod === 'GET') {
     const month = parseMonth(event.queryStringParameters?.month);
     const { start, end } = monthRange(month);
@@ -68,6 +96,30 @@ export const handler = authed(['GET', 'POST', 'PATCH', 'DELETE'], async ({ admin
     if (error) throw error;
     if (!count) throw new HttpError(404, 'Transaction not found');
     return json(200, { ok: true });
+  }
+
+  if (b.action === 'convert_card_payments') {
+    const rawIds = Array.isArray(b.ids) ? b.ids : [];
+    if (rawIds.length === 0 || rawIds.length > 200) throw new HttpError(400, 'Choose between 1 and 200 entries');
+    const ids = rawIds.map(v => reqId({ id: v }, 'id'));
+    const cardId = reqId(b, 'cardId');
+    const { data: card, error: cardErr } = await admin.from('spend_accounts').select('id,kind').eq('id', cardId).eq('user_id', userId).maybeSingle();
+    if (cardErr) throw cardErr;
+    if (!card) throw new HttpError(400, 'Unknown account');
+    if (!isCreditCard(card.kind)) throw new HttpError(400, 'Choose a credit card account');
+    // Only live, manual spends; one paid from the card itself cannot be a payment to it.
+    const { error, count } = await admin
+      .from('spend_transactions')
+      .update({ type: 'transfer', category_id: null, to_account_id: cardId, external: false, credit_category: null, updated_at: new Date().toISOString() }, { count: 'exact' })
+      .in('id', ids)
+      .eq('user_id', userId)
+      .eq('type', 'spend')
+      .is('deleted_at', null)
+      .is('commitment_id', null)
+      .is('policy_id', null)
+      .neq('account_id', cardId);
+    if (error) throw error;
+    return json(200, { converted: count ?? 0 });
   }
 
   if (b.action === 'restore') {

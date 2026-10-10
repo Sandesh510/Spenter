@@ -37,6 +37,7 @@ export function Settings({
   onLockNow,
   email,
   onOpenRules,
+  onOpenFixCards,
 }: {
   token: string;
   onToast: (m: string) => void;
@@ -46,6 +47,7 @@ export function Settings({
   onLockNow: () => void;
   email: string | undefined;
   onOpenRules: () => void;
+  onOpenFixCards: () => void;
 }) {
   const month = currentMonth();
   const home = useApi<HomeData>(`home?month=${month}`, token);
@@ -217,6 +219,11 @@ export function Settings({
 
       <SectionTitle>Help</SectionTitle>
       <Group>
+        <button onClick={onOpenFixCards} style={rowButton}>
+          <span className="c-sec"><Icon name="credit-card" size={17} /></span>
+          <span className="flex-1 fs-14">Fix card repayments saved as spend</span>
+          <span className="c-mut"><Icon name="chevron-right" size={15} /></span>
+        </button>
         <button onClick={onOpenRules} style={rowButton}>
           <span className="c-sec"><Icon name="info" size={17} /></span>
           <span className="flex-1 fs-14">Rules to remember</span>
