@@ -125,6 +125,12 @@ const fixtures: Record<string, (q: URLSearchParams) => unknown> = {
         ]
       : [],
   }),
+  offers: () => ({
+    items: [
+      { id: 'of1', account_id: 'acc2', title: '5% back on Amazon', category_id: null, merchant: 'Amazon', kind: 'cashback_pct', rate: 5, point_value_paise: null, cap_paise: 200_000, cap_period: 'month', min_spend_paise: null, exclude_category_ids: [], valid_from: null, valid_to: null, note: 'For Prime members. 3% without Prime: edit the rate.' },
+      { id: 'of2', account_id: 'acc2', title: '1% on everything else', category_id: null, merchant: null, kind: 'cashback_pct', rate: 1, point_value_paise: null, cap_paise: null, cap_period: null, min_spend_paise: null, exclude_category_ids: [], valid_from: null, valid_to: null, note: null },
+    ],
+  }),
   insurance: () => ({
     items: [
       { id: 'pol1', name: 'Family health cover', insurer: 'Star Health', policy_number: 'SH-4471', policy_type: 'health', premium_paise: 1_200_000, frequency: 'yearly', next_due_on: '2026-10-25', sum_assured_paise: 50_000_000, account_id: 'acc1', category_id: 'c0', auto_debit: false, active: true, due_day: 25 },

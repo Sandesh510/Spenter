@@ -649,3 +649,49 @@ li:last-child > .list-row {
 .d-block {
   display: block;
 }
+
+/* A card offer in the Card offers list */
+.offer-row {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.offer-row__main {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* A card suggestion in "Should I buy this?" */
+.card-pick {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.card-pick--on {
+  border-color: var(--color-accent);
+  background: var(--color-accent-tint);
+}
+.card-pick--blocked {
+  opacity: 0.6;
+}
+.card-pick__best {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 11px;
+}

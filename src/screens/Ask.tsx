@@ -12,6 +12,7 @@ import { BUCKET_LABEL, BUCKET_TAG } from '../lib/categories';
 import { currentMonth } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
+import { AskCards } from './AskCards';
 import type { Account, Bucket, HomeData } from '../lib/types';
 import type { Route } from '../App';
 
@@ -20,6 +21,8 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
   const [item, setItem] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  /** The card chosen from the suggestions; "Bought" is recorded on it. */
+  const [cardId, setCardId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +47,7 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
     if (!amountPaise) return setError('Enter the amount');
     if (!selected) return setError('Choose a category');
     const accountList = accounts.data?.items ?? [];
-    const account = accountList.find(a => a.id === pickAccount(accountList, defaultAccountId));
+    const account = accountList.find(a => a.id === (cardId ?? pickAccount(accountList, defaultAccountId)));
     if (decision === 'bought' && !account) return setError('Add an account in Settings first');
 
     setBusy(true);
@@ -122,6 +125,18 @@ export function Ask({ token, go, onToast }: { token: string; go: (r: Route) => v
           />
           <div className="fs-11 c-mut mt-6">{BUCKET_LABEL[selected.bucket]} · {BUCKET_TAG[selected.bucket]}</div>
         </div>
+      )}
+
+      {selected && amountPaise > 0 && (
+        <AskCards
+          token={token}
+          amountPaise={amountPaise}
+          categoryId={selected.id}
+          item={item}
+          selectedId={cardId}
+          onSelect={setCardId}
+          onOpenOffers={() => go('offers')}
+        />
       )}
 
       {error && <p className="c-danger fs-13 mt-12" role="alert">{error}</p>}

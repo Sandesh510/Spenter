@@ -13,6 +13,7 @@ import { formatINR, paiseToPlain, parseBalanceToPaise } from '../lib/money';
 import { useApi } from '../lib/useApi';
 import type { Account, HomeData, Profile } from '../lib/types';
 import { MAX_ACCOUNTS, MAX_EXPORT_MONTHS } from '../lib/limits';
+import { CARD_CATALOG, CATALOG_AS_OF, offersForCard } from '../lib/cardCatalog';
 import { ACCOUNT_KINDS, ACCOUNT_KIND_LABEL, isAccountKind, isCreditCard, normaliseAccountKind, type AccountKind } from '../lib/accountTypes';
 import { cardView, flipCardSign } from '../lib/accountBalance';
 import { exportFileName, transactionsCsv, type ExportRow } from '../lib/csv';
@@ -38,6 +39,7 @@ export function Settings({
   email,
   onOpenRules,
   onOpenFixCards,
+  onOpenOffers,
 }: {
   token: string;
   onToast: (m: string) => void;
@@ -48,6 +50,7 @@ export function Settings({
   email: string | undefined;
   onOpenRules: () => void;
   onOpenFixCards: () => void;
+  onOpenOffers: () => void;
 }) {
   const month = currentMonth();
   const home = useApi<HomeData>(`home?month=${month}`, token);
@@ -219,6 +222,11 @@ export function Settings({
 
       <SectionTitle>Help</SectionTitle>
       <Group>
+        <button onClick={onOpenOffers} style={rowButton}>
+          <span className="c-sec"><Icon name="credit-card" size={17} /></span>
+          <span className="flex-1 fs-14">Card offers</span>
+          <span className="c-mut"><Icon name="chevron-right" size={15} /></span>
+        </button>
         <button onClick={onOpenFixCards} style={rowButton}>
           <span className="c-sec"><Icon name="credit-card" size={17} /></span>
           <span className="flex-1 fs-14">Fix card repayments saved as spend</span>
@@ -502,6 +510,9 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
   const [nickname, setNickname] = useState('');
   const [bank, setBank] = useState('');
   const [kind, setKind] = useState<AccountKind>('bank');
+  /** A card chosen from the popular cards list; its offers are loaded when the account is added. */
+  const [catalogId, setCatalogId] = useState<string | null>(null);
+  const home = useApi<HomeData>(`home?month=${currentMonth()}`, token);
 
   if (count >= MAX_ACCOUNTS) return <div className="fs-12 c-mut" style={{ padding: '12px 14px' }}>Up to {MAX_ACCOUNTS} accounts</div>;
   if (!open) return (
@@ -510,17 +521,29 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
 
   async function add(e: FormEvent) {
     e.preventDefault();
+    let created: { id: string };
     try {
-      await api('accounts', { token, body: { nickname, bank: bank || undefined, kind } });
-      setNickname('');
-      setBank('');
-      setKind('bank');
-      setOpen(false);
-      haptic('success');
-      onAdded();
+      created = await api<{ id: string }>('accounts', { token, body: { nickname, bank: bank || undefined, kind } });
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not add account');
+      return onError(err instanceof Error ? err.message : 'Could not add account');
     }
+    // A card picked from the list brings its standard offers; they can all be edited afterwards.
+    const picked = kind === 'credit_card' ? CARD_CATALOG.find(c => c.id === catalogId) : undefined;
+    if (picked) {
+      try {
+        const { offers } = offersForCard(picked, created.id, home.data?.categories ?? []);
+        if (offers.length > 0) await api('offers', { token, body: { items: offers } });
+      } catch {
+        onError('The card was added, but its offers could not be loaded. Load them from Card offers.');
+      }
+    }
+    setNickname('');
+    setBank('');
+    setKind('bank');
+    setCatalogId(null);
+    setOpen(false);
+    haptic('success');
+    onAdded();
   }
 
   return (
@@ -539,6 +562,29 @@ function AddAccount({ token, count, onAdded, onError }: { token: string; count: 
           ))}
         </div>
       </fieldset>
+      {kind === 'credit_card' && (
+        <fieldset className="chipset">
+          <legend className="kicker">Pick your card to bring its offers (optional)</legend>
+          <div className="flex flex-wrap gap-8">
+            {CARD_CATALOG.map(c => (
+              <button
+                type="button"
+                key={c.id}
+                className={`chip ${catalogId === c.id ? 'chip--on' : ''}`}
+                aria-pressed={catalogId === c.id}
+                onClick={() => {
+                  setCatalogId(c.id);
+                  setNickname(c.name.slice(0, 40));
+                  setBank(c.bank);
+                }}
+              >
+                {c.name.replace(' Credit Card', '')}
+              </button>
+            ))}
+          </div>
+          <p className="fs-12 c-mut m-0 mt-8">Offers are as of {CATALOG_AS_OF} from public sources. Check them with your bank; you can edit every one.</p>
+        </fieldset>
+      )}
       <Button type="submit">Add account</Button>
     </form>
   );

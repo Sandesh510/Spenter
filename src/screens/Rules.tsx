@@ -84,6 +84,17 @@ const GROUPS: RuleGroup[] = [
     ],
   },
   {
+    title: 'Card offers',
+    icon: 'credit-card',
+    rules: [
+      'Card offers (Settings) say what each card gives back: cashback, reward points or a flat amount, on a category, a merchant, or everything else.',
+      'In Should I buy this?, each card is ranked by what its best offer gives on this purchase (after its cap), then by days to pay, and a card without enough credit goes last. One line says why. This is an estimate from the offers you keep.',
+      'A merchant offer applies when its word appears in the item you typed. A category offer applies to that category. An offer can exclude categories such as fuel or rent.',
+      'Caps count what the card has already earned on that offer this month, statement cycle or quarter, from your entries.',
+      'Popular cards come with offers from public pages and review sites, as of October 2026. Banks change them without notice, so check with your bank and edit anything that is not right.',
+    ],
+  },
+  {
     title: 'Cash outlook',
     icon: 'calendar',
     rules: [
