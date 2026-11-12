@@ -88,7 +88,7 @@ export function App() {
   const [editTxn, setEditTxn] = useState<TxnRow | null>(null);
   /** Which card and amount Pay card bill starts with, set by the screen that opened it. */
   const [payPrefill, setPayPrefill] = useState<PayCardPrefill | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null);
   const [checking, setChecking] = useState(true);
   const staleTotals = useRefreshFailed();
 
@@ -175,7 +175,8 @@ export function App() {
   // Show a message for ~2.3s, as the mockups' toast does.
   useEffect(() => {
     if (!toast) return;
-    const t = window.setTimeout(() => setToast(null), 2300);
+    // A toast with Undo stays longer, so there is time to tap it.
+    const t = window.setTimeout(() => setToast(null), toast.undo ? 5000 : 2300);
     return () => window.clearTimeout(t);
   }, [toast]);
 
@@ -234,7 +235,7 @@ export function App() {
     setEditTxn(t);
     go('manual');
   };
-  const showToast = (m: string) => setToast(m);
+  const showToast = (m: string, undo?: () => void) => setToast({ text: m, undo });
   /** Opens Pay card bill, optionally for one card and an amount. */
   const payCard = (prefill?: PayCardPrefill) => {
     setPayPrefill(prefill ?? null);
@@ -282,7 +283,13 @@ export function App() {
           <button className="link" onClick={() => refreshInBackground(token)}>Retry</button>
         </div>
       )}
-      {toast && <div className="toast" role="status">{toast}</div>}
+      {toast && (
+        <div className={`toast${toast.undo ? ' toast--action' : ''}`} role="status" aria-live="polite">
+          <Icon name="check" size={15} />
+          <span className="toast__text">{toast.text}</span>
+          {toast.undo && <button className="link toast__undo" onClick={() => { toast.undo?.(); setToast(null); }}>Undo</button>}
+        </div>
+      )}
     </Frame>
   );
 }

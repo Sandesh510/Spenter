@@ -10,6 +10,7 @@ import { BUCKET_LABEL, categoryIcon } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth, todayIST } from '../lib/dates';
 import { dailyAllowance } from '../lib/dailyAllowance';
 import { useAmountsShown } from '../lib/amountVisibility';
+import { dismissAlert, isDismissed } from '../lib/alertDismissals';
 import { useApi } from '../lib/useApi';
 import type { Bucket, Category, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
 import { CategoryTile } from '../components/ui/CategoryTile';
@@ -107,23 +108,22 @@ export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
       <CategorySpend categories={data.categories} onOpen={id => onOpenCategory(id, month)} />
 
       <div className="section-head"><h2 className="kicker m-0">Your money</h2></div>
-      <Card as="button" onClick={() => go('lent')} className="card--link card--row">
-        <span className="fs-13 c-sec">Money lent · yet to get back</span>
-        <span className="num flex ai-c gap-6">
-          <LentTotal token={token} />
-          <Icon name="chevron-right" size={16} />
-        </span>
-      </Card>
+      <div className="home-pair">
+        <Card as="button" onClick={() => go('lent')} className="card--link card--row">
+          <span className="fs-13 c-sec">Money lent</span>
+          <span className="num flex ai-c gap-6">
+            <LentTotal token={token} />
+            <Icon name="chevron-right" size={16} />
+          </span>
+        </Card>
+        <NetWorthCard token={token} onOpen={() => go('networth')} />
+      </div>
 
       <CommitmentsCard token={token} onOpen={() => go('commitments')} />
       <SavingsCard token={token} onOpen={() => go('savings')} />
-      <NetWorthCard token={token} onOpen={() => go('networth')} />
       <OutlookCard token={token} onOpen={() => go('outlook')} />
 
       <InsuranceReminders policies={insurance.data?.items ?? []} onOpen={() => go('commitments')} />
-
-
-
       <div className="section-head">
         <h2 className="kicker m-0">Recent asks</h2>
         <button className="link flex ai-c gap-2" onClick={() => go('log')}>
@@ -131,7 +131,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
         </button>
       </div>
       {data.asks.length === 0 ? (
-        <p className="fs-13 c-sec" style={{ margin: 0 }}>No decisions yet. Tap the centre button to check a purchase.</p>
+        <p className="fs-13 c-sec m-0">No decisions yet. Tap the centre button to check a purchase.</p>
       ) : (
         <div>{data.asks.map(a => <AskRow key={a.id} a={a} />)}</div>
       )}
@@ -287,15 +287,18 @@ const TOP_CATEGORIES = 5;
  */
 function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen: (categoryId: string) => void }) {
   const [all, setAll] = useState(false);
+  const [, redraw] = useState(0);
   // Savings above plan means the goal is met, so only Needs and Wants can be over budget.
   const over = (c: Category) => c.bucket !== 'save' && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise > c.plannedPaise;
   // Near the limit: 80% of the plan or more, the same line the budget alerts used.
-  const near = (c: Category) => c.bucket !== 'save' && !over(c) && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise / c.plannedPaise >= 0.8;
+  // A category whose alert was hidden for this month stops counting as a warning (it comes back if it goes from near to over).
+  const near = (c: Category) => c.bucket !== 'save' && !over(c) && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise / c.plannedPaise >= 0.8 && !isDismissed(c.id, 'warn');
+  const flagged = (c: Category) => (over(c) && !isDismissed(c.id, 'over')) || near(c);
   const shown = categories
     .filter(c => c.spentPaise > 0 || over(c))
     .sort((a, b) => Number(over(b)) - Number(over(a)) || Number(near(b)) - Number(near(a)) || b.spentPaise - a.spentPaise);
   if (shown.length === 0) return null;
-  const overCount = shown.filter(over).length;
+  const overCount = shown.filter(c => over(c) && !isDismissed(c.id, 'over')).length;
   const nearCount = shown.filter(near).length;
   const visible = all ? shown : shown.slice(0, TOP_CATEGORIES);
 
@@ -312,7 +315,7 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
       <Card variant="group">
         <ul className="list-reset">
           {visible.map(c => (
-            <li key={c.id}>
+            <li key={c.id} className="flex ai-c">
               <button className="list-row" onClick={() => onOpen(c.id)} aria-label={`${c.name}: show transactions`}>
                 <CategoryTile icon={categoryIcon(c)} bucket={c.bucket} />
                 <span className="flex-1 min-0">
@@ -326,6 +329,11 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
                 {near(c) && <Badge tone="neutral">{Math.round((c.spentPaise / (c.plannedPaise as number)) * 100)}% used</Badge>}
                 <span className="c-mut"><Icon name="chevron-right" size={15} /></span>
               </button>
+              {flagged(c) && (
+                <button className="iconbtn iconbtn--sm flex-none" onClick={() => { dismissAlert(c.id, over(c) ? 'over' : 'warn'); redraw(n => n + 1); }} aria-label={`Hide the budget warning for ${c.name} this month`}>
+                  <Icon name="x" size={14} />
+                </button>
+              )}
             </li>
           ))}
         </ul>

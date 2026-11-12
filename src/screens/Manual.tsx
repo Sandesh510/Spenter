@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
 import { api } from '../lib/api';
+import { undoFor } from '../lib/undoTxn';
 import { haptic } from '../lib/haptics';
 import { currentMonth, todayIST } from '../lib/dates';
 import { formatINR, parseRupeesToPaise } from '../lib/money';
@@ -38,7 +39,7 @@ const CREDIT_SECTIONS: { id: CreditCategory; label: string }[] = [
  * Manual entry: older or non-spend transactions. Layout from screens/ScreenAdd.dc.html.
  * With `editing`, the same form opens filled in and saves changes to that transaction.
  */
-export function Manual({ token, go, onToast, editing, onPayCard }: { token: string; go: (r: Route) => void; onToast: (m: string) => void; editing: TxnRow | null; onPayCard: (prefill?: { amount?: string }) => void }) {
+export function Manual({ token, go, onToast, editing, onPayCard }: { token: string; go: (r: Route) => void; onToast: (m: string, undo?: () => void) => void; editing: TxnRow | null; onPayCard: (prefill?: { amount?: string }) => void }) {
   const [kind, setKind] = useState<Kind>(editing ? (editing.type === 'credit' ? 'credit' : editing.type === 'transfer' ? 'transfer' : 'spend') : 'spend');
   const [amount, setAmount] = useState(editing ? String(editing.amount_paise / 100) : '');
   const [desc, setDesc] = useState(editing?.description ?? '');
@@ -103,6 +104,7 @@ export function Manual({ token, go, onToast, editing, onPayCard }: { token: stri
         : { type: 'spend', amount, date, description: desc.trim() || null, categoryId, accountId: from };
 
     setSaving(true);
+    let savedId: string | null = null;
     try {
       if (editing) {
         await api('transactions', { method: 'PATCH', token, body: { id: editing.id, ...body } });
@@ -110,6 +112,7 @@ export function Manual({ token, go, onToast, editing, onPayCard }: { token: stri
         await refreshAll(token).catch(() => {});
       } else {
         const res = await api<{ id: string; item?: TxnRow }>('transactions', { token, body });
+        savedId = res.id;
         if (res.item) addTransactionToCache(res.item);
         // Log, Home and Lent read from the cache; they catch up in the background so saving never waits on it.
         refreshInBackground(token);
@@ -119,7 +122,7 @@ export function Manual({ token, go, onToast, editing, onPayCard }: { token: stri
         onToast('Transaction updated');
         go('log');
       } else {
-        onToast(`Saved ${formatINR(paise)}`);
+        onToast(`Saved ${formatINR(paise)}`, savedId ? undoFor(token, savedId, onToast) : undefined);
         setSavedNew(true);
       }
     } catch (err) {

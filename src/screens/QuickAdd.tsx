@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon';
 import { Keypad, applyKey } from '../components/Keypad';
 import { Verdict } from '../components/Verdict';
 import { api } from '../lib/api';
+import { undoFor } from '../lib/undoTxn';
 import { addTransactionToCache, refreshInBackground } from '../lib/cache';
 import { pickAccount } from '../lib/defaultAccount';
 import { useDefaultAccountId } from '../lib/useDefaultAccount';
@@ -33,7 +34,7 @@ const GROUPS: { bucket: Bucket; label: string }[] = [
  * Quick Add: two steps. Type the amount, then pick the category on one screen where the account
  * (your default one first) and an optional note are already in place, and save.
  */
-export function QuickAdd({ token, go, onToast, onPayCard }: { token: string; go: (r: Route) => void; onToast: (m: string) => void; onPayCard: (prefill?: { amount?: string }) => void }) {
+export function QuickAdd({ token, go, onToast, onPayCard }: { token: string; go: (r: Route) => void; onToast: (m: string, undo?: () => void) => void; onPayCard: (prefill?: { amount?: string }) => void }) {
   const [step, setStep] = useState<Step>('amount');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export function QuickAdd({ token, go, onToast, onPayCard }: { token: string; go:
       // Say so when this entry takes the category to 80% of its plan, or over it.
       const crossed = alertAfterSpend(category, amountPaise);
       const warning = crossed ? (crossed.level === 'over' ? ` · now ${formatINR(crossed.overPaise)} over plan` : ` · now at ${crossed.pct}% of plan`) : '';
-      onToast(`Added ${formatINR(amountPaise)} · ${category.name}${warning}`);
+      onToast(`Added ${formatINR(amountPaise)} · ${category.name}${warning}`, res.id ? undoFor(token, res.id, onToast) : undefined);
       go('log');
     } catch (err) {
       haptic('error');

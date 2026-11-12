@@ -348,6 +348,19 @@
 li:last-child > .list-row {
   border-bottom: none;
 }
+/* A list row with a button beside it keeps its divider on the row, not on the inner button */
+li.flex > .list-row {
+  flex: 1;
+  min-width: 0;
+  border-bottom: none;
+}
+li.flex {
+  border-bottom: 1px solid var(--color-border);
+  padding-right: 6px;
+}
+li.flex:last-child {
+  border-bottom: none;
+}
 
 /* Safe to spend: a divided block at the foot of the balance card */
 .safe {
@@ -778,4 +791,22 @@ li:last-child > .list-row {
   background: var(--color-danger-bg);
   border-color: var(--color-danger);
   color: var(--color-danger);
+}
+
+/* Two small link cards side by side: label above, value below */
+.home-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.home-pair > .card--link {
+  margin-top: 0;
+}
+.home-pair .card--row,
+.home-pair .card--link > .flex.jc-sb {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
 }
