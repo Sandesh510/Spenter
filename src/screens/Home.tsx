@@ -10,8 +10,6 @@ import { BUCKET_LABEL, categoryIcon } from '../lib/categories';
 import { currentMonth, dayOfMonth, daysInMonth, monthTitle, shiftMonth, todayIST } from '../lib/dates';
 import { dailyAllowance } from '../lib/dailyAllowance';
 import { useAmountsShown } from '../lib/amountVisibility';
-import { budgetAlerts, type BudgetAlert } from '../lib/budgetAlerts';
-import { dismissAlert, isDismissed } from '../lib/alertDismissals';
 import { useApi } from '../lib/useApi';
 import type { Bucket, Category, CommitmentsData, HomeBucket, HomeData, AskItem, Loan, InsurancePolicy } from '../lib/types';
 import { CategoryTile } from '../components/ui/CategoryTile';
@@ -48,16 +46,16 @@ export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
 
   return (
     <div className="scroll">
-      <div className="flex ai-c jc-sb" style={{ margin: '6px 0 18px' }}>
+      <div className="home-head">
         <div className="flex ai-c gap-8">
           <button className="iconbtn" onClick={() => setMonth(m => shiftMonth(m, -1))} aria-label="Previous month">
             <Icon name="chevron-left" size={18} />
           </button>
           <div>
-            <div className="kicker kicker--amber" style={{ letterSpacing: '.14em' }}>{isCurrent ? 'This month' : 'Past month'}</div>
-            <h1 className="heading fs-22 mt-2" style={{ lineHeight: 1.1 }}>{monthTitle(month)}</h1>
+            <div className="kicker kicker--amber">{isCurrent ? 'This month' : 'Past month'}</div>
+            <h1 className="heading fs-22 mt-2 lh-tight">{monthTitle(month)}</h1>
           </div>
-          <button className="iconbtn" onClick={() => setMonth(m => shiftMonth(m, 1))} aria-label="Next month" disabled={isCurrent} style={{ opacity: isCurrent ? 0.4 : 1 }}>
+          <button className="iconbtn" onClick={() => setMonth(m => shiftMonth(m, 1))} aria-label="Next month" disabled={isCurrent}>
             <Icon name="chevron-right" size={18} />
           </button>
         </div>
@@ -68,34 +66,48 @@ export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
 
       {!data.decided && <OpeningDecision token={token} month={month} suggested={data.suggestedOpening ?? null} onDone={reload} />}
 
-      <Card as="section" className="mt-12">
+      <Card as="section" className="mt-12 home-hero">
         <div className="flex ai-c jc-sb">
           <span className="fs-12 c-sec">Balance left to spend</span>
           <button className="iconbtn iconbtn--sm" onClick={toggleShown} aria-pressed={shown} aria-label={shown ? 'Hide amounts' : 'Show amounts'}>
             <Icon name={shown ? 'eye' : 'eye-off'} size={15} />
           </button>
         </div>
-        <div className="heading num fs-44" style={{ lineHeight: 1, margin: '8px 0 14px', color: shown && data.spendableBalancePaise < 0 ? 'var(--color-danger)' : 'var(--color-text-primary)' }}>
-          {money(data.spendableBalancePaise)}
+        <div className="home-hero__row">
+          <div className={`heading num fs-34 home-hero__amount${shown && data.spendableBalancePaise < 0 ? ' c-danger' : ''}`}>
+            {money(data.spendableBalancePaise)}
+          </div>
+          {isCurrent && (
+            <div className="home-hero__safe num">
+              <div className="fs-11 c-sec">Safe to spend</div>
+              <div className={`fs-18 ${(data.safeToSpendPaise ?? data.spendableBalancePaise) < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(data.safeToSpendPaise ?? data.spendableBalancePaise)}</div>
+            </div>
+          )}
         </div>
-        <div className="track">
+        <div className="track track--thin">
           <div className="fill" style={{ width: `${progress * 100}%` }} />
         </div>
-        <div className="num flex jc-sb fs-12 c-sec" style={{ marginTop: 9 }}>
-          <span>Started <span className="c-text">{data.hasOpening ? money(data.openingPaise) : 'none'}</span></span>
-          <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
-        </div>
+        <p className="num fs-12 c-sec m-0 mt-8">
+          Started <span className="c-text">{data.hasOpening ? money(data.openingPaise) : 'none'}</span> · Spent <span className="c-text">{formatINR(spent)}</span>
+        </p>
         {data.card && (data.card.duePaise > 0 || data.card.paidPaise > 0 || (data.card.carriedPaise ?? 0) > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} onPay={onPayCard} />}
-        {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
+        {isCurrent && <SafeNote safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
 
-      {isCurrent && <BudgetAlerts categories={data.categories} onOpen={id => onOpenCategory(id, month)} />}
+      <div className="section-head">
+        <h2 className="kicker m-0">Budgets</h2>
+        <span className="kicker num">{isCurrent ? `day ${dayOfMonth()} / ${daysInMonth(month)}` : `${daysInMonth(month)} days`}</span>
+      </div>
+      <div className="flex gap-18" style={{ flexDirection: 'column' }}>
+        {data.buckets.map(b => (
+          <BudgetBar key={b.bucket} b={b} onOpen={() => onOpenBucket(b.bucket as Bucket, month)} />
+        ))}
+      </div>
 
-      <Card
-        as="button"
-        onClick={() => go('lent')}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 12, padding: 14, cursor: 'pointer', color: 'var(--color-text-primary)', fontFamily: 'inherit', textAlign: 'left' }}
-      >
+      <CategorySpend categories={data.categories} onOpen={id => onOpenCategory(id, month)} />
+
+      <div className="section-head"><h2 className="kicker m-0">Your money</h2></div>
+      <Card as="button" onClick={() => go('lent')} className="card--link card--row">
         <span className="fs-13 c-sec">Money lent · yet to get back</span>
         <span className="num flex ai-c gap-6">
           <LentTotal token={token} />
@@ -110,21 +122,11 @@ export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
 
       <InsuranceReminders policies={insurance.data?.items ?? []} onOpen={() => go('commitments')} />
 
-      <div className="flex ai-c jc-sb" style={{ margin: '24px 2px 14px' }}>
-        <span className="kicker">Budgets</span>
-        <span className="kicker num">{isCurrent ? `day ${dayOfMonth()} / ${daysInMonth(month)}` : `${daysInMonth(month)} days`}</span>
-      </div>
-      <div className="flex gap-18" style={{ flexDirection: 'column' }}>
-        {data.buckets.map(b => (
-          <BudgetBar key={b.bucket} b={b} onOpen={() => onOpenBucket(b.bucket as Bucket, month)} />
-        ))}
-      </div>
 
-      <CategorySpend categories={data.categories} onOpen={id => onOpenCategory(id, month)} />
 
-      <div className="flex ai-c jc-sb" style={{ margin: '26px 2px 12px' }}>
-        <span className="kicker">Recent asks</span>
-        <button className="link" onClick={() => go('log')} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <div className="section-head">
+        <h2 className="kicker m-0">Recent asks</h2>
+        <button className="link flex ai-c gap-2" onClick={() => go('log')}>
           See all <Icon name="chevron-right" size={14} />
         </button>
       </div>
@@ -201,7 +203,7 @@ function BudgetBar({ b, onOpen }: { b: HomeBucket; onOpen: () => void }) {
   if (!b.hasBudget) {
     note = '';
   } else if (isSave) {
-    note = ratio >= 1 ? 'goal met' : `${formatINR(-left)} to go`;
+    note = ratio >= 1 ? 'goal met' : `${formatINR(left)} to go`;
   } else if (over) {
     note = `${formatINR(-left)} over`;
   } else {
@@ -287,18 +289,25 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
   const [all, setAll] = useState(false);
   // Savings above plan means the goal is met, so only Needs and Wants can be over budget.
   const over = (c: Category) => c.bucket !== 'save' && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise > c.plannedPaise;
+  // Near the limit: 80% of the plan or more, the same line the budget alerts used.
+  const near = (c: Category) => c.bucket !== 'save' && !over(c) && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise / c.plannedPaise >= 0.8;
   const shown = categories
     .filter(c => c.spentPaise > 0 || over(c))
-    .sort((a, b) => Number(over(b)) - Number(over(a)) || b.spentPaise - a.spentPaise);
+    .sort((a, b) => Number(over(b)) - Number(over(a)) || Number(near(b)) - Number(near(a)) || b.spentPaise - a.spentPaise);
   if (shown.length === 0) return null;
   const overCount = shown.filter(over).length;
+  const nearCount = shown.filter(near).length;
   const visible = all ? shown : shown.slice(0, TOP_CATEGORIES);
 
   return (
     <section aria-labelledby="home-categories">
-      <div className="flex ai-c jc-sb" style={{ margin: '26px 2px 12px' }}>
+      <div className="section-head">
         <h2 id="home-categories" className="kicker m-0">Categories</h2>
-        {overCount > 0 && <span className="kicker c-danger">{overCount} over budget</span>}
+        {(overCount > 0 || nearCount > 0) && (
+          <span className={`kicker ${overCount > 0 ? 'c-danger' : 'c-warning'}`}>
+            {[overCount > 0 ? `${overCount} over` : '', nearCount > 0 ? `${nearCount} near limit` : ''].filter(Boolean).join(' · ')}
+          </span>
+        )}
       </div>
       <Card variant="group">
         <ul className="list-reset">
@@ -314,7 +323,7 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
                 </span>
                 {over(c) && c.plannedPaise !== null && <span className="c-danger fs-12 num">{formatINR(c.spentPaise - c.plannedPaise)} over</span>}
                 {c.bucket === 'save' && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise >= c.plannedPaise && <Badge tone="success">goal met</Badge>}
-                {c.bucket !== 'save' && !over(c) && c.plannedPaise !== null && c.plannedPaise > 0 && c.spentPaise / c.plannedPaise > 0.9 && <Badge tone="neutral">tight</Badge>}
+                {near(c) && <Badge tone="neutral">{Math.round((c.spentPaise / (c.plannedPaise as number)) * 100)}% used</Badge>}
                 <span className="c-mut"><Icon name="chevron-right" size={15} /></span>
               </button>
             </li>
@@ -337,24 +346,26 @@ function CategorySpend({ categories, onOpen }: { categories: Category[]; onOpen:
 function CardDue({ card, balancePaise, money, shown, onPay }: { card: NonNullable<HomeData['card']>; balancePaise: number; money: (p: number) => string; shown: boolean; onPay: () => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="safe mt-12">
-      <div className="flex ai-c jc-sb">
-        <h2 className="fs-13 c-sec m-0">Credit card bill</h2>
-        <span className="flex ai-c gap-8">
-          <span className="num fs-14">{money(card.duePaise)}</span>
-          <button className="link fs-13" onClick={onPay}>Pay</button>
-          <button className="iconbtn iconbtn--sm" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-label={open ? 'Hide credit card details' : 'Show credit card details'}>
-            <Icon name={open ? 'chevron-up' : 'chevron-down'} size={15} />
-          </button>
-        </span>
-      </div>
-      <dl className="num grid gap-4 fs-13 m-0 mt-8">
-        <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{money(balancePaise + card.duePaise)}</dd></div>
-        <div className="flex jc-sb"><dt className="c-sec">Card owed</dt><dd className="m-0">{money(card.duePaise)}</dd></div>
+    <div className="safe mt-8">
+      <dl className="home-split num m-0">
+        <div>
+          <dt className="fs-11 c-sec">In your accounts</dt>
+          <dd className="fs-15 m-0">{money(balancePaise + card.duePaise)}</dd>
+        </div>
+        <div>
+          <dt className="fs-11 c-sec">Card owed</dt>
+          <dd className="fs-15 m-0 flex ai-c gap-8">
+            {money(card.duePaise)}
+            {card.duePaise > 0 && <button className="link fs-13" onClick={onPay}>Pay</button>}
+            <button className="iconbtn iconbtn--sm" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-label={open ? 'Hide card details' : 'Show card details'}>
+              <Icon name={open ? 'chevron-up' : 'chevron-down'} size={15} />
+            </button>
+          </dd>
+        </div>
       </dl>
       {open && (
         <>
-          <dl className="num grid gap-4 fs-13 m-0 mt-4">
+          <dl className="num grid gap-4 fs-13 m-0 mt-8">
             {(card.carriedPaise ?? 0) > 0 && <div className="flex jc-sb"><dt className="c-sec">Owed from earlier months</dt><dd className="m-0">{money(card.carriedPaise ?? 0)}</dd></div>}
             {(card.otherPaise ?? 0) > 0 && <div className="flex jc-sb"><dt className="c-sec">Of which money lent</dt><dd className="m-0">{money(card.otherPaise ?? 0)}</dd></div>}
             {card.paidPaise > 0 && <div className="flex jc-sb"><dt className="c-sec">Card bills paid this month</dt><dd className="m-0">{money(card.paidPaise)}</dd></div>}
@@ -368,78 +379,36 @@ function CardDue({ card, balancePaise, money, shown, onPay }: { card: NonNullabl
 }
 
 /**
- * Balance left to spend less the subscriptions, SIPs, EMIs and premiums still due this month.
- * The bills list opens on tap so the card stays short.
+ * The line under the balance: what Safe to spend allows a day, and the bills still due this month.
+ * Safe to spend is the balance less subscriptions, SIPs, EMIs and premiums still due. The bills open on tap.
  */
-function SafeToSpend({ safePaise, bills }: { safePaise: number; bills: NonNullable<HomeData['upcomingBills']> }) {
+function SafeNote({ safePaise, bills }: { safePaise: number; bills: NonNullable<HomeData['upcomingBills']> }) {
   const [open, setOpen] = useState(false);
   const total = bills.reduce((s, b) => s + b.amountPaise, 0);
   const perDay = dailyAllowance(safePaise, todayIST());
   return (
-    <div className="safe mt-12">
-      <div className="flex ai-c jc-sb">
-        <span className="fs-13 c-sec">Safe to spend</span>
-        <span className={`num fs-18 ${safePaise < 0 ? 'c-danger' : 'c-text'}`}>{formatINR(safePaise)}</span>
-      </div>
-      {perDay && <p className="fs-12 c-sec m-0 mt-4">About <span className="num c-text">{formatINR(perDay.perDayPaise)}</span> a day for the {perDay.daysLeft === 1 ? 'last day' : `next ${perDay.daysLeft} days`}</p>}
-      {bills.length === 0 ? (
-        <p className="fs-12 c-mut m-0 mt-4">No more bills due this month.</p>
-      ) : (
-        <>
+    <div className="safe mt-8">
+      <div className="flex ai-c jc-sb gap-8 fs-12 c-sec">
+        <span>{perDay ? <>About <span className="num c-text">{formatINR(perDay.perDayPaise)}</span> a day{perDay.daysLeft > 1 ? ` for ${perDay.daysLeft} days` : ' today'}</> : 'Safe to spend'}</span>
+        {bills.length === 0 ? (
+          <span className="c-mut">No bills due</span>
+        ) : (
           <button className="link fs-12 flex ai-c gap-4" onClick={() => setOpen(o => !o)} aria-expanded={open}>
-            {formatINR(total)} of bills still due this month
+            {formatINR(total)} bills due
             <Icon name={open ? 'chevron-down' : 'chevron-right'} size={13} />
           </button>
-          {open && (
-            <ul className="list-reset grid gap-4 fs-12">
-              {bills.map(b => (
-                <li key={`${b.name}-${b.dueOn}`} className="flex jc-sb">
-                  <span className="c-sec">{b.name} · {b.dueOn.slice(8)} {monthTitle(b.dueOn.slice(0, 7)).slice(0, 3)}</span>
-                  <span className="num">{formatINR(b.amountPaise)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+        )}
+      </div>
+      {open && (
+        <ul className="list-reset grid gap-4 fs-12 mt-8">
+          {bills.map(b => (
+            <li key={`${b.name}-${b.dueOn}`} className="flex jc-sb">
+              <span className="c-sec">{b.name} · {b.dueOn.slice(8)} {monthTitle(b.dueOn.slice(0, 7)).slice(0, 3)}</span>
+              <span className="num">{formatINR(b.amountPaise)}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
-  );
-}
-
-/** At most this many alerts show at once; the rest are one tap away in the category list. */
-const MAX_ALERTS = 3;
-
-/**
- * Categories at 80% of their plan or over it. Each can be dismissed for the month (it comes back if the
- * category goes from nearly there to over). Tapping one opens the Log filtered to that category.
- */
-function BudgetAlerts({ categories, onOpen }: { categories: Category[]; onOpen: (categoryId: string) => void }) {
-  const [, redraw] = useState(0);
-  const alerts = budgetAlerts(categories).filter(a => !isDismissed(a.categoryId, a.level));
-  if (alerts.length === 0) return null;
-  const shown = alerts.slice(0, MAX_ALERTS);
-
-  function text(a: BudgetAlert): string {
-    return a.level === 'over' ? `${a.name} is ${formatINR(a.overPaise)} over its plan` : `${a.name} is at ${a.pct}% of its plan`;
-  }
-
-  return (
-    <section aria-label="Budget alerts" className="mt-12">
-      <ul className="list-reset grid gap-8">
-        {shown.map(a => (
-          <li key={`${a.categoryId}:${a.level}`} className={`alert-row alert-row--${a.level}`}>
-            <button className="alert-row__main" onClick={() => onOpen(a.categoryId)} aria-label={`${text(a)}. Show transactions`}>
-              <Icon name="alert-triangle" size={16} />
-              <span className="alert-row__text">{text(a)}</span>
-              <span className="num fs-12 c-sec">{formatINR(a.spentPaise)} of {formatINR(a.plannedPaise)}</span>
-            </button>
-            <button className="iconbtn iconbtn--sm" onClick={() => { dismissAlert(a.categoryId, a.level); redraw(n => n + 1); }} aria-label={`Dismiss ${a.name} alert`}>
-              <Icon name="x" size={14} />
-            </button>
-          </li>
-        ))}
-      </ul>
-      {alerts.length > shown.length && <p className="fs-12 c-mut m-0 mt-6">and {alerts.length - shown.length} more in the category list</p>}
-    </section>
   );
 }
