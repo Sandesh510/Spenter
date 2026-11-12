@@ -66,7 +66,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
   // Opening is the cash in the accounts, so card debt from earlier months is taken off it.
   const hasOpening = openRes.data?.opening_paise != null;
   const cardAccounts = toCardAccounts(accountRes.data);
-  const carriedCardPaise = hasOpening ? await cardsOwedAt(admin, userId, cardAccounts, firstDay, `${shiftMonth(month, 1)}-01`) : 0;
+  const carriedCardPaise = hasOpening ? await cardsOwedAt(admin, userId, cardAccounts, firstDay) : 0;
   const totals = monthTotals({ month, openingPaise, txns, lentOutPaise, cardDebtPaise: carriedCardPaise });
 
   // Money in and out for the month: everything that moved the balance. Income is only salary and others;
@@ -264,6 +264,9 @@ export async function loadAccounts(admin: SupabaseClient, userId: string) {
   };
 }
 
+/** Any opening date counts when winding a card's balance back to the start of a month. */
+const WIND_BACK = '9999-12-31';
+
 type AccountOpeningRow = { id: string; kind: unknown; opening_balance_paise: number | string | null; opening_balance_on: string | null };
 
 /** The credit card accounts, in the shape the balance functions read. */
@@ -274,13 +277,14 @@ function toCardAccounts(rows: AccountOpeningRow[] | null): BalanceAccount[] {
 }
 
 /** What the cards owed in total at the start of `before` (YYYY-MM-DD). Cards without an opening balance count as 0. */
-async function cardsOwedAt(admin: SupabaseClient, userId: string, cards: BalanceAccount[], before: string, rollbackUntil: string): Promise<number> {
-  // A card whose opening is dated inside the month (Match my bank) is wound back to the month's start.
-  const known = cards.filter(c => c.openingPaise !== null && c.openingOn !== null && c.openingOn < rollbackUntil);
+async function cardsOwedAt(admin: SupabaseClient, userId: string, cards: BalanceAccount[], before: string): Promise<number> {
+  // A card whose opening is dated after `before` (Match my bank moves it to today) is wound back to `before`,
+  // so earlier months keep the debt the card had then.
+  const known = cards.filter(c => c.openingPaise !== null && c.openingOn !== null);
   if (known.length === 0) return 0;
   const since = [before, ...known.map(c => c.openingOn as string)].sort()[0];
   const { txns, loans } = await loadBalanceInputs(admin, userId, known.map(c => c.id), since);
-  return cardsOwedBefore(known, before, txns, loans, rollbackUntil);
+  return cardsOwedBefore(known, before, txns, loans, WIND_BACK);
 }
 
 /**
@@ -489,8 +493,8 @@ async function suggestedOpeningFor(
   // Openings are cash in the accounts. Last month's closing is net of the card debt it began with, and the
   // new month's opening is gross again, so the debt still owed at the turn of the month is added back.
   const cards = toCardAccounts(accountRes.data);
-  const owedAtStart = hadOpening ? await cardsOwedAt(admin, userId, cards, firstDay, `${month}-01`) : 0;
-  const owedAtEnd = hadOpening ? await cardsOwedAt(admin, userId, cards, `${month}-01`, `${shiftMonth(month, 1)}-01`) : 0;
+  const owedAtStart = hadOpening ? await cardsOwedAt(admin, userId, cards, firstDay) : 0;
+  const owedAtEnd = hadOpening ? await cardsOwedAt(admin, userId, cards, `${month}-01`) : 0;
   const totals = monthTotals({
     cardDebtPaise: owedAtStart,
     month: prev,

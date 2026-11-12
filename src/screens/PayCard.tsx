@@ -3,6 +3,7 @@ import { Button } from '../components/ui/Button';
 import { Field, Input } from '../components/ui/Field';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
+import { undoFor } from '../lib/undoTxn';
 import { useAmountsShown } from '../lib/amountVisibility';
 import { addTransactionToCache, refreshInBackground } from '../lib/cache';
 import { isCreditCard } from '../lib/accountTypes';
@@ -29,7 +30,7 @@ export interface PayCardPrefill {
 export function PayCard({ token, go, onToast, prefill }: {
   token: string;
   go: (r: Route) => void;
-  onToast: (m: string) => void;
+  onToast: (m: string, undo?: () => void) => void;
   prefill: PayCardPrefill | null;
 }) {
   const result = useOutlook(token);
@@ -77,7 +78,7 @@ export function PayCard({ token, go, onToast, prefill }: {
       haptic('success');
       if (res.item) addTransactionToCache(res.item);
       refreshInBackground(token);
-      onToast(`Paid ${formatINR(paise)} to ${card.nickname} from ${from.nickname}. ${from.nickname} balance and card owed go down; Left to spend stays, as the purchases were already counted.`);
+      onToast(`Paid ${formatINR(paise)} to ${card.nickname} from ${from.nickname}. ${from.nickname} balance and card owed go down; Left to spend stays, as the purchases were already counted.`, undoFor(token, res.id, onToast));
       go('home');
     } catch (err) {
       haptic('error');
@@ -127,10 +128,13 @@ export function PayCard({ token, go, onToast, prefill }: {
             <div className="flex flex-wrap gap-8">
               {sources.map(a => (
                 <button key={a.id} type="button" className={`chip ${from?.id === a.id ? 'chip--on' : ''}`} aria-pressed={from?.id === a.id} onClick={() => setFromId(a.id)}>
-                  <span className="chip__inner"><Icon name={a.icon ?? 'wallet'} size={13} />{a.nickname}</span>
+                  <span className="chip__inner"><Icon name={a.icon ?? 'wallet'} size={13} />{a.nickname}{a.balance_paise != null ? ` · ${money(a.balance_paise)}` : ''}</span>
                 </button>
               ))}
             </div>
+            {from?.balance_paise != null && paise > from.balance_paise && (
+              <p className="fs-12 c-warning m-0 mt-8" role="note">{from.nickname} holds {money(from.balance_paise)}, less than this payment.</p>
+            )}
           </fieldset>
 
           <div>

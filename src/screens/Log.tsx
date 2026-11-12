@@ -1,6 +1,8 @@
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Field';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Badge } from '../components/ui/Badge';
+import { isCreditCard } from '../lib/accountTypes';
 import { Icon } from '../components/Icon';
 import { api } from '../lib/api';
 import { haptic } from '../lib/haptics';
@@ -173,6 +175,7 @@ export function Log({ token, go, onEdit, initialCategoryId, initialBucket, initi
                 <div className="flex-1 min-0">
                   <div className="fs-14 nowrap ovh ellipsis">{title}</div>
                   <div className="flex ai-c gap-6" style={{ marginTop: 3 }}>
+                    {t.type === 'transfer' && !t.external && isCreditCard(accounts.data?.items.find(a => a.id === t.to_account_id)?.kind) && <Badge tone="info">Card bill</Badge>}
                     {cat && t.type !== 'transfer' && (
                       <span className="fs-11" style={{ padding: '2px 7px', borderRadius: 5, background: tint.bg, color: tint.fg }}>{cat.name}</span>
                     )}

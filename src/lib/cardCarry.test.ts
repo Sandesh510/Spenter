@@ -53,3 +53,15 @@ describe('card debt carried across months, from raw rows', () => {
     expect(cardsOwedBefore([card], '2026-12-01', rows, [])).toBe(nov.card.duePaise);
   });
 });
+
+describe('a card matched to the bank after the month', () => {
+  it('keeps the debt it had at the start of an earlier month', () => {
+    // Match my bank on 20 Nov set the card to owing 10,000. October's 35,000 spend and 5,000 of November's are on it.
+    const matched = { id: 'card', openingPaise: -1_000_000, openingOn: '2026-11-20' };
+    const rows = [row('spend', 3_500_000, '2026-10-12', 'card'), row('spend', 500_000, '2026-11-05', 'card')];
+    // Owed on 1 Oct: the 10,000 now, less the 40,000 spent since, so the card was in credit (nothing owed).
+    expect(cardsOwedBefore([matched], '2026-10-01', rows, [], '9999-12-31')).toBe(0);
+    // Owed on 1 Nov: 10,000 now less the 5,000 spent in November = 5,000 owed.
+    expect(cardsOwedBefore([matched], '2026-11-01', rows, [], '9999-12-31')).toBe(500_000);
+  });
+});

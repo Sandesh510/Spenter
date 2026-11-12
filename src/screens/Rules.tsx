@@ -79,7 +79,7 @@ const GROUPS: RuleGroup[] = [
       'Account balance = opening balance + money in − spend − transfers out + transfers in − money lent from it, counting entries on or after the opening date.',
       'The opening balance is what the account held at the start of its "As on" day, before that day\'s entries. It is optional; without it no balance is shown.',
       'For a credit card, enter what you owe. Purchases add to it, a bill payment brings it down, and Settings shows it as Owed.',
-      'Match my bank sets the balance to what your bank shows now. It moves the opening date to today, so today\'s entries still count once.',
+      'Match my bank sets the balance to what your bank shows now. It moves the opening date to today, so today\'s entries still count once. Earlier months still know what a card owed then, worked back from the new opening.',
       'Balances are worked out from your entries every time, never stored. Editing an old entry changes the balance.',
     ],
   },
