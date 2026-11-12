@@ -22,7 +22,7 @@ const KINDS: { id: Kind; label: string; icon: string }[] = [
   { id: 'spend', label: 'Spend', icon: 'arrow-up-right' },
   { id: 'transfer', label: 'Transfer', icon: 'arrow-left-right' },
   { id: 'self', label: 'Self transfer', icon: 'repeat' },
-  { id: 'credit', label: 'Credit / money in', icon: 'arrow-down-left' },
+  { id: 'credit', label: 'Money in', icon: 'arrow-down-left' },
 ];
 
 /** The only credit categories. A credit is always one of these, never a spend category. */
@@ -69,6 +69,7 @@ export function Manual({ token, go, onToast, editing, onPayCard }: { token: stri
   const to = toAccountId ?? accountList.find(a => a.id !== from)?.id ?? null;
   // Paying a card bill is a transfer into the card account, so it is never counted as spend.
   const toIsCard = isCreditCard(accountList.find(a => a.id === to)?.kind);
+  const moneyInToCard = isCredit && isCreditCard(accountList.find(a => a.id === from)?.kind);
   // A new spend in a category named like a card payment would be counted twice; offer the transfer instead.
   const chosenCategory = categories.find(c => c.id === categoryId);
   const isCardPayment = kind === 'spend' && !editing && looksLikeCardPayment(chosenCategory?.name);
@@ -207,6 +208,10 @@ export function Manual({ token, go, onToast, editing, onPayCard }: { token: stri
           <p className="fs-13 c-sec m-0"><Icon name="credit-card" size={13} /> Paying a card bill is a transfer to the card, not a spend, so the card owes less and the money is not counted twice.</p>
           <Button variant="secondary" block className="mt-8" onClick={() => onPayCard({ amount })}>Pay card bill instead</Button>
         </div>
+      )}
+
+      {moneyInToCard && (
+        <p className="fs-12 c-warning m-0 mt-8" role="note">This account is a credit card. Money in lowers what you owe on it, as a refund does. If you bought something with the card, go back and choose Spend instead.</p>
       )}
 
       {isCredit && (

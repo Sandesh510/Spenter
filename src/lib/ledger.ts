@@ -35,6 +35,11 @@ export interface MonthInput {
   txns: Txn[];
   /** Money lent to people this month. It leaves the balance; Got back credits bring it back. */
   lentOutPaise?: number;
+  /**
+   * What the credit cards owed at the start of the month. Opening is the cash in the accounts, so this
+   * money is already spoken for and is taken off what is left to spend.
+   */
+  cardDebtPaise?: number;
 }
 
 export interface MonthTotals {
@@ -51,7 +56,7 @@ export interface MonthTotals {
   spendPaise: number;
   /** Spend in the Save bucket (e.g. SIP). */
   savingsPaise: number;
-  /** Spendable balance = opening + income + got back + borrowed − spend − savings − external transfers − lent out. */
+  /** Spendable balance = opening − card debt carried in + income + got back + borrowed − spend − savings − external transfers − lent out. */
   spendableBalancePaise: number;
   /** Savings shown as its own balance line. */
   savingsBalancePaise: number;
@@ -61,7 +66,7 @@ export interface MonthTotals {
 const live = (t: Txn) => !t.deletedAt;
 const inMonth = (t: Txn, month: string) => t.txnDate.startsWith(month);
 
-export function monthTotals({ month, openingPaise, txns, lentOutPaise = 0 }: MonthInput): MonthTotals {
+export function monthTotals({ month, openingPaise, txns, lentOutPaise = 0, cardDebtPaise = 0 }: MonthInput): MonthTotals {
   const rows = txns.filter(live).filter(t => inMonth(t, month));
 
   let incomePaise = 0;
@@ -95,7 +100,7 @@ export function monthTotals({ month, openingPaise, txns, lentOutPaise = 0 }: Mon
   }
 
   const spendableBalancePaise =
-    openingPaise + incomePaise + returnedPaise + borrowedPaise - spendPaise - savingsPaise - externalPaise - lentOutPaise;
+    openingPaise + incomePaise + returnedPaise + borrowedPaise - spendPaise - savingsPaise - externalPaise - lentOutPaise - cardDebtPaise;
 
   return {
     openingPaise,

@@ -126,3 +126,12 @@ describe('lending, got back and borrowed money', () => {
     expect(t.spendableBalancePaise).toBe(151_000_00);
   });
 });
+
+describe('card debt carried into the month', () => {
+  it('opening 50,000 with 35,000 of last month\'s card spend leaves 15,000, and paying the card by transfer keeps it', () => {
+    const base = { month: '2026-11', openingPaise: 5_000_000, cardDebtPaise: 3_500_000 };
+    const pay: Txn = { id: 'p', type: 'transfer', amountPaise: 3_500_000, txnDate: '2026-11-05', fromAccountId: 'bank', toAccountId: 'card' };
+    expect(monthTotals({ ...base, txns: [] }).spendableBalancePaise).toBe(1_500_000);
+    expect(monthTotals({ ...base, txns: [pay] }).spendableBalancePaise).toBe(1_500_000);
+  });
+});

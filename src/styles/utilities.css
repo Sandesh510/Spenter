@@ -4,6 +4,7 @@
 .ai-c { align-items:center; }
 .c-accent { color:var(--color-accent-text); }
 .c-danger { color:var(--color-danger); }
+.c-warning { color: var(--color-warning); }
 .c-mut { color:var(--color-text-muted); }
 .c-sec { color:var(--color-text-secondary); }
 .c-success { color:var(--color-success); }

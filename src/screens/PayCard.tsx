@@ -77,7 +77,7 @@ export function PayCard({ token, go, onToast, prefill }: {
       haptic('success');
       if (res.item) addTransactionToCache(res.item);
       refreshInBackground(token);
-      onToast(`Paid ${formatINR(paise)} to ${card.nickname}`);
+      onToast(`Paid ${formatINR(paise)} to ${card.nickname} from ${from.nickname}. ${from.nickname} balance and card owed go down; Left to spend stays, as the purchases were already counted.`);
       go('home');
     } catch (err) {
       haptic('error');
