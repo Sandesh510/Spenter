@@ -11,7 +11,7 @@ import { suggestOpening } from '../../../src/lib/openingSuggestion';
 import { spendByAccount } from '../../../src/lib/spendByAccount';
 import { cardSummary } from '../../../src/lib/cardSummary';
 import { isCreditCard } from '../../../src/lib/accountTypes';
-import { accountBalances, type BalanceLoan, type BalanceTxn } from '../../../src/lib/accountBalance';
+import { accountBalances, cardsOwedBefore, type BalanceAccount, type BalanceLoan, type BalanceTxn } from '../../../src/lib/accountBalance';
 
 /**
  * Shared loaders. Each one is scoped to a user id. The admin client bypasses RLS,
@@ -51,7 +51,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
       .eq('user_id', userId)
       .eq('active', true),
     admin.from('spend_insurance_policies').select('name,premium_paise,next_due_on,active').eq('user_id', userId).eq('active', true),
-    admin.from('spend_accounts').select('id,kind').eq('user_id', userId),
+    admin.from('spend_accounts').select('id,kind,opening_balance_paise,opening_balance_on').eq('user_id', userId),
   ]);
   for (const r of [catRes, openRes, budgetRes, txnRes, askRes, lentRes, commitRes, policyRes, accountRes]) if (r.error) throw r.error;
   const lentOutPaise = (lentRes.data ?? []).reduce((s, l) => s + l.amount_paise, 0);
@@ -63,7 +63,11 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
 
   const txns: Txn[] = rows.map(r => toLedgerTxn(r, bucketOf));
 
-  const totals = monthTotals({ month, openingPaise, txns, lentOutPaise });
+  // Opening is the cash in the accounts, so card debt from earlier months is taken off it.
+  const hasOpening = openRes.data?.opening_paise != null;
+  const cardAccounts = toCardAccounts(accountRes.data);
+  const carriedCardPaise = hasOpening ? await cardsOwedAt(admin, userId, cardAccounts, firstDay, `${shiftMonth(month, 1)}-01`) : 0;
+  const totals = monthTotals({ month, openingPaise, txns, lentOutPaise, cardDebtPaise: carriedCardPaise });
 
   // Money in and out for the month: everything that moved the balance. Income is only salary and others;
   // got back and borrowed money are shown apart so they never look like earnings.
@@ -154,6 +158,7 @@ export async function loadHome(admin: SupabaseClient, userId: string, month: str
       new Set((accountRes.data ?? []).filter(a => isCreditCard(a.kind)).map(a => a.id as string)),
       rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id, toAccountId: r.to_account_id, external: r.external, categoryId: r.category_id })),
       (lentRes.data ?? []).map(l => ({ amountPaise: l.amount_paise, debitAccountId: l.debit_account_id })),
+      carriedCardPaise,
     ),
     // Money out by account this month, for the Trends chart.
     byAccount: spendByAccount(rows.map(r => ({ type: r.type, amountPaise: r.amount_paise, accountId: r.account_id }))),
@@ -257,6 +262,25 @@ export async function loadAccounts(admin: SupabaseClient, userId: string) {
       balance_paise: balances.get(a.id) ?? null,
     })),
   };
+}
+
+type AccountOpeningRow = { id: string; kind: unknown; opening_balance_paise: number | string | null; opening_balance_on: string | null };
+
+/** The credit card accounts, in the shape the balance functions read. */
+function toCardAccounts(rows: AccountOpeningRow[] | null): BalanceAccount[] {
+  return (rows ?? [])
+    .filter(a => isCreditCard(a.kind))
+    .map(a => ({ id: a.id, openingPaise: a.opening_balance_paise === null ? null : Number(a.opening_balance_paise), openingOn: a.opening_balance_on }));
+}
+
+/** What the cards owed in total at the start of `before` (YYYY-MM-DD). Cards without an opening balance count as 0. */
+async function cardsOwedAt(admin: SupabaseClient, userId: string, cards: BalanceAccount[], before: string, rollbackUntil: string): Promise<number> {
+  // A card whose opening is dated inside the month (Match my bank) is wound back to the month's start.
+  const known = cards.filter(c => c.openingPaise !== null && c.openingOn !== null && c.openingOn < rollbackUntil);
+  if (known.length === 0) return 0;
+  const since = [before, ...known.map(c => c.openingOn as string)].sort()[0];
+  const { txns, loans } = await loadBalanceInputs(admin, userId, known.map(c => c.id), since);
+  return cardsOwedBefore(known, before, txns, loans, rollbackUntil);
 }
 
 /**
@@ -447,7 +471,7 @@ async function suggestedOpeningFor(
 ): Promise<{ month: string; paise: number } | null> {
   const prev = shiftMonth(month, -1);
   const { start, end, firstDay } = monthRange(prev);
-  const [openRes, txnRes, lentRes] = await Promise.all([
+  const [openRes, txnRes, lentRes, accountRes] = await Promise.all([
     admin.from('spend_month_settings').select('opening_paise').eq('user_id', userId).eq('month', firstDay).maybeSingle(),
     admin
       .from('spend_transactions')
@@ -457,16 +481,23 @@ async function suggestedOpeningFor(
       .lt('txn_date', end)
       .is('deleted_at', null),
     admin.from('spend_lent_loans').select('amount_paise').eq('user_id', userId).gte('lent_on', start).lt('lent_on', end),
+    admin.from('spend_accounts').select('id,kind,opening_balance_paise,opening_balance_on').eq('user_id', userId),
   ]);
-  for (const r of [openRes, txnRes, lentRes]) if (r.error) throw r.error;
+  for (const r of [openRes, txnRes, lentRes, accountRes]) if (r.error) throw r.error;
 
   const hadOpening = openRes.data?.opening_paise != null;
+  // Openings are cash in the accounts. Last month's closing is net of the card debt it began with, and the
+  // new month's opening is gross again, so the debt still owed at the turn of the month is added back.
+  const cards = toCardAccounts(accountRes.data);
+  const owedAtStart = hadOpening ? await cardsOwedAt(admin, userId, cards, firstDay, `${month}-01`) : 0;
+  const owedAtEnd = hadOpening ? await cardsOwedAt(admin, userId, cards, `${month}-01`, `${shiftMonth(month, 1)}-01`) : 0;
   const totals = monthTotals({
+    cardDebtPaise: owedAtStart,
     month: prev,
     openingPaise: openRes.data?.opening_paise ?? 0,
     txns: (txnRes.data ?? []).map(r => toLedgerTxn(r as LedgerRow, bucketOf)),
     lentOutPaise: (lentRes.data ?? []).reduce((sum, l) => sum + l.amount_paise, 0),
   });
-  const paise = suggestOpening({ hadOpening, closingPaise: totals.spendableBalancePaise });
+  const paise = suggestOpening({ hadOpening, closingPaise: totals.spendableBalancePaise + owedAtEnd });
   return paise === null ? null : { month: prev, paise };
 }

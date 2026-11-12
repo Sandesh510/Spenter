@@ -85,7 +85,7 @@ export function Home({ token, go, onOpenCategory, onOpenBucket, onPayCard }: {
           <span>Started <span className="c-text">{data.hasOpening ? money(data.openingPaise) : 'none'}</span></span>
           <span>Spent <span className="c-text">{formatINR(spent)}</span></span>
         </div>
-        {data.card && (data.card.duePaise > 0 || data.card.paidPaise > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} onPay={onPayCard} />}
+        {data.card && (data.card.duePaise > 0 || data.card.paidPaise > 0 || (data.card.carriedPaise ?? 0) > 0) && <CardDue card={data.card} balancePaise={data.spendableBalancePaise} money={money} shown={shown} onPay={onPayCard} />}
         {isCurrent && <SafeToSpend safePaise={data.safeToSpendPaise ?? data.spendableBalancePaise} bills={data.upcomingBills ?? []} />}
       </Card>
 
@@ -165,7 +165,7 @@ function OpeningDecision({ token, month, suggested, onDone }: { token: string; m
     <Card as="section" className="mt-12">
       <div className="kicker">Starting balance</div>
       <p className="fs-13 c-sec" style={{ margin: '6px 0 12px' }}>
-        Set a starting balance for {monthTitle(month)}, or choose none. {suggested ? 'Nothing carries over unless you choose it.' : 'Nothing carries over from the previous month.'}
+        Set a starting balance for {monthTitle(month)}: the cash in your bank, savings and wallet accounts, not counting credit cards. Card bills still owed are taken off it for you. Or choose none. {suggested ? 'Nothing carries over unless you choose it.' : 'Nothing carries over from the previous month.'}
       </p>
       {suggested && (
         <Button block disabled={busy} onClick={() => decide({ amount: (suggested.paise / 100).toFixed(2) })}>
@@ -348,12 +348,16 @@ function CardDue({ card, balancePaise, money, shown, onPay }: { card: NonNullabl
           </button>
         </span>
       </div>
+      <dl className="num grid gap-4 fs-13 m-0 mt-8">
+        <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{money(balancePaise + card.duePaise)}</dd></div>
+        <div className="flex jc-sb"><dt className="c-sec">Card owed</dt><dd className="m-0">{money(card.duePaise)}</dd></div>
+      </dl>
       {open && (
         <>
-          <dl className="num grid gap-4 fs-13 m-0 mt-8">
-            <div className="flex jc-sb"><dt className="c-sec">In your accounts</dt><dd className="m-0">{money(balancePaise + card.duePaise)}</dd></div>
+          <dl className="num grid gap-4 fs-13 m-0 mt-4">
+            {(card.carriedPaise ?? 0) > 0 && <div className="flex jc-sb"><dt className="c-sec">Owed from earlier months</dt><dd className="m-0">{money(card.carriedPaise ?? 0)}</dd></div>}
             {(card.otherPaise ?? 0) > 0 && <div className="flex jc-sb"><dt className="c-sec">Of which money lent</dt><dd className="m-0">{money(card.otherPaise ?? 0)}</dd></div>}
-            {card.paidPaise > 0 && <div className="flex jc-sb"><dt className="c-sec">Bill paid this month</dt><dd className="m-0">{money(card.paidPaise)}</dd></div>}
+            {card.paidPaise > 0 && <div className="flex jc-sb"><dt className="c-sec">Card bills paid this month</dt><dd className="m-0">{money(card.paidPaise)}</dd></div>}
             <div className="flex jc-sb"><dt className="c-text">Left after the card bill</dt><dd className={`m-0 ${shown && balancePaise < 0 ? 'c-danger' : 'c-text'}`}>{money(balancePaise)}</dd></div>
           </dl>
           {card.duePaise > 0 && <p className="fs-12 c-mut m-0 mt-8">The bill can be paid from next month’s money. It is already taken out of the balance above.</p>}

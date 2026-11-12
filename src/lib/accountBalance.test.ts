@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   accountBalance,
   accountBalances,
+  balanceBefore,
+  cardsOwedBefore,
   cardView,
   flipCardSign,
   openingForActual,
@@ -165,5 +167,21 @@ describe('card limit', () => {
   it('is nothing for other account kinds', async () => {
     const { cardView } = await import('./accountBalance');
     expect(cardView('savings', 5_000_00, 100_000_00)).toBeNull();
+  });
+});
+
+describe('card debt carried into a month', () => {
+  const card = { id: 'card', openingPaise: -1_000_000, openingOn: '2026-09-01' };
+  const t = (type: 'spend' | 'credit' | 'transfer', amountPaise: number, txnDate: string, accountId: string, toAccountId: string | null = null) => ({ type, amountPaise, txnDate, accountId, toAccountId });
+
+  it('owed at the start of a month is the opening plus entries before it', () => {
+    const txns = [t('spend', 3_500_000, '2026-10-12', 'card'), t('spend', 100, '2026-11-02', 'card')];
+    expect(balanceBefore(card, '2026-11-01', txns, [])).toBe(-4_500_000);
+    expect(cardsOwedBefore([card], '2026-11-01', txns, [])).toBe(4_500_000);
+  });
+
+  it('is unknown before the opening date, and a card in credit owes nothing', () => {
+    expect(balanceBefore(card, '2026-09-01', [], [])).toBeNull();
+    expect(cardsOwedBefore([{ ...card, openingPaise: 500 }], '2026-11-01', [], [])).toBe(0);
   });
 });

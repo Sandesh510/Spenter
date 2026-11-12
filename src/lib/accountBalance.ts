@@ -67,6 +67,39 @@ export function accountBalance(account: BalanceAccount, txns: BalanceTxn[], loan
 }
 
 /**
+ * An account's balance at the start of `before` (YYYY-MM-DD), before that day's entries. Null when the
+ * account has no opening balance, or the opening is dated on or after `before` and no `rollbackUntil` is given.
+ *
+ * Match my bank stores the opening "from today", so a card matched part-way through a month has an opening
+ * dated inside it. With `rollbackUntil` (the end of that month), an opening dated before it is wound back:
+ * the opening less the entries from `before` up to the opening date.
+ */
+export function balanceBefore(account: BalanceAccount, before: string, txns: BalanceTxn[], loans: BalanceLoan[], rollbackUntil?: string): number | null {
+  if (account.openingPaise === null || account.openingOn === null) return null;
+  if (account.openingOn >= before) {
+    if (!rollbackUntil || account.openingOn >= rollbackUntil) return null;
+    let net = 0;
+    for (const t of txns) if (t.txnDate >= before && t.txnDate < account.openingOn) net += effectOn(account.id, t);
+    for (const l of loans) if (l.debitAccountId === account.id && l.lentOn >= before && l.lentOn < account.openingOn) net -= l.amountPaise;
+    return account.openingPaise - net;
+  }
+  let net = 0;
+  for (const t of txns) if (t.txnDate >= account.openingOn && t.txnDate < before) net += effectOn(account.id, t);
+  for (const l of loans) if (l.debitAccountId === account.id && l.lentOn >= account.openingOn && l.lentOn < before) net -= l.amountPaise;
+  return account.openingPaise + net;
+}
+
+/** What the given card accounts owed in total at the start of `before`; a card in credit counts as 0. */
+export function cardsOwedBefore(cards: BalanceAccount[], before: string, txns: BalanceTxn[], loans: BalanceLoan[], rollbackUntil?: string): number {
+  let owed = 0;
+  for (const c of cards) {
+    const b = balanceBefore(c, before, txns, loans, rollbackUntil);
+    if (b !== null && b < 0) owed += -b;
+  }
+  return owed;
+}
+
+/**
  * Balances for many accounts in one pass over the entries, for the accounts list.
  * Same result as calling accountBalance for each account.
  */
